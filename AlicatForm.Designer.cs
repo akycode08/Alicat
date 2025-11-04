@@ -1,7 +1,12 @@
-﻿using System;
-using System.Windows.Forms;
-using System.Drawing;
+﻿// ----------------------------------------------------------------------------
+// Файл: AlicatForm.Designer.cs
+// Описание: Разметка (дизайн) главной формы. Минимальная логика только для UI:
+//           кнопка "Go to target" активируется при отметке "Confirm to go".
+// ----------------------------------------------------------------------------
 
+using System;
+using System.Drawing;
+using System.Windows.Forms;
 
 namespace Alicat
 {
@@ -9,43 +14,70 @@ namespace Alicat
     {
         private System.ComponentModel.IContainer components = null;
 
-        private System.Windows.Forms.TableLayoutPanel root;
-        private System.Windows.Forms.TableLayoutPanel header;
-        private System.Windows.Forms.Label lblTitle;
-        private System.Windows.Forms.Button btnCommunication;
+        // ---------- Верхний уровень макета ----------
+        private TableLayoutPanel root;
+        private TableLayoutPanel header;
+        private Label lblTitle;
+        private Button btnCommunication;
 
-        private System.Windows.Forms.GroupBox groupTop;
-        private System.Windows.Forms.TableLayoutPanel tableTop;
-        private System.Windows.Forms.Button btnGoPlus;
-        private System.Windows.Forms.Button btnGoMinus;
-        private System.Windows.Forms.Panel panelCurrent;
-        private System.Windows.Forms.Label lblCurrentBig;
-        private System.Windows.Forms.TableLayoutPanel tableIncrement;
-        private System.Windows.Forms.Label lblIncrement;
-        private System.Windows.Forms.NumericUpDown nudIncrement;
+        // ---------- Группа с основными элементами ----------
+        private GroupBox groupTop;
+        private TableLayoutPanel tableTop;
+
+        // 1-я строка tableTop
+        private Button btnGoPlus;
+        private Panel panelCurrent;
+        private Label lblCurrentBig;
+        private Button btnGoMinus;
+
+        // 2-я строка tableTop: Increment
+        private TableLayoutPanel tableIncrement;
+        private Label lblIncrement;
+        private NumericUpDown nudIncrement;
+
+        // 3-я строка tableTop: Target value
+        private TableLayoutPanel tableTarget;
+        private Label lblTargetTitle;
+        private TextBox txtTarget;
+        private CheckBox chkConfirmGo;
+        private Button btnGoTarget;
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null)) components.Dispose();
+            if (disposing && (components != null))
+                components.Dispose();
             base.Dispose(disposing);
         }
 
         #region Windows Form Designer generated code
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
+
             root = new TableLayoutPanel();
             header = new TableLayoutPanel();
             lblTitle = new Label();
             btnCommunication = new Button();
+
             groupTop = new GroupBox();
             tableTop = new TableLayoutPanel();
-            tableIncrement = new TableLayoutPanel();
-            lblIncrement = new Label();
-            nudIncrement = new NumericUpDown();
+
             btnGoPlus = new Button();
             panelCurrent = new Panel();
             lblCurrentBig = new Label();
             btnGoMinus = new Button();
+
+            tableIncrement = new TableLayoutPanel();
+            lblIncrement = new Label();
+            nudIncrement = new NumericUpDown();
+
+            tableTarget = new TableLayoutPanel();
+            lblTargetTitle = new Label();
+            txtTarget = new TextBox();
+            chkConfirmGo = new CheckBox();
+            btnGoTarget = new Button();
+
+            // --- begin layout suspend ---
             root.SuspendLayout();
             header.SuspendLayout();
             groupTop.SuspendLayout();
@@ -53,192 +85,232 @@ namespace Alicat
             tableIncrement.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)nudIncrement).BeginInit();
             panelCurrent.SuspendLayout();
+            tableTarget.SuspendLayout();
             SuspendLayout();
-            // 
-            // root
-            // 
+
+            // ====================================================================
+            // ROOT
+            // ====================================================================
             root.ColumnCount = 1;
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
+            root.ColumnStyles.Clear();
+            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            root.RowCount = 2;
+            root.RowStyles.Clear();
+            root.RowStyles.Add(new RowStyle());                          // header
+            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));    // content
+            root.Dock = DockStyle.Fill;
+            root.Padding = new Padding(12);
+            root.Name = "root";
+            root.Size = new Size(1024, 520);
+
             root.Controls.Add(header, 0, 0);
             root.Controls.Add(groupTop, 0, 1);
-            root.Dock = DockStyle.Fill;
-            root.Location = new Point(0, 0);
-            root.Name = "root";
-            root.Padding = new Padding(12);
-            root.RowCount = 2;
-            root.RowStyles.Add(new RowStyle());
-            root.RowStyles.Add(new RowStyle());
-            root.Size = new Size(1024, 420);
-            root.TabIndex = 0;
-            // 
-            // header
-            // 
+
+            // ====================================================================
+            // HEADER
+            // ====================================================================
             header.ColumnCount = 2;
+            header.ColumnStyles.Clear();
             header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            header.ColumnStyles.Add(new ColumnStyle());
-            header.Controls.Add(lblTitle, 0, 0);
-            header.Controls.Add(btnCommunication, 1, 0);
+            header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            header.RowCount = 1;
+            header.RowStyles.Clear();
+            header.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
             header.Dock = DockStyle.Top;
-            header.Location = new Point(12, 12);
             header.Margin = new Padding(0, 0, 0, 8);
             header.Name = "header";
-            header.RowCount = 1;
-            header.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
-            header.Size = new Size(1000, 100);
-            header.TabIndex = 0;
-            // 
-            // lblTitle
-            // 
+            header.Size = new Size(1000, 48);
+
             lblTitle.Anchor = AnchorStyles.Left;
             lblTitle.AutoSize = true;
-            lblTitle.Location = new Point(0, 42);
-            lblTitle.Margin = new Padding(0, 8, 0, 8);
-            lblTitle.Name = "lblTitle";
-            lblTitle.Size = new Size(93, 15);
-            lblTitle.TabIndex = 0;
+            lblTitle.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
             lblTitle.Text = "Alicat Controller";
-            // 
-            // btnCommunication
-            // 
+
             btnCommunication.Anchor = AnchorStyles.Right;
             btnCommunication.AutoSize = true;
-            btnCommunication.Location = new Point(884, 37);
-            btnCommunication.Name = "btnCommunication";
-            btnCommunication.Size = new Size(113, 25);
-            btnCommunication.TabIndex = 1;
             btnCommunication.Text = "Communication…";
-            // 
-            // groupTop
-            // 
+            btnCommunication.Margin = new Padding(8, 8, 0, 8);
+            btnCommunication.Name = "btnCommunication";
+
+            header.Controls.Add(lblTitle, 0, 0);
+            header.Controls.Add(btnCommunication, 1, 0);
+
+            // ====================================================================
+            // GROUP TOP
+            // ====================================================================
             groupTop.AutoSize = true;
             groupTop.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            groupTop.Controls.Add(tableTop);
-            groupTop.Dock = DockStyle.Top;
-            groupTop.Location = new Point(12, 120);
-            groupTop.Margin = new Padding(0, 0, 0, 8);
-            groupTop.Name = "groupTop";
+            groupTop.Dock = DockStyle.Fill;
             groupTop.Padding = new Padding(12);
-            groupTop.Size = new Size(1000, 172);
-            groupTop.TabIndex = 1;
-            groupTop.TabStop = false;
-            // 
-            // tableTop
-            // 
+            groupTop.Name = "groupTop";
+            groupTop.Controls.Add(tableTop);
+
+            // ====================================================================
+            // TABLE TOP (3 колонки)
+            // ====================================================================
             tableTop.AutoSize = true;
-            tableTop.ColumnCount = 3;
-            tableTop.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            tableTop.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tableTop.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            tableTop.Controls.Add(tableIncrement, 0, 1);
-            tableTop.Controls.Add(btnGoPlus, 0, 0);
-            tableTop.Controls.Add(panelCurrent, 1, 0);
-            tableTop.Controls.Add(btnGoMinus, 2, 0);
             tableTop.Dock = DockStyle.Fill;
-            tableTop.Location = new Point(12, 28);
+            tableTop.ColumnCount = 3;
+            tableTop.ColumnStyles.Clear();
+            tableTop.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F)); // +
+            tableTop.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F)); // Current
+            tableTop.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F)); // -
+            tableTop.RowCount = 3; // 1: +/-/current, 2: increment, 3: target
+            tableTop.RowStyles.Clear();
+            tableTop.RowStyles.Add(new RowStyle(SizeType.Absolute, 110F)); // верхняя линия
+            tableTop.RowStyles.Add(new RowStyle(SizeType.AutoSize));       // increment
+            tableTop.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));  // target тянется вниз
             tableTop.Name = "tableTop";
-            tableTop.RowCount = 2;
-            tableTop.RowStyles.Add(new RowStyle());
-            tableTop.RowStyles.Add(new RowStyle());
-            tableTop.Size = new Size(976, 132);
-            tableTop.TabIndex = 0;
-            // 
-            // tableIncrement
-            // 
-            tableIncrement.AutoSize = true;
-            tableIncrement.ColumnCount = 3;
-            tableTop.SetColumnSpan(tableIncrement, 3);
-            tableIncrement.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            tableIncrement.ColumnStyles.Add(new ColumnStyle());
-            tableIncrement.ColumnStyles.Add(new ColumnStyle());
-            tableIncrement.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            tableIncrement.ColumnStyles.Add(new ColumnStyle());
-            tableIncrement.ColumnStyles.Add(new ColumnStyle());
-            tableIncrement.Controls.Add(lblIncrement, 1, 0);
-            tableIncrement.Controls.Add(nudIncrement, 2, 0);
-            tableIncrement.Dock = DockStyle.Top;
-            tableIncrement.Location = new Point(0, 112);
-            tableIncrement.Margin = new Padding(0, 8, 0, 0);
-            tableIncrement.Name = "tableIncrement";
-            tableIncrement.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
-            tableIncrement.Size = new Size(976, 20);
-            tableIncrement.TabIndex = 0;
-            // 
-            // lblIncrement
-            // 
-            lblIncrement.Anchor = AnchorStyles.Left;
-            lblIncrement.AutoSize = true;
-            lblIncrement.Location = new Point(791, 6);
-            lblIncrement.Margin = new Padding(0, 6, 8, 0);
-            lblIncrement.Name = "lblIncrement";
-            lblIncrement.Size = new Size(61, 14);
-            lblIncrement.TabIndex = 1;
-            lblIncrement.Text = "Increment";
-            // 
-            // nudIncrement
-            // 
-            nudIncrement.DecimalPlaces = 3;
-            nudIncrement.Increment = new decimal(new int[] { 100, 0, 0, 196608 });
-            nudIncrement.Location = new Point(863, 3);
-            nudIncrement.Maximum = new decimal(new int[] { 100000, 0, 0, 0 });
-            nudIncrement.Minimum = new decimal(new int[] { 1, 0, 0, 196608 });
-            nudIncrement.Name = "nudIncrement";
-            nudIncrement.Size = new Size(110, 23);
-            nudIncrement.TabIndex = 2;
-            nudIncrement.Value = new decimal(new int[] { 1000, 0, 0, 196608 });
-            // 
-            // btnGoPlus
-            // 
+
+            // ---------- [+] ----------
             btnGoPlus.Dock = DockStyle.Fill;
-            btnGoPlus.Location = new Point(0, 0);
-            btnGoPlus.Margin = new Padding(0, 0, 6, 0);
-            btnGoPlus.Name = "btnGoPlus";
-            btnGoPlus.Size = new Size(238, 104);
-            btnGoPlus.TabIndex = 1;
+            btnGoPlus.Margin = new Padding(0, 0, 6, 6);
             btnGoPlus.Text = "GO: Value + increment";
-            // 
-            // panelCurrent
-            // 
+            tableTop.Controls.Add(btnGoPlus, 0, 0);
+
+            // ---------- [Current] ----------
             panelCurrent.BackColor = Color.White;
             panelCurrent.BorderStyle = BorderStyle.FixedSingle;
-            panelCurrent.Controls.Add(lblCurrentBig);
             panelCurrent.Dock = DockStyle.Fill;
-            panelCurrent.Location = new Point(250, 0);
-            panelCurrent.Margin = new Padding(6, 0, 6, 4);
-            panelCurrent.Name = "panelCurrent";
-            panelCurrent.Size = new Size(476, 100);
-            panelCurrent.TabIndex = 2;
-            // 
-            // lblCurrentBig
-            // 
+            panelCurrent.Margin = new Padding(6, 0, 6, 6);
+            panelCurrent.Controls.Add(lblCurrentBig);
+            tableTop.Controls.Add(panelCurrent, 1, 0);
+
             lblCurrentBig.Dock = DockStyle.Fill;
             lblCurrentBig.Font = new Font("Segoe UI", 22F, FontStyle.Bold);
-            lblCurrentBig.Location = new Point(0, 0);
-            lblCurrentBig.Name = "lblCurrentBig";
-            lblCurrentBig.Size = new Size(474, 98);
-            lblCurrentBig.TabIndex = 0;
-            lblCurrentBig.Text = "0.000 PSI";
+            lblCurrentBig.Text = "0.0 PSIG";
             lblCurrentBig.TextAlign = ContentAlignment.MiddleCenter;
-            // 
-            // btnGoMinus
-            // 
+
+            // ---------- [–] ----------
             btnGoMinus.Dock = DockStyle.Fill;
-            btnGoMinus.Location = new Point(738, 0);
-            btnGoMinus.Margin = new Padding(6, 0, 0, 0);
-            btnGoMinus.Name = "btnGoMinus";
-            btnGoMinus.Size = new Size(238, 104);
-            btnGoMinus.TabIndex = 3;
+            btnGoMinus.Margin = new Padding(6, 0, 0, 6);
             btnGoMinus.Text = "GO: Value - increment";
-            // 
-            // AlicatForm
-            // 
+            tableTop.Controls.Add(btnGoMinus, 2, 0);
+
+            // ====================================================================
+            // INCREMENT (2-я строка)
+            // ====================================================================
+            tableIncrement.AutoSize = true;
+            tableIncrement.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            tableIncrement.Dock = DockStyle.Top;
+            tableIncrement.Margin = new Padding(0, 4, 0, 0);
+            tableIncrement.ColumnCount = 3;
+            tableIncrement.ColumnStyles.Clear();
+            tableIncrement.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F)); // spacer
+            tableIncrement.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));      // label
+            tableIncrement.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));      // nud
+
+            lblIncrement.Anchor = AnchorStyles.Left;
+            lblIncrement.AutoSize = true;
+            lblIncrement.Margin = new Padding(0, 6, 8, 6);
+            lblIncrement.Text = "Increment";
+
+            nudIncrement.DecimalPlaces = 3;
+            nudIncrement.Increment = 0.001M;
+            nudIncrement.Minimum = 0.001M;
+            nudIncrement.Maximum = 100000M;
+            nudIncrement.Value = 1.000M;
+            nudIncrement.Size = new Size(110, 23);
+            nudIncrement.Margin = new Padding(0, 3, 0, 3);
+            nudIncrement.Name = "nudIncrement";
+
+            tableIncrement.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 0);
+            tableIncrement.Controls.Add(lblIncrement, 1, 0);
+            tableIncrement.Controls.Add(nudIncrement, 2, 0);
+
+            tableTop.Controls.Add(tableIncrement, 0, 1);
+            tableTop.SetColumnSpan(tableIncrement, 3);
+
+            // ====================================================================
+            // TARGET (3-я строка) — чистый дизайн
+            // ====================================================================
+            tableTarget.AutoSize = true;
+            tableTarget.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            tableTarget.Dock = DockStyle.Fill;               // занимает оставшееся место
+            tableTarget.Margin = new Padding(0, 10, 0, 0);
+            tableTarget.ColumnCount = 3;
+            tableTarget.ColumnStyles.Clear();
+            tableTarget.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+            tableTarget.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F)); // центральная колонка с контентом
+            tableTarget.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+
+            // Внутренняя стек-табличка для центральной колонки
+            var targetStack = new TableLayoutPanel
+            {
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Dock = DockStyle.Top,
+                ColumnCount = 1,
+                RowCount = 4,
+                Margin = new Padding(0)
+            };
+            targetStack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            targetStack.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // title
+            targetStack.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // textbox
+            targetStack.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // checkbox
+            targetStack.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // button
+
+            // Заголовок
+            lblTargetTitle.AutoSize = true;
+            lblTargetTitle.Font = new Font("Segoe UI", 10F);
+            lblTargetTitle.Text = "Target value";
+            lblTargetTitle.Margin = new Padding(0, 0, 0, 6);
+
+            // Поле ввода
+            txtTarget.Font = new Font("Segoe UI", 10F);
+            txtTarget.PlaceholderText = "Target value";
+            txtTarget.Size = new Size(220, 25);
+            txtTarget.Margin = new Padding(0, 0, 0, 6);
+            txtTarget.Name = "txtTarget";
+
+            // Чекбокс
+            chkConfirmGo.AutoSize = true;
+            chkConfirmGo.Font = new Font("Segoe UI", 9F);
+            chkConfirmGo.Text = "Confirm to go";
+            chkConfirmGo.Margin = new Padding(0, 0, 0, 8);
+            chkConfirmGo.Name = "chkConfirmGo";
+
+            // Кнопка
+            btnGoTarget.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnGoTarget.Text = "Go to target";
+            btnGoTarget.Size = new Size(220, 36);
+            btnGoTarget.Margin = new Padding(0, 0, 0, 0);
+            btnGoTarget.Name = "btnGoTarget";
+            //btnGoTarget.Enabled = false; // по умолчанию выключена
+
+            // Мини-логика UI: активируем кнопку, когда отметили чекбокс
+            chkConfirmGo.CheckedChanged += (s, e) =>
+            {
+                btnGoTarget.Enabled = chkConfirmGo.Checked;
+            };
+
+            // Сборка стека
+            targetStack.Controls.Add(lblTargetTitle, 0, 0);
+            targetStack.Controls.Add(txtTarget, 0, 1);
+            targetStack.Controls.Add(chkConfirmGo, 0, 2);
+            targetStack.Controls.Add(btnGoTarget, 0, 3);
+
+            // Кладём стек в центральную колонку tableTarget
+            tableTarget.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 0);
+            tableTarget.Controls.Add(targetStack, 1, 0);
+            tableTarget.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 0);
+
+            tableTop.Controls.Add(tableTarget, 0, 2);
+            tableTop.SetColumnSpan(tableTarget, 3);
+
+            // ====================================================================
+            // ФОРМА
+            // ====================================================================
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1024, 420);
-            Controls.Add(root);
-            MinimumSize = new Size(960, 360);
-            Name = "AlicatForm";
+            ClientSize = new Size(1024, 520);
+            MinimumSize = new Size(960, 420);
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Alicat — Controller";
+            Controls.Add(root);
+            Name = "AlicatForm";
+
+            // --- end layout resume ---
             root.ResumeLayout(false);
             root.PerformLayout();
             header.ResumeLayout(false);
@@ -251,6 +323,7 @@ namespace Alicat
             tableIncrement.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)nudIncrement).EndInit();
             panelCurrent.ResumeLayout(false);
+            tableTarget.ResumeLayout(false);
             ResumeLayout(false);
         }
         #endregion
