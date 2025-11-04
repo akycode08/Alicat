@@ -35,6 +35,12 @@ namespace Alicat
         private Label lblIncrement;
         private NumericUpDown nudIncrement;
 
+        // --- Purge ---
+        private System.Windows.Forms.GroupBox grpPurge;
+        private System.Windows.Forms.Label lblPurgeHint;
+        private System.Windows.Forms.CheckBox chkConfirmPurge;
+        private System.Windows.Forms.Button btnPurge;
+
         // 3-я строка tableTop: Target value
         private TableLayoutPanel tableTarget;
         private Label lblTargetTitle;
@@ -220,6 +226,48 @@ namespace Alicat
 
             tableTop.Controls.Add(tableIncrement, 0, 1);
             tableTop.SetColumnSpan(tableIncrement, 3);
+
+            this.grpPurge = new System.Windows.Forms.GroupBox();
+            this.chkConfirmPurge = new System.Windows.Forms.CheckBox();
+            this.btnPurge = new System.Windows.Forms.Button();
+
+            // 
+            // grpPurge
+            // 
+            this.grpPurge.Text = "Purge";
+            this.grpPurge.Name = "grpPurge";
+            this.grpPurge.Size = new System.Drawing.Size(200, 100); // подстрой под свою правую панель
+            this.grpPurge.Location = new System.Drawing.Point(750, 300); // поставь ниже Increment
+            this.grpPurge.TabStop = false;
+
+            // 
+            // chkConfirmPurge
+            // 
+            this.chkConfirmPurge.AutoSize = true;
+            this.chkConfirmPurge.Text = "Confirm purge to 0";
+            this.chkConfirmPurge.Location = new System.Drawing.Point(15, 25);
+            this.chkConfirmPurge.Name = "chkConfirmPurge";
+
+            // 
+            // btnPurge
+            // 
+            this.btnPurge.Text = "Purge";
+            this.btnPurge.Size = new System.Drawing.Size(150, 30);
+            this.btnPurge.Location = new System.Drawing.Point(15, 55);
+            this.btnPurge.Name = "btnPurge";
+            // обработчик добавим позже:
+            // this.btnPurge.Click += new System.EventHandler(this.btnPurge_Click);
+
+            // 
+            // Добавляем элементы в группу
+            // 
+            this.grpPurge.Controls.Add(this.chkConfirmPurge);
+            this.grpPurge.Controls.Add(this.btnPurge);
+
+            // 
+            // Добавляем группу на форму (в правую часть, под Increment)
+            // 
+            this.Controls.Add(this.grpPurge);
 
             // ====================================================================
             // TARGET (3-я строка) — чистый дизайн
