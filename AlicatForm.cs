@@ -23,6 +23,9 @@ namespace Alicat
         {
             InitializeComponent();            // Создаёт UI-элементы из .Designer.cs
 
+            btnGoTarget.Click += btnGoTarget_Click;
+
+
             RefreshCurrent();                 // Отрисовать начальное значение на экране
 
             // Привязка обработчиков кнопок
@@ -89,7 +92,7 @@ namespace Alicat
         private void SendSetPoint(double sp)
         {
             _setPoint = sp;                             // Локально запоминаем новую уставку
-            var cmd = $"AS {sp.ToString("0.###", CultureInfo.InvariantCulture)}"; // Команда Alicat на установку SP
+            var cmd = $"AS {sp.ToString("F2", CultureInfo.InvariantCulture)}"; // Команда Alicat на установку SP
             _serial?.Send(cmd);                         // Отправляем в порт (если подключены)
             _serial?.RequestAls();                      // Сразу запросить состояние для обновления UI
         }
@@ -110,7 +113,7 @@ namespace Alicat
 
         private void RefreshCurrent()
         {
-            lblCurrentBig.Text = $"{_current:0.000} {_unit}"; // Большой ярлык с текущим значением
+            lblCurrentBig.Text = $"{_current:0.0} {_unit}"; // Большой ярлык с текущим значением
         }
 
         // ================= Парсер ответа ALS =================
@@ -233,5 +236,84 @@ namespace Alicat
                 catch { /* игнорируем ошибки dispose */ }
             }
         }
+
+        private void btnGoTarget_Click(object? sender, EventArgs e)
+        {
+            // Кнопка должна оставаться активной
+            btnGoTarget.Enabled = true;
+
+            if (_serial == null)
+            {
+                MessageBox.Show("Device is not connected.", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string raw = txtTarget.Text?.Trim() ?? string.Empty;
+            if (raw.Length == 0)
+            {
+                MessageBox.Show("Enter target value.", "Validation",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            if (!double.TryParse(raw,
+                System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out double targetValue))
+            {
+                MessageBox.Show("Invalid target value format.", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            const double MIN = 0.0, MAX = 100.0; // при необходимости подправь
+            if (targetValue < MIN || targetValue > MAX)
+            {
+                MessageBox.Show($"Target value must be between {MIN} and {MAX}.", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // Текст для отображения значения (с единицами)
+            string unit = string.IsNullOrWhiteSpace(_unit) ? "PSIG" : _unit;
+            string displayVal = targetValue.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
+            string confirmText = $"Do you want to change the target value to {displayVal} {unit}?";
+
+            // Если чекбокс не отмечен — спросим подтверждение с числом
+            if (!chkConfirmGo.Checked)
+            {
+                var ask = MessageBox.Show(confirmText, "Confirm action",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+                if (ask != DialogResult.Yes)
+                    return;
+            }
+
+            try
+            {
+                string cmd = $"AS {targetValue:F1}";
+                _serial.Send(cmd);
+
+                // по желанию — сразу обновить показания
+                _serial.RequestAls();
+
+                // Сброс UI
+                chkConfirmGo.Checked = false;
+                txtTarget.Clear();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Failed to send command:\n" + ex.Message, "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnGoTarget.Enabled = true; // гарантируем включено
+            }
+        }
+
+
     }
+
 }
