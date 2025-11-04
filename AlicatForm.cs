@@ -25,6 +25,9 @@ namespace Alicat
 
             btnGoTarget.Click += btnGoTarget_Click;
 
+            btnPurge.Click += btnPurge_Click;
+
+
 
             RefreshCurrent();                 // Отрисовать начальное значение на экране
 
@@ -312,6 +315,59 @@ namespace Alicat
                 btnGoTarget.Enabled = true; // гарантируем включено
             }
         }
+
+        private async void btnPurge_Click(object? sender, EventArgs e)
+        {
+            if (_serial is null)
+            {
+                MessageBox.Show("Нет соединения с прибором.", "Purge", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            bool confirmed = chkConfirmPurge.Checked;
+
+            // Если галочка не стоит — спрашиваем подтверждение
+            if (!confirmed)
+            {
+                var ask = MessageBox.Show(
+                    "Сбросить давление до 0?",
+                    "Confirm purge",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (ask != DialogResult.Yes)
+                    return;
+            }
+
+            // Очищаем галочку, чтобы не оставалась активной
+            chkConfirmPurge.Checked = false;
+
+            // Блокируем кнопку во время purge
+            btnPurge.Enabled = false;
+            Cursor = Cursors.WaitCursor;
+
+            try
+            {
+                // Команда AE — сброс давления
+                _serial.Send("AE");
+
+                // Ждём немного, чтобы давление упало
+                await Task.Delay(3000); // можно увеличить, если сброс идёт дольше
+
+                // Команда AC — вернуться в обычный режим
+                _serial.Send("AC");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка Purge: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnPurge.Enabled = true;
+                Cursor = Cursors.Default;
+            }
+        }
+
 
 
     }
