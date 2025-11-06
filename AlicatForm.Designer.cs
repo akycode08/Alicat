@@ -41,6 +41,28 @@ namespace Alicat
         private System.Windows.Forms.CheckBox chkConfirmPurge;
         private System.Windows.Forms.Button btnPurge;
 
+        // INFORMATION
+
+        private System.Windows.Forms.GroupBox grpData;
+        private System.Windows.Forms.Label lblPressureUnits;
+        private System.Windows.Forms.Label lblRampSpeedUnits;
+        private System.Windows.Forms.Label lblSetPoint;
+        private System.Windows.Forms.Label lblTimeToSetPoint;
+        private System.Windows.Forms.Label lblStatus;
+
+        private System.Windows.Forms.Label boxPressureUnits;
+        private System.Windows.Forms.Label boxRampSpeedUnits;
+        private System.Windows.Forms.Label boxSetPoint;
+        private System.Windows.Forms.Label boxTimeToSetPoint;
+
+        private System.Windows.Forms.Label icoUp;
+        private System.Windows.Forms.Label icoMid;
+        private System.Windows.Forms.Label icoDown;
+
+
+
+
+
         // 3-я строка tableTop: Target value
         private TableLayoutPanel tableTarget;
         private Label lblTargetTitle;
@@ -268,6 +290,126 @@ namespace Alicat
             // Добавляем группу на форму (в правую часть, под Increment)
             // 
             this.Controls.Add(this.grpPurge);
+
+
+            // ===================================================================
+            // ====INFORMATION=====
+            // ===================================================================
+
+            // ==========================================================
+            // === ГРУППА: ПОКАЗ ДАННЫХ ================================
+            // ==========================================================
+            this.grpData = new System.Windows.Forms.GroupBox();
+            this.grpData.Text = "SHOW VALUE";
+            this.grpData.Location = new System.Drawing.Point(50, 250);
+            this.grpData.Size = new System.Drawing.Size(270, 160);
+            this.grpData.TabStop = false;
+
+            // Pressure units
+            this.lblPressureUnits = new System.Windows.Forms.Label();
+            this.lblPressureUnits.AutoSize = true;
+            this.lblPressureUnits.Location = new System.Drawing.Point(15, 25);
+            this.lblPressureUnits.Text = "Pressure units:";
+
+            this.boxPressureUnits = new System.Windows.Forms.Label();
+            this.boxPressureUnits.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.boxPressureUnits.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.boxPressureUnits.Location = new System.Drawing.Point(150, 22);
+            this.boxPressureUnits.Size = new System.Drawing.Size(90, 20);
+            this.boxPressureUnits.Text = "—";
+
+            // Ramp speed units
+            this.lblRampSpeedUnits = new System.Windows.Forms.Label();
+            this.lblRampSpeedUnits.AutoSize = true;
+            this.lblRampSpeedUnits.Location = new System.Drawing.Point(15, 50);
+            this.lblRampSpeedUnits.Text = "Ramp speed units:";
+
+            this.boxRampSpeedUnits = new System.Windows.Forms.Label();
+            this.boxRampSpeedUnits.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.boxRampSpeedUnits.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.boxRampSpeedUnits.Location = new System.Drawing.Point(150, 47);
+            this.boxRampSpeedUnits.Size = new System.Drawing.Size(90, 20);
+            this.boxRampSpeedUnits.Text = "—";
+
+            // Set point
+            this.lblSetPoint = new System.Windows.Forms.Label();
+            this.lblSetPoint.AutoSize = true;
+            this.lblSetPoint.Location = new System.Drawing.Point(15, 75);
+            this.lblSetPoint.Text = "Set point:";
+
+            this.boxSetPoint = new System.Windows.Forms.Label();
+            this.boxSetPoint.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.boxSetPoint.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.boxSetPoint.Location = new System.Drawing.Point(150, 72);
+            this.boxSetPoint.Size = new System.Drawing.Size(90, 20);
+            this.boxSetPoint.Text = "—";
+
+            // Time to set point
+            this.lblTimeToSetPoint = new System.Windows.Forms.Label();
+            this.lblTimeToSetPoint.AutoSize = true;
+            this.lblTimeToSetPoint.Location = new System.Drawing.Point(15, 100);
+            this.lblTimeToSetPoint.Text = "Time to set point:";
+
+            this.boxTimeToSetPoint = new System.Windows.Forms.Label();
+            this.boxTimeToSetPoint.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.boxTimeToSetPoint.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.boxTimeToSetPoint.Location = new System.Drawing.Point(150, 97);
+            this.boxTimeToSetPoint.Size = new System.Drawing.Size(90, 20);
+            this.boxTimeToSetPoint.Text = "—";
+
+            // Status
+            this.lblStatus = new System.Windows.Forms.Label();
+            this.lblStatus.AutoSize = true;
+            this.lblStatus.Location = new System.Drawing.Point(15, 125);
+            this.lblStatus.Text = "Status:";
+
+            // ▲ вверх
+            this.icoUp = new System.Windows.Forms.Label();
+            this.icoUp.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.icoUp.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.icoUp.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.icoUp.Location = new System.Drawing.Point(150, 122);
+            this.icoUp.Size = new System.Drawing.Size(20, 20);
+            this.icoUp.Text = "▲";
+            this.icoUp.ForeColor = System.Drawing.Color.Gray;
+
+            // ● центр
+            this.icoMid = new System.Windows.Forms.Label();
+            this.icoMid.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.icoMid.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.icoMid.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.icoMid.Location = new System.Drawing.Point(175, 122);
+            this.icoMid.Size = new System.Drawing.Size(20, 20);
+            this.icoMid.Text = "●";
+            this.icoMid.ForeColor = System.Drawing.Color.Gray;
+
+            // ▼ вниз
+            this.icoDown = new System.Windows.Forms.Label();
+            this.icoDown.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.icoDown.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.icoDown.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.icoDown.Location = new System.Drawing.Point(200, 122);
+            this.icoDown.Size = new System.Drawing.Size(20, 20);
+            this.icoDown.Text = "▼";
+            this.icoDown.ForeColor = System.Drawing.Color.Gray;
+
+            // Добавляем в grpData
+            this.grpData.Controls.Add(this.lblPressureUnits);
+            this.grpData.Controls.Add(this.boxPressureUnits);
+            this.grpData.Controls.Add(this.lblRampSpeedUnits);
+            this.grpData.Controls.Add(this.boxRampSpeedUnits);
+            this.grpData.Controls.Add(this.lblSetPoint);
+            this.grpData.Controls.Add(this.boxSetPoint);
+            this.grpData.Controls.Add(this.lblTimeToSetPoint);
+            this.grpData.Controls.Add(this.boxTimeToSetPoint);
+            this.grpData.Controls.Add(this.lblStatus);
+            this.grpData.Controls.Add(this.icoUp);
+            this.grpData.Controls.Add(this.icoMid);
+            this.grpData.Controls.Add(this.icoDown);
+
+            // Добавляем на форму
+            this.Controls.Add(this.grpData);
+
 
             // ====================================================================
             // TARGET (3-я строка) — чистый дизайн
