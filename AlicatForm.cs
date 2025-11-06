@@ -1,10 +1,11 @@
-﻿using System;                           // Базовые типы, события, исключения
-using System.Globalization;             // Парсинг чисел с инвариантной культурой
-using System.IO.Ports;                  // Работа с SerialPort (COM)
-using System.Text;                      // Кодировки для порта (ASCII)
-using System.Windows.Forms;             // WinForms UI
+﻿using System;                           // базовые типы
+using System.Globalization;             // парс чисел Invariant
+using System.IO.Ports;                  // SerialPort
+using System.Text;                      // Encoding.ASCII
+using System.Threading.Tasks;           // Task.Delay (на будущее)
+using System.Windows.Forms;             // WinForms
 
-// Разруливаем конфликт двух Timer: явно используем таймер из WinForms
+// Явно используем таймер WinForms
 using Timer = System.Windows.Forms.Timer;
 
 namespace Alicat
@@ -12,237 +13,112 @@ namespace Alicat
     public partial class AlicatForm : Form
     {
         // ---- Состояние измерений/уставки ----
-        private double _current = 0.0;        // Текущее давление, из ответа прибора
-        private double _setPoint = 0.0;       // Текущая уставка (что мы отправили/что прибор вернул)
-        private string _unit = "PSIG";        // Единицы измерения (из ответа ALS)
+        private double _current = 0.0;        // текущее давление
+        private double _setPoint = 0.0;       // уставка
+        private string _unit = "PSIG";        // единицы измерения
 
-        private SerialClient? _serial;        // Наш обёрнутый клиент поверх SerialPort
-        private readonly Timer _pollTimer = new() { Interval = 500 }; // Таймер опроса (каждые 500 мс)
+        private bool _isExhaust = false;      // сейчас в режиме выхлопа (после AE)
+        private double? _lastCurrent = null;  // предыдущее текущее давление для тренда
+
+        private SerialClient? _serial;        // клиент поверх SerialPort
+        private readonly Timer _pollTimer = new() { Interval = 500 }; // опрос каждые 500мс
 
         public AlicatForm()
         {
-            InitializeComponent();            // Создаёт UI-элементы из .Designer.cs
+            InitializeComponent();
 
+            // Привязка UI-событий
             btnGoTarget.Click += btnGoTarget_Click;
-
             btnPurge.Click += btnPurge_Click;
+            btnGoPlus.Click += btnGoPlus_Click;
+            btnGoMinus.Click += btnGoMinus_Click;
+            btnCommunication.Click += btnCommunication_Click;
 
+            // Начальные значения в окнах «SHOW VALUE»
+            UI_SetPressureUnits(_unit);         // PSIG
+            UI_SetRampSpeedUnits("PSIG/s");     // при необходимости поменяешь
+            UI_SetSetPoint(_setPoint, _unit);   // 0.0 PSIG
+            UI_SetTimeToSetPoint(null);         // "—"
+            UI_Status_Up(false);
+            UI_Status_Mid(false);
+            UI_Status_Down(false);
 
+            RefreshCurrent(); // большой дисплей
 
-            RefreshCurrent();                 // Отрисовать начальное значение на экране
-
-            // Привязка обработчиков кнопок
-            btnGoPlus.Click += btnGoPlus_Click;           // Кнопка + инкремент
-            btnGoMinus.Click += btnGoMinus_Click;         // Кнопка - инкремент
-            btnCommunication.Click += btnCommunication_Click; // Открыть окно настроек/подключения
-
-            // При каждом тике опрашиваем прибор (ALS), если есть подключение
+            // Периодический опрос
             _pollTimer.Tick += (_, __) => _serial?.RequestAls();
         }
 
         // ================= Окно коммуникаций (FormConnect) =================
         private void btnCommunication_Click(object? sender, EventArgs e)
         {
-            using var dlg = new FormConnect             // Создаём диалоговое окно
-            {
-                StartPosition = FormStartPosition.CenterParent // Центрируем над родителем
-            };
+            using var dlg = new FormConnect { StartPosition = FormStartPosition.CenterParent };
+            dlg.ShowDialog(this);
 
-            dlg.ShowDialog(this);                       // Показываем модально, ждём закрытия
-
-            // Забираем «уже открытый» SerialPort из FormConnect (аккуратно)
+            // Забираем открытый SerialPort из FormConnect
             var opened = GetOpenPortFrom(dlg);
-            if (opened == null) return;                 // Если не получили — выходим
+            if (opened == null) return;
 
-            _serial?.Dispose();                         // Закрываем прежнее соединение, если было
+            _serial?.Dispose();
+            _serial = new SerialClient(opened);
+            _serial.LineReceived += Serial_LineReceived;
+            _serial.Connected += (_, __) => BeginInvoke(new Action(() => _pollTimer.Start()));
+            _serial.Disconnected += (_, __) => BeginInvoke(new Action(() => _pollTimer.Stop()));
 
-            _serial = new SerialClient(opened);         // Оборачиваем существующий открытый порт
-            _serial.LineReceived += Serial_LineReceived; // Подписка на входящие строки
-            _serial.Connected += (_, __) => BeginInvoke(new Action(() => _pollTimer.Start())); // При «подключено» — старт опроса
-            _serial.Disconnected += (_, __) => BeginInvoke(new Action(() => _pollTimer.Stop()));  // При «отключено» — стоп опроса
-
-            _serial.Attach();        // Навесить обработчики на порт и сгенерировать событие Connected
-            _serial.RequestAls();    // Сразу запросить состояние (ALS)
+            _serial.Attach();
+            _serial.RequestAls();
         }
 
-        // Аккуратно получить открытый SerialPort у FormConnect через рефлексию (не меняя её API)
+        // Аккуратно вытащить private поле _port у FormConnect
         private static SerialPort? GetOpenPortFrom(FormConnect fc)
         {
             try
             {
                 var f = typeof(FormConnect).GetField("_port",
-                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic); // Достаём private поле _port
-                var sp = f?.GetValue(fc) as SerialPort;   // Преобразуем к SerialPort
-                if (sp != null && sp.IsOpen) return sp;   // Возвращаем, если открыт
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var sp = f?.GetValue(fc) as SerialPort;
+                if (sp != null && sp.IsOpen) return sp;
             }
-            catch { /* игнорируем ошибки рефлексии */ }
-            return null;                                   // Не удалось — null
+            catch { }
+            return null;
         }
 
         // ================= Управление уставкой (GO ±) =================
         private void btnGoPlus_Click(object? sender, EventArgs e)
         {
-            var inc = (double)nudIncrement.Value;       // Берём шаг инкремента из NumericUpDown
-            SendSetPoint(_setPoint + inc);              // Увеличиваем уставку и отправляем
+            var inc = (double)nudIncrement.Value;
+            SendSetPoint(_setPoint + inc);
         }
 
         private void btnGoMinus_Click(object? sender, EventArgs e)
         {
-            var inc = (double)nudIncrement.Value;       // Шаг инкремента
-            SendSetPoint(_setPoint - inc);              // Уменьшаем уставку и отправляем
+            var inc = (double)nudIncrement.Value;
+            SendSetPoint(_setPoint - inc);
         }
 
         private void SendSetPoint(double sp)
         {
-            _setPoint = sp;                             // Локально запоминаем новую уставку
-            var cmd = $"AS {sp.ToString("F2", CultureInfo.InvariantCulture)}"; // Команда Alicat на установку SP
-            _serial?.Send(cmd);                         // Отправляем в порт (если подключены)
-            _serial?.RequestAls();                      // Сразу запросить состояние для обновления UI
+            _setPoint = sp;
+            UI_SetSetPoint(_setPoint, _unit);
+
+            if (_serial is null) return;
+
+            // Если были в EXH и хотим поднять давление — выйти из EXH
+            if (sp > 0.05)
+            {
+                _serial.Send("AC");
+                _isExhaust = false;
+                _lastCurrent = null; // начнём тренд заново после выхода из EXH
+            }
+
+            _serial.Send($"AS {sp.ToString("F2", CultureInfo.InvariantCulture)}");
+            _serial.RequestAls();
         }
 
-        // ================= Приём и отрисовка данных =================
-        private void Serial_LineReceived(object? sender, string line)
-        {
-            // Парсим строку ответа ALS: "A +0030.0 +0030.0 10 PSIG" и т.п.
-            if (!TryParseAls(line, out var cur, out var sp, out var unit))
-                return;                                  // Если не распознали — игнор
-
-            _current = cur;                              // Обновляем текущее
-            _setPoint = sp;                              // Обновляем уставку
-            _unit = unit ?? _unit;                       // Обновляем единицы, если пришли
-
-            BeginInvoke(new Action(RefreshCurrent));     // Обновить UI из UI-потока
-        }
-
-        private void RefreshCurrent()
-        {
-            lblCurrentBig.Text = $"{_current:0.0} {_unit}"; // Большой ярлык с текущим значением
-        }
-
-        // ================= Парсер ответа ALS =================
-        private static bool TryParseAls(string line, out double cur, out double sp, out string? unit)
-        {
-            cur = 0; sp = 0; unit = null;               // Значения по умолчанию
-
-            if (string.IsNullOrWhiteSpace(line)) return false; // Пусто — не годится
-
-            var parts = line.Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries); // Разбиваем по пробелам/табам
-            if (parts.Length < 3) return false;         // Минимум: маркер + текущее + уставка
-
-            // parts[0] обычно "A", parts[1] — текущее, parts[2] — уставка
-            if (!double.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out cur)) return false;
-            if (!double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out sp)) return false;
-
-            // Ищем единицы измерения в остатке: PSIG/PSI/KPA/BAR
-            for (int i = 3; i < parts.Length; i++)
-            {
-                var p = parts[i].Trim().ToUpperInvariant();
-                if (p is "PSIG" or "PSI" or "KPA" or "BAR")
-                {
-                    unit = p;                            // Нашли единицы — сохраняем
-                    break;
-                }
-            }
-            return true;                                 // Успешный парс
-        }
-
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            base.OnFormClosing(e);                      // Базовая логика закрытия формы
-            _pollTimer.Stop();                          // Останавливаем опрос
-            _serial?.Dispose();                         // Освобождаем порт/подписки
-        }
-
-        // ================= Встроенный клиент поверх SerialPort =================
-        private sealed class SerialClient : IDisposable
-        {
-            private readonly SerialPort _port;          // Базовый COM-порт
-            private bool _attached;                     // Навешены ли обработчики
-
-            public event EventHandler? Connected;       // Событие «подключено» (логическое)
-            public event EventHandler? Disconnected;    // Событие «отключено»
-            public event EventHandler<string>? LineReceived; // Событие «получена строка»
-
-            // Конструктор №1: использовать уже ОТКРЫТЫЙ порт из FormConnect
-            public SerialClient(SerialPort existingOpenPort)
-            {
-                _port = existingOpenPort;               // Сохраняем ссылку на порт
-                _port.NewLine = "\r";                   // Alicat завершает строки CR
-                _port.Encoding = Encoding.ASCII;        // ASCII-обмен
-            }
-
-            // Конструктор №2: открыть порт по имени/скорости (на будущее)
-            public SerialClient(string portName, int baud)
-            {
-                _port = new SerialPort(portName, baud)  // Создаём новый SerialPort
-                {
-                    NewLine = "\r",                     // Строки заканчиваются CR
-                    Encoding = Encoding.ASCII,          // ASCII
-                    DtrEnable = false,                  // DTR/RTS не используем
-                    RtsEnable = false,
-                    ReadTimeout = 1500,                 // Таймауты на случай зависаний
-                    WriteTimeout = 1500
-                };
-            }
-
-            // Навешиваем обработчики и генерируем «Connected»
-            public void Attach()
-            {
-                if (_attached) return;                  // Повторно не навешиваем
-                _port.DataReceived += Port_DataReceived; // Подписка на входящие данные
-                _attached = true;
-                Connected?.Invoke(this, EventArgs.Empty); // Сообщаем внешнему коду
-            }
-
-            public void Open()
-            {
-                if (_port.IsOpen) { Attach(); return; } // Если уже открыт — просто Attach
-                _port.Open();                            // Иначе открываем физически
-                Attach();                                // И навешиваем обработчики
-            }
-
-            public void Close()
-            {
-                if (!_port.IsOpen) return;               // Если уже закрыт — выходим
-                _port.Close();                           // Закрываем физически
-                Disconnected?.Invoke(this, EventArgs.Empty); // Сигнал «отключено»
-            }
-
-            public void Send(string cmd)
-            {
-                if (!_port.IsOpen) return;               // Если не открыт — игнор
-                try { _port.Write(cmd + "\r"); }         // Пишем команду + CR
-                catch { /* глушим I/O ошибки */ }
-            }
-
-            public void RequestAls() => Send("ALS");     // Удобный шорткат на опрос состояния
-
-            private void Port_DataReceived(object? sender, SerialDataReceivedEventArgs e)
-            {
-                try
-                {
-                    var line = _port.ReadLine();         // Читаем до CR
-                    if (!string.IsNullOrWhiteSpace(line))
-                        LineReceived?.Invoke(this, line); // Прокидываем строку наружу
-                }
-                catch { /* глушим ошибки порта/таймаута */ }
-            }
-
-            public void Dispose()
-            {
-                try
-                {
-                    _port.DataReceived -= Port_DataReceived; // Снимаем подписку
-                    if (_port.IsOpen) _port.Close();         // Закрываем при необходимости
-                    _port.Dispose();                          // Освобождаем ресурсы
-                }
-                catch { /* игнорируем ошибки dispose */ }
-            }
-        }
-
+        // ================= Кнопка Go to target =================
         private void btnGoTarget_Click(object? sender, EventArgs e)
         {
-            // Кнопка должна оставаться активной
+            // Кнопка остаётся активной по ТЗ
             btnGoTarget.Enabled = true;
 
             if (_serial == null)
@@ -260,10 +136,7 @@ namespace Alicat
                 return;
             }
 
-            if (!double.TryParse(raw,
-                System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out double targetValue))
+            if (!double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out double targetValue))
             {
                 MessageBox.Show("Invalid target value format.", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -278,27 +151,35 @@ namespace Alicat
                 return;
             }
 
-            // Текст для отображения значения (с единицами)
+            // Подтверждение только если чекбокс не отмечен
             string unit = string.IsNullOrWhiteSpace(_unit) ? "PSIG" : _unit;
-            string displayVal = targetValue.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
-            string confirmText = $"Do you want to change the target value to {displayVal} {unit}?";
-
-            // Если чекбокс не отмечен — спросим подтверждение с числом
+            string displayVal = targetValue.ToString("F1", CultureInfo.InvariantCulture);
             if (!chkConfirmGo.Checked)
             {
-                var ask = MessageBox.Show(confirmText, "Confirm action",
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-                if (ask != DialogResult.Yes)
-                    return;
+                var ask = MessageBox.Show(
+                    $"Do you want to change the target value to {displayVal} {unit}?",
+                    "Confirm action", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (ask != DialogResult.Yes) return;
             }
 
             try
             {
-                string cmd = $"AS {targetValue:F1}";
-                _serial.Send(cmd);
+                // Если выходим из EXH для ненулевой уставки
+                if (targetValue > 0.05)
+                {
+                    _serial.Send("AC");
+                    _isExhaust = false;
+                    _lastCurrent = null; // сброс базы тренда
+                }
 
-                // по желанию — сразу обновить показания
+                // Установить новую уставку
+                _serial.Send($"AS {targetValue:F1}");
+
+                // Моментально обновить UI
+                _setPoint = targetValue;
+                UI_SetSetPoint(_setPoint, _unit);
+
+                // Подтянуть фактические данные с прибора
                 _serial.RequestAls();
 
                 // Сброс UI
@@ -312,64 +193,284 @@ namespace Alicat
             }
             finally
             {
-                btnGoTarget.Enabled = true; // гарантируем включено
+                btnGoTarget.Enabled = true;
             }
         }
 
-        private async void btnPurge_Click(object? sender, EventArgs e)
+        // ================= Purge: МГНОВЕННЫЙ ВЫХЛОП и УДЕРЖАНИЕ EXH =================
+        private void btnPurge_Click(object? sender, EventArgs e)
         {
             if (_serial is null)
             {
-                MessageBox.Show("Нет соединения с прибором.", "Purge", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Нет соединения с прибором.", "Purge",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            bool confirmed = chkConfirmPurge.Checked;
-
-            // Если галочка не стоит — спрашиваем подтверждение
-            if (!confirmed)
+            if (!chkConfirmPurge.Checked)
             {
-                var ask = MessageBox.Show(
-                    "Сбросить давление до 0?",
-                    "Confirm purge",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question);
-
-                if (ask != DialogResult.Yes)
-                    return;
+                var ask = MessageBox.Show("Сразу открыть выхлоп и удерживать?",
+                                          "Confirm purge",
+                                          MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (ask != DialogResult.Yes) return;
             }
-
-            // Очищаем галочку, чтобы не оставалась активной
             chkConfirmPurge.Checked = false;
-
-            // Блокируем кнопку во время purge
-            btnPurge.Enabled = false;
-            Cursor = Cursors.WaitCursor;
 
             try
             {
-                // Команда AE — сброс давления
+                // 1) МГНОВЕННЫЙ ВЫХЛОП — только AE
                 _serial.Send("AE");
+                _isExhaust = true;
 
-                // Ждём немного, чтобы давление упало
-                await Task.Delay(3000); // можно увеличить, если сброс идёт дольше
+                // тренд сразу ▼ относительно последнего значения
+                UI_SetTrendStatus(_lastCurrent, _current, isExhaust: true);
 
-                // Команда AC — вернуться в обычный режим
-                _serial.Send("AC");
+                // 2) Визуал: стрелка вниз
+                UI_Status_Up(false);
+                UI_Status_Mid(false);
+                UI_Status_Down(true);
+
+                // 3) В UI фиксируем SP=0 (не посылая AS/AC — удерживаем EXH!)
+                _setPoint = 0.0;
+                UI_SetSetPoint(_setPoint, _unit);
+
+                // 4) Опрос для обновления текущего
+                _serial.RequestAls();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка Purge: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            finally
-            {
-                btnPurge.Enabled = true;
-                Cursor = Cursors.Default;
+                MessageBox.Show($"Ошибка Purge: {ex.Message}", "Ошибка",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
+        // ================= Приём/отрисовка данных =================
+        private void Serial_LineReceived(object? sender, string line)
+        {
+            // Флаг EXH по тексту ответа
+            bool exh = line.IndexOf("EXH", StringComparison.OrdinalIgnoreCase) >= 0;
+            if (exh) _isExhaust = true;
 
+            if (!TryParseAls(line, out var cur, out var sp, out var unit))
+                return;
 
+            _current = cur;
+
+            // Если НЕ в EXH — обновляем уставку из прибора; если в EXH — держим локально (0)
+            if (!_isExhaust)
+                _setPoint = sp;
+
+            if (!string.IsNullOrWhiteSpace(unit)) _unit = unit!;
+
+            BeginInvoke(new Action(() =>
+            {
+                // 1) статус по тренду (до перерисовки)
+                UI_SetTrendStatus(_lastCurrent, _current, _isExhaust);
+
+                // 2) перерисовка
+                RefreshCurrent();            // большой дисплей
+                UI_SetPressureUnits(_unit);  // единицы
+                UI_SetSetPoint(_isExhaust ? 0.0 : _setPoint, _unit);
+
+                // 3) сохранить текущее как предыдущее для следующего тика
+                _lastCurrent = _current;
+            }));
+        }
+
+        private void RefreshCurrent()
+        {
+            lblCurrentBig.Text = $"{_current:0.0} {_unit}";
+        }
+
+        // ================= Парсер ответа ALS =================
+        // Примеры строк: "A +0030.0 +0030.0 10 PSIG", "A +0030.0 +0030.0"
+        private static bool TryParseAls(string line, out double cur, out double sp, out string? unit)
+        {
+            cur = 0; sp = 0; unit = null;
+            if (string.IsNullOrWhiteSpace(line)) return false;
+
+            var parts = line.Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 3) return false;
+
+            if (!double.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out cur)) return false;
+            if (!double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out sp)) return false;
+
+            for (int i = 3; i < parts.Length; i++)
+            {
+                var p = parts[i].Trim().ToUpperInvariant();
+                if (p is "PSIG" or "PSI" or "KPA" or "BAR") { unit = p; break; }
+            }
+            return true;
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            _pollTimer.Stop();
+            _serial?.Dispose();
+        }
+
+        // ========= SHOW VALUE: helpers (показ данных) =========
+        private static string TrimZeros(double v, int maxDecimals = 2)
+        {
+            return v.ToString("0." + new string('#', maxDecimals), CultureInfo.InvariantCulture);
+        }
+
+        // Units
+        public void UI_SetPressureUnits(string units)
+        {
+            boxPressureUnits.Text = string.IsNullOrWhiteSpace(units) ? "—" : units.Trim();
+        }
+
+        public void UI_SetRampSpeedUnits(string units)
+        {
+            boxRampSpeedUnits.Text = string.IsNullOrWhiteSpace(units) ? "—" : units.Trim();
+        }
+
+        // Set point
+        public void UI_SetSetPoint(double sp, string? units = null)
+        {
+            var u = string.IsNullOrWhiteSpace(units) ? _unit : units!;
+            boxSetPoint.Text = $"{TrimZeros(sp)} {u}";
+        }
+
+        // Time to set point
+        public void UI_SetTimeToSetPoint(TimeSpan? t)
+        {
+            if (t == null) { boxTimeToSetPoint.Text = "—"; return; }
+            var secs = Math.Max(0, t.Value.TotalSeconds);
+            boxTimeToSetPoint.Text = $"{TrimZeros(secs, 1)} s";
+        }
+
+        // Статус-индикаторы (только визуал)
+        public void UI_Status_Up(bool on) => icoUp.ForeColor = on ? System.Drawing.Color.OrangeRed : System.Drawing.Color.Gray;
+        public void UI_Status_Mid(bool on) => icoMid.ForeColor = on ? System.Drawing.Color.LimeGreen : System.Drawing.Color.Gray;
+        public void UI_Status_Down(bool on) => icoDown.ForeColor = on ? System.Drawing.Color.RoyalBlue : System.Drawing.Color.Gray;
+
+        // Тренд: выбор индикатора ▲ ● ▼
+        private void UI_SetTrendStatus(double? prev, double now, bool isExhaust)
+        {
+            // В режиме выхлопа всегда горит ▼
+            if (isExhaust)
+            {
+                UI_Status_Up(false);
+                UI_Status_Mid(false);
+                UI_Status_Down(true);
+                return;
+            }
+
+            const double EPS = 0.05; // чувствительность (единицы давления)
+
+            if (prev is null)
+            {
+                UI_Status_Up(false);
+                UI_Status_Mid(true);
+                UI_Status_Down(false);
+                return;
+            }
+
+            double delta = now - prev.Value;
+            if (delta > EPS)
+            {
+                UI_Status_Up(true);
+                UI_Status_Mid(false);
+                UI_Status_Down(false);
+            }
+            else if (delta < -EPS)
+            {
+                UI_Status_Up(false);
+                UI_Status_Mid(false);
+                UI_Status_Down(true);
+            }
+            else
+            {
+                UI_Status_Up(false);
+                UI_Status_Mid(true);
+                UI_Status_Down(false);
+            }
+        }
+
+        // ================= Мини-клиент поверх SerialPort =================
+        private sealed class SerialClient : IDisposable
+        {
+            private readonly SerialPort _port;
+            private bool _attached;
+
+            public event EventHandler? Connected;
+            public event EventHandler? Disconnected;
+            public event EventHandler<string>? LineReceived;
+
+            public SerialClient(SerialPort existingOpenPort)
+            {
+                _port = existingOpenPort;
+                _port.NewLine = "\r";
+                _port.Encoding = Encoding.ASCII;
+            }
+
+            public SerialClient(string portName, int baud)
+            {
+                _port = new SerialPort(portName, baud)
+                {
+                    NewLine = "\r",
+                    Encoding = Encoding.ASCII,
+                    DtrEnable = false,
+                    RtsEnable = false,
+                    ReadTimeout = 1500,
+                    WriteTimeout = 1500
+                };
+            }
+
+            public void Attach()
+            {
+                if (_attached) return;
+                _port.DataReceived += Port_DataReceived;
+                _attached = true;
+                Connected?.Invoke(this, EventArgs.Empty);
+            }
+
+            public void Open()
+            {
+                if (_port.IsOpen) { Attach(); return; }
+                _port.Open();
+                Attach();
+            }
+
+            public void Close()
+            {
+                if (!_port.IsOpen) return;
+                _port.Close();
+                Disconnected?.Invoke(this, EventArgs.Empty);
+            }
+
+            public void Send(string cmd)
+            {
+                if (!_port.IsOpen) return;
+                try { _port.Write(cmd + "\r"); } catch { }
+            }
+
+            public void RequestAls() => Send("ALS");
+
+            private void Port_DataReceived(object? sender, SerialDataReceivedEventArgs e)
+            {
+                try
+                {
+                    var line = _port.ReadLine(); // до CR
+                    if (!string.IsNullOrWhiteSpace(line))
+                        LineReceived?.Invoke(this, line);
+                }
+                catch { }
+            }
+
+            public void Dispose()
+            {
+                try
+                {
+                    _port.DataReceived -= Port_DataReceived;
+                    if (_port.IsOpen) _port.Close();
+                    _port.Dispose();
+                }
+                catch { }
+            }
+        }
     }
-
 }
