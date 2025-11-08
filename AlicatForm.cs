@@ -52,6 +52,8 @@ namespace Alicat
         // ================= Окно коммуникаций (FormConnect) =================
         private void btnCommunication_Click(object? sender, EventArgs e)
         {
+
+
             using var dlg = new FormConnect { StartPosition = FormStartPosition.CenterParent };
             dlg.ShowDialog(this);
 
@@ -67,6 +69,15 @@ namespace Alicat
 
             _serial.Attach();
             _serial.RequestAls();
+
+
+            // TEST
+
+            TestSetRampSR_Number(1, 4);
+
+
+
+            // TEST
         }
 
         // Аккуратно вытащить private поле _port у FormConnect
@@ -247,6 +258,8 @@ namespace Alicat
         // ================= Приём/отрисовка данных =================
         private void Serial_LineReceived(object? sender, string line)
         {
+            System.Diagnostics.Debug.WriteLine("RX: " + line); //==========================OUTPUT==========11/7/2025 JUST FOR OUTPUT
+
             // Флаг EXH по тексту ответа
             bool exh = line.IndexOf("EXH", StringComparison.OrdinalIgnoreCase) >= 0;
             if (exh) _isExhaust = true;
@@ -472,5 +485,60 @@ namespace Alicat
                 catch { }
             }
         }
+
+
+
+
+
+        // TEST
+        // ===== SR (numeric time code) =====
+
+        // Прочитать текущий Ramp (пытаемся двумя способами)
+        private async void TestReadRampSR_Number()
+        {
+            if (_serial == null) { MessageBox.Show("Прибор не подключён."); return; }
+
+            System.Diagnostics.Debug.WriteLine("TX: SR");
+            _serial.Send("SR");        // без UnitID
+            await Task.Delay(120);
+
+            System.Diagnostics.Debug.WriteLine("TX: ASR");
+            _serial.Send("ASR");       // с UnitID=A
+            await Task.Delay(120);
+        }
+
+        // Установить Ramp со временем по коду (напр. timeCode=4 => секунды)
+        private async void TestSetRampSR_Number(double rampValue, int timeCode = 4)
+        {
+            if (_serial == null) { MessageBox.Show("Прибор не подключён."); return; }
+
+            // на всякий включим контур
+            _serial.Send("AC");
+            await Task.Delay(80);
+
+            // запросим текущее
+            System.Diagnostics.Debug.WriteLine("TX: SR");
+            _serial.Send("SR");
+            await Task.Delay(120);
+
+            // установка с UnitID=A (как в твоём примере "ASR 7 4")
+            string cmdA = $"ASR {rampValue.ToString("0.###", CultureInfo.InvariantCulture)} {timeCode}";
+            System.Diagnostics.Debug.WriteLine("TX: " + cmdA);
+            _serial.Send(cmdA);
+            await Task.Delay(150);
+
+            // дубль без UnitID (на случай другой прошивки)
+            string cmd = $"SR {rampValue.ToString("0.###", CultureInfo.InvariantCulture)} {timeCode}";
+            System.Diagnostics.Debug.WriteLine("TX: " + cmd);
+            _serial.Send(cmd);
+            await Task.Delay(150);
+
+            // проверим и подтянем статус
+            _serial.Send("SR");
+            await Task.Delay(120);
+            _serial.RequestAls();
+        }
+
+
     }
 }
