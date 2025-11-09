@@ -1,4 +1,5 @@
 ﻿using System;                           // базовые типы
+using System.Diagnostics;
 using System.Globalization;             // парс чисел Invariant
 using System.IO.Ports;                  // SerialPort
 using System.Text;                      // Encoding.ASCII
@@ -23,6 +24,10 @@ namespace Alicat
         private SerialClient? _serial;        // клиент поверх SerialPort
         private readonly Timer _pollTimer = new() { Interval = 500 }; // опрос каждые 500мс
 
+        // ---- Лимиты/настройки (из Options) ----
+        private double _maxPressure = 200.0;        // PSI: лимит по умолчанию (Target)
+        private double _maxIncrementLimit = 20.0;   // потолок для шага (из Options)
+
         public AlicatForm()
         {
             InitializeComponent();
@@ -33,6 +38,14 @@ namespace Alicat
             btnGoPlus.Click += btnGoPlus_Click;
             btnGoMinus.Click += btnGoMinus_Click;
             btnCommunication.Click += btnCommunication_Click;
+            btnOptions.Click += btnOptions_Click;
+
+            // Онлайн-валидация
+            txtTarget.TextChanged += (_, __) => ValidateTargetAgainstMax();
+            chkConfirmGo.CheckedChanged += (_, __) => ValidateTargetAgainstMax();
+
+            // Для инкремента — постоянная подсветка при нарушении лимита
+            nudIncrement.ValueChanged += (_, __) => ValidateIncrementAgainstMax();
 
             // Начальные значения в окнах «SHOW VALUE»
             UI_SetPressureUnits(_unit);         // PSIG
@@ -47,13 +60,63 @@ namespace Alicat
 
             // Периодический опрос
             _pollTimer.Tick += (_, __) => _serial?.RequestAls();
+
+            // Применить настройки из Options
+            ApplyOptionsToUi();
+        }
+
+        // ========================== Options → Применение в главном окне ==========================
+        private void ApplyOptionsToUi()
+        {
+            // Подтянуть лимиты из Options (дефолты на случай null)
+            _maxPressure        = FormOptions.AppOptions.Current.MaxPressure  ?? 200.0;
+            _maxIncrementLimit  = FormOptions.AppOptions.Current.MaxIncrement ?? 20.0;
+
+            // Оформление nudIncrement (формат)
+            nudIncrement.DecimalPlaces = 1;
+            nudIncrement.Increment     = 0.1M;
+
+            // ВАЖНО: не зажимать Maximum до лимита — иначе авто-кламп сломает UX.
+            // Держим широкий диапазон, чтобы можно было увидеть красную подсветку при нарушении.
+            if (nudIncrement.Minimum <= 0) nudIncrement.Minimum = 0.1M;
+            if (nudIncrement.Maximum < 100000M) nudIncrement.Maximum = 100000M;
+
+            // Пересчитать состояния
+            ValidateTargetAgainstMax();
+            ValidateIncrementAgainstMax();
+        }
+
+        // ===== Проверка Target против Max Pressure (как было)
+        private void ValidateTargetAgainstMax()
+        {
+            var text = txtTarget.Text?.Trim();
+            bool parsed = double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double targetVal);
+            bool over = parsed && targetVal > _maxPressure;
+
+            // Подсветка поля Target — горит, пока не исправим
+            txtTarget.BackColor = over ? System.Drawing.Color.MistyRose : System.Drawing.SystemColors.Window;
+
+            // Кнопка "Go to target": активна, если формат корректен и чекбокс отмечен
+            btnGoTarget.Enabled = chkConfirmGo.Checked && parsed;
+        }
+
+        // ===== Проверка Increment против Max Increment (НОВАЯ логика)
+        private void ValidateIncrementAgainstMax()
+        {
+            double inc = (double)nudIncrement.Value;
+            bool over = inc > _maxIncrementLimit;
+
+            // Подсветка поля Increment — горит, пока не вернут в предел
+            nudIncrement.BackColor = over ? System.Drawing.Color.MistyRose : System.Drawing.SystemColors.Window;
+
+            // При недопустимом инкременте отключаем +/− (без сообщений)
+            btnGoPlus.Enabled  = !over;
+            btnGoMinus.Enabled = !over;
         }
 
         // ================= Окно коммуникаций (FormConnect) =================
         private void btnCommunication_Click(object? sender, EventArgs e)
         {
-
-
             using var dlg = new FormConnect { StartPosition = FormStartPosition.CenterParent };
             dlg.ShowDialog(this);
 
@@ -69,15 +132,16 @@ namespace Alicat
 
             _serial.Attach();
             _serial.RequestAls();
+        }
 
+        private void btnOptions_Click(object? sender, EventArgs e)
+        {
+            using var dlg = new FormOptions();
+            dlg.StartPosition = FormStartPosition.CenterParent;
+            dlg.ShowDialog(this);
 
-            // TEST
-
-            TestSetRampSR_Number(1, 4);
-
-
-
-            // TEST
+            // Пользователь мог нажать Apply или OK — подтянем актуальные настройки
+            ApplyOptionsToUi();
         }
 
         // Аккуратно вытащить private поле _port у FormConnect
@@ -97,14 +161,32 @@ namespace Alicat
         // ================= Управление уставкой (GO ±) =================
         private void btnGoPlus_Click(object? sender, EventArgs e)
         {
+            // Если инкремент недопустим — кнопка уже отключена ValidateIncrementAgainstMax()
             var inc = (double)nudIncrement.Value;
-            SendSetPoint(_setPoint + inc);
+            var next = _setPoint + inc;
+
+            // (Поведение Max Pressure оставляем как было — с предупреждением)
+            if (next > _maxPressure)
+            {
+                System.Media.SystemSounds.Beep.Play();
+                MessageBox.Show(this,
+                    $"Cannot exceed Max Pressure ({_maxPressure.ToString("0.###", CultureInfo.InvariantCulture)} PSI).",
+                    "Limit exceeded",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ValidateTargetAgainstMax();
+                return;
+            }
+
+            SendSetPoint(next);
+            ValidateTargetAgainstMax();
         }
 
         private void btnGoMinus_Click(object? sender, EventArgs e)
         {
+            // Если инкремент недопустим — кнопка уже отключена ValidateIncrementAgainstMax()
             var inc = (double)nudIncrement.Value;
             SendSetPoint(_setPoint - inc);
+            ValidateTargetAgainstMax();
         }
 
         private void SendSetPoint(double sp)
@@ -129,7 +211,6 @@ namespace Alicat
         // ================= Кнопка Go to target =================
         private void btnGoTarget_Click(object? sender, EventArgs e)
         {
-            // Кнопка остаётся активной по ТЗ
             btnGoTarget.Enabled = true;
 
             if (_serial == null)
@@ -154,10 +235,23 @@ namespace Alicat
                 return;
             }
 
-            const double MIN = 0.0, MAX = 100.0; // при необходимости подправь
-            if (targetValue < MIN || targetValue > MAX)
+            // ---- Проверка Max Pressure (как было) ----
+            if (targetValue > _maxPressure)
             {
-                MessageBox.Show($"Target value must be between {MIN} and {MAX}.", "Error",
+                System.Media.SystemSounds.Beep.Play();
+                MessageBox.Show(this,
+                    $"Target value exceeds Max Pressure ({_maxPressure.ToString("0.###", CultureInfo.InvariantCulture)} PSI).",
+                    "Limit exceeded",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ValidateTargetAgainstMax();
+                return;
+            }
+
+            // Доп. базовый диапазон, если нужен
+            const double MIN = 0.0, MAX_SOFT = 1000.0;
+            if (targetValue < MIN || targetValue > MAX_SOFT)
+            {
+                MessageBox.Show($"Target value must be between {MIN} and {MAX_SOFT}.", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -175,25 +269,20 @@ namespace Alicat
 
             try
             {
-                // Если выходим из EXH для ненулевой уставки
                 if (targetValue > 0.05)
                 {
                     _serial.Send("AC");
                     _isExhaust = false;
-                    _lastCurrent = null; // сброс базы тренда
+                    _lastCurrent = null;
                 }
 
-                // Установить новую уставку
                 _serial.Send($"AS {targetValue:F1}");
 
-                // Моментально обновить UI
                 _setPoint = targetValue;
                 UI_SetSetPoint(_setPoint, _unit);
 
-                // Подтянуть фактические данные с прибора
                 _serial.RequestAls();
 
-                // Сброс UI
                 chkConfirmGo.Checked = false;
                 txtTarget.Clear();
             }
@@ -204,6 +293,7 @@ namespace Alicat
             }
             finally
             {
+                ValidateTargetAgainstMax();
                 btnGoTarget.Enabled = true;
             }
         }
@@ -229,29 +319,29 @@ namespace Alicat
 
             try
             {
-                // 1) МГНОВЕННЫЙ ВЫХЛОП — только AE
                 _serial.Send("AE");
                 _isExhaust = true;
 
-                // тренд сразу ▼ относительно последнего значения
                 UI_SetTrendStatus(_lastCurrent, _current, isExhaust: true);
 
-                // 2) Визуал: стрелка вниз
                 UI_Status_Up(false);
                 UI_Status_Mid(false);
                 UI_Status_Down(true);
 
-                // 3) В UI фиксируем SP=0 (не посылая AS/AC — удерживаем EXH!)
                 _setPoint = 0.0;
                 UI_SetSetPoint(_setPoint, _unit);
 
-                // 4) Опрос для обновления текущего
                 _serial.RequestAls();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка Purge: {ex.Message}", "Ошибка",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                ValidateTargetAgainstMax();
+                ValidateIncrementAgainstMax();
             }
         }
 
@@ -260,7 +350,6 @@ namespace Alicat
         {
             System.Diagnostics.Debug.WriteLine("RX: " + line); //==========================OUTPUT==========11/7/2025 JUST FOR OUTPUT
 
-            // Флаг EXH по тексту ответа
             bool exh = line.IndexOf("EXH", StringComparison.OrdinalIgnoreCase) >= 0;
             if (exh) _isExhaust = true;
 
@@ -269,7 +358,6 @@ namespace Alicat
 
             _current = cur;
 
-            // Если НЕ в EXH — обновляем уставку из прибора; если в EXH — держим локально (0)
             if (!_isExhaust)
                 _setPoint = sp;
 
@@ -277,15 +365,15 @@ namespace Alicat
 
             BeginInvoke(new Action(() =>
             {
-                // 1) статус по тренду (до перерисовки)
                 UI_SetTrendStatus(_lastCurrent, _current, _isExhaust);
 
-                // 2) перерисовка
-                RefreshCurrent();            // большой дисплей
-                UI_SetPressureUnits(_unit);  // единицы
+                RefreshCurrent();
+                UI_SetPressureUnits(_unit);
                 UI_SetSetPoint(_isExhaust ? 0.0 : _setPoint, _unit);
 
-                // 3) сохранить текущее как предыдущее для следующего тика
+                ValidateTargetAgainstMax();
+                ValidateIncrementAgainstMax();
+
                 _lastCurrent = _current;
             }));
         }
@@ -363,7 +451,6 @@ namespace Alicat
         // Тренд: выбор индикатора ▲ ● ▼
         private void UI_SetTrendStatus(double? prev, double now, bool isExhaust)
         {
-            // В режиме выхлопа всегда горит ▼
             if (isExhaust)
             {
                 UI_Status_Up(false);
@@ -485,60 +572,5 @@ namespace Alicat
                 catch { }
             }
         }
-
-
-
-
-
-        // TEST
-        // ===== SR (numeric time code) =====
-
-        // Прочитать текущий Ramp (пытаемся двумя способами)
-        private async void TestReadRampSR_Number()
-        {
-            if (_serial == null) { MessageBox.Show("Прибор не подключён."); return; }
-
-            System.Diagnostics.Debug.WriteLine("TX: SR");
-            _serial.Send("SR");        // без UnitID
-            await Task.Delay(120);
-
-            System.Diagnostics.Debug.WriteLine("TX: ASR");
-            _serial.Send("ASR");       // с UnitID=A
-            await Task.Delay(120);
-        }
-
-        // Установить Ramp со временем по коду (напр. timeCode=4 => секунды)
-        private async void TestSetRampSR_Number(double rampValue, int timeCode = 4)
-        {
-            if (_serial == null) { MessageBox.Show("Прибор не подключён."); return; }
-
-            // на всякий включим контур
-            _serial.Send("AC");
-            await Task.Delay(80);
-
-            // запросим текущее
-            System.Diagnostics.Debug.WriteLine("TX: SR");
-            _serial.Send("SR");
-            await Task.Delay(120);
-
-            // установка с UnitID=A (как в твоём примере "ASR 7 4")
-            string cmdA = $"ASR {rampValue.ToString("0.###", CultureInfo.InvariantCulture)} {timeCode}";
-            System.Diagnostics.Debug.WriteLine("TX: " + cmdA);
-            _serial.Send(cmdA);
-            await Task.Delay(150);
-
-            // дубль без UnitID (на случай другой прошивки)
-            string cmd = $"SR {rampValue.ToString("0.###", CultureInfo.InvariantCulture)} {timeCode}";
-            System.Diagnostics.Debug.WriteLine("TX: " + cmd);
-            _serial.Send(cmd);
-            await Task.Delay(150);
-
-            // проверим и подтянем статус
-            _serial.Send("SR");
-            await Task.Delay(120);
-            _serial.RequestAls();
-        }
-
-
     }
 }
