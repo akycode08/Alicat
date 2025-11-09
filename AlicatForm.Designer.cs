@@ -19,6 +19,7 @@ namespace Alicat
         private TableLayoutPanel header;
         private Label lblTitle;
         private Button btnCommunication;
+        private Button btnOptions; // NEW
 
         // ---------- Группа с основными элементами ----------
         private GroupBox groupTop;
@@ -42,7 +43,6 @@ namespace Alicat
         private System.Windows.Forms.Button btnPurge;
 
         // INFORMATION
-
         private System.Windows.Forms.GroupBox grpData;
         private System.Windows.Forms.Label lblPressureUnits;
         private System.Windows.Forms.Label lblRampSpeedUnits;
@@ -58,10 +58,6 @@ namespace Alicat
         private System.Windows.Forms.Label icoUp;
         private System.Windows.Forms.Label icoMid;
         private System.Windows.Forms.Label icoDown;
-
-
-
-
 
         // 3-я строка tableTop: Target value
         private TableLayoutPanel tableTarget;
@@ -86,6 +82,7 @@ namespace Alicat
             header = new TableLayoutPanel();
             lblTitle = new Label();
             btnCommunication = new Button();
+            btnOptions = new Button(); // NEW
 
             groupTop = new GroupBox();
             tableTop = new TableLayoutPanel();
@@ -137,10 +134,11 @@ namespace Alicat
             // ====================================================================
             // HEADER
             // ====================================================================
-            header.ColumnCount = 2;
+            header.ColumnCount = 3; // CHANGED: было 2
             header.ColumnStyles.Clear();
-            header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F)); // Title
+            header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));      // Options (NEW)
+            header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));      // Communication
             header.RowCount = 1;
             header.RowStyles.Clear();
             header.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
@@ -154,6 +152,13 @@ namespace Alicat
             lblTitle.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
             lblTitle.Text = "Alicat Controller";
 
+            // NEW: Options (слева от Communication)
+            btnOptions.Anchor = AnchorStyles.Right;
+            btnOptions.AutoSize = true;
+            btnOptions.Text = "Options";
+            btnOptions.Margin = new Padding(8, 8, 8, 8);
+            btnOptions.Name = "btnOptions";
+
             btnCommunication.Anchor = AnchorStyles.Right;
             btnCommunication.AutoSize = true;
             btnCommunication.Text = "Communication…";
@@ -161,7 +166,8 @@ namespace Alicat
             btnCommunication.Name = "btnCommunication";
 
             header.Controls.Add(lblTitle, 0, 0);
-            header.Controls.Add(btnCommunication, 1, 0);
+            header.Controls.Add(btnOptions, 1, 0);       // NEW
+            header.Controls.Add(btnCommunication, 2, 0); // было 1,0
 
             // ====================================================================
             // GROUP TOP
@@ -233,8 +239,8 @@ namespace Alicat
             lblIncrement.Margin = new Padding(0, 6, 8, 6);
             lblIncrement.Text = "Increment";
 
-            nudIncrement.DecimalPlaces = 3;
-            nudIncrement.Increment = 0.001M;
+            nudIncrement.DecimalPlaces = 1;
+            nudIncrement.Increment = 0.1M;
             nudIncrement.Minimum = 0.001M;
             nudIncrement.Maximum = 100000M;
             nudIncrement.Value = 1.000M;
@@ -290,7 +296,6 @@ namespace Alicat
             // Добавляем группу на форму (в правую часть, под Increment)
             // 
             this.Controls.Add(this.grpPurge);
-
 
             // ===================================================================
             // ====INFORMATION=====
@@ -409,7 +414,6 @@ namespace Alicat
 
             // Добавляем на форму
             this.Controls.Add(this.grpData);
-
 
             // ====================================================================
             // TARGET (3-я строка) — чистый дизайн
