@@ -4,6 +4,9 @@
     <Compile Update="AlicatForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Update="FormOptions.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="FormConnect.cs">
       <SubType>Form</SubType>
     </Compile>
