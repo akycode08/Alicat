@@ -1,7 +1,16 @@
 ﻿// ----------------------------------------------------------------------------
 // Файл: AlicatForm.Designer.cs
-// Описание: Разметка (дизайн) главной формы. Минимальная логика только для UI:
-//           кнопка "Go to target" активируется при отметке "Confirm to go".
+// Описание: Разметка (дизайн) главной формы.
+// Макет:
+//   [MenuStrip]
+//   [Header]
+//   [2x2 grid:
+//        Block 1: Increment
+//        Block 2: Target
+//        Block 3: Data (Current + values)
+//        Block 4: Purge]
+//
+// Кнопки узкие по центру (40% — 20% — 40%), без заголовков блоков.
 // ----------------------------------------------------------------------------
 
 using System;
@@ -18,53 +27,55 @@ namespace Alicat
         private TableLayoutPanel root;
         private TableLayoutPanel header;
         private Label lblTitle;
-        private Button btnCommunication;
-        private Button btnOptions; // NEW
 
-        // ---------- Группа с основными элементами ----------
-        private GroupBox groupTop;
-        private TableLayoutPanel tableTop;
+        // ---------- Главное меню ----------
+        private MenuStrip menuMain;
+        private ToolStripMenuItem menuFile;
+        private ToolStripMenuItem menuSettings;
+        private ToolStripMenuItem menuView;
+        private ToolStripMenuItem menuSettingsOptions;
+        private ToolStripMenuItem menuSettingsCommunication;
 
-        // 1-я строка tableTop
-        private Button btnGoPlus;
-        private Panel panelCurrent;
-        private Label lblCurrentBig;
-        private Button btnGoMinus;
+        // ---------- Основная 2x2 сетка ----------
+        private TableLayoutPanel layoutMain;
 
-        // 2-я строка tableTop: Increment
-        private TableLayoutPanel tableIncrement;
+        // Block 1: Increment
+        private GroupBox grpIncrementBlock;
         private Label lblIncrement;
         private NumericUpDown nudIncrement;
+        private Button btnGoPlus;
+        private Button btnGoMinus;
 
-        // --- Purge ---
-        private System.Windows.Forms.GroupBox grpPurge;
-        //private System.Windows.Forms.Label lblPurgeHint;
-        private System.Windows.Forms.CheckBox chkConfirmPurge;
-        private System.Windows.Forms.Button btnPurge;
-
-        // INFORMATION
-        private System.Windows.Forms.GroupBox grpData;
-        private System.Windows.Forms.Label lblPressureUnits;
-        private System.Windows.Forms.Label lblRampSpeedUnits;
-        private System.Windows.Forms.Label lblSetPoint;
-        private System.Windows.Forms.Label lblTimeToSetPoint;
-        private System.Windows.Forms.Label lblStatus;
-
-        private System.Windows.Forms.Label boxPressureUnits;
-        private System.Windows.Forms.Label boxRampSpeedUnits;
-        private System.Windows.Forms.Label boxSetPoint;
-        private System.Windows.Forms.Label boxTimeToSetPoint;
-
-        private System.Windows.Forms.Label icoUp;
-        private System.Windows.Forms.Label icoMid;
-        private System.Windows.Forms.Label icoDown;
-
-        // 3-я строка tableTop: Target value
-        private TableLayoutPanel tableTarget;
+        // Block 2: Target
+        private GroupBox grpTargetBlock;
         private Label lblTargetTitle;
         private TextBox txtTarget;
         private CheckBox chkConfirmGo;
         private Button btnGoTarget;
+
+        // Block 3: Data
+        private GroupBox grpData;
+        private Panel panelCurrent;
+        private Label lblCurrentBig;
+        private Label lblPressureUnits;
+        private Label lblRampSpeedUnits;
+        private Label lblSetPoint;
+        private Label lblTimeToSetPoint;
+        private Label lblStatus;
+
+        private Label boxPressureUnits;
+        private Label boxRampSpeedUnits;
+        private Label boxSetPoint;
+        private Label boxTimeToSetPoint;
+
+        private Label icoUp;
+        private Label icoMid;
+        private Label icoDown;
+
+        // Block 4: Purge
+        private GroupBox grpPurge;
+        private CheckBox chkConfirmPurge;
+        private Button btnPurge;
 
         protected override void Dispose(bool disposing)
         {
@@ -78,40 +89,104 @@ namespace Alicat
         {
             components = new System.ComponentModel.Container();
 
+            // ========= ИНИЦИАЛИЗАЦИЯ КОНТРОЛОВ =========
             root = new TableLayoutPanel();
             header = new TableLayoutPanel();
             lblTitle = new Label();
-            btnCommunication = new Button();
-            btnOptions = new Button(); // NEW
 
-            groupTop = new GroupBox();
-            tableTop = new TableLayoutPanel();
+            // меню
+            menuMain = new MenuStrip();
+            menuFile = new ToolStripMenuItem();
+            menuSettings = new ToolStripMenuItem();
+            menuView = new ToolStripMenuItem();
+            menuSettingsOptions = new ToolStripMenuItem();
+            menuSettingsCommunication = new ToolStripMenuItem();
 
-            btnGoPlus = new Button();
-            panelCurrent = new Panel();
-            lblCurrentBig = new Label();
-            btnGoMinus = new Button();
+            layoutMain = new TableLayoutPanel();
 
-            tableIncrement = new TableLayoutPanel();
+            grpIncrementBlock = new GroupBox();
             lblIncrement = new Label();
             nudIncrement = new NumericUpDown();
+            btnGoPlus = new Button();
+            btnGoMinus = new Button();
 
-            tableTarget = new TableLayoutPanel();
+            grpTargetBlock = new GroupBox();
             lblTargetTitle = new Label();
             txtTarget = new TextBox();
             chkConfirmGo = new CheckBox();
             btnGoTarget = new Button();
 
+            grpData = new GroupBox();
+            panelCurrent = new Panel();
+            lblCurrentBig = new Label();
+            lblPressureUnits = new Label();
+            lblRampSpeedUnits = new Label();
+            lblSetPoint = new Label();
+            lblTimeToSetPoint = new Label();
+            lblStatus = new Label();
+            boxPressureUnits = new Label();
+            boxRampSpeedUnits = new Label();
+            boxSetPoint = new Label();
+            boxTimeToSetPoint = new Label();
+            icoUp = new Label();
+            icoMid = new Label();
+            icoDown = new Label();
+
+            grpPurge = new GroupBox();
+            chkConfirmPurge = new CheckBox();
+            btnPurge = new Button();
+
             // --- begin layout suspend ---
             root.SuspendLayout();
             header.SuspendLayout();
-            groupTop.SuspendLayout();
-            tableTop.SuspendLayout();
-            tableIncrement.SuspendLayout();
+            menuMain.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)nudIncrement).BeginInit();
             panelCurrent.SuspendLayout();
-            tableTarget.SuspendLayout();
+            grpIncrementBlock.SuspendLayout();
+            grpTargetBlock.SuspendLayout();
+            grpData.SuspendLayout();
+            grpPurge.SuspendLayout();
             SuspendLayout();
+
+            // ====================================================================
+            // MENU STRIP (верхняя строка)
+            // ====================================================================
+            menuMain.Name = "menuMain";
+            menuMain.Dock = DockStyle.Top;
+            menuMain.ImageScalingSize = new Size(20, 20);
+
+            // File
+            menuFile.Name = "menuFile";
+            menuFile.Text = "File";
+
+            // Settings
+            menuSettings.Name = "menuSettings";
+            menuSettings.Text = "Settings";
+
+            // View
+            menuView.Name = "menuView";
+            menuView.Text = "View";
+
+            // --- Settings submenu ---
+            menuSettingsOptions.Name = "menuSettingsOptions";
+            menuSettingsOptions.Text = "Options";
+
+            menuSettingsCommunication.Name = "menuSettingsCommunication";
+            menuSettingsCommunication.Text = "Communication";
+
+            menuSettings.DropDownItems.AddRange(new ToolStripItem[]
+            {
+                menuSettingsOptions,
+                menuSettingsCommunication
+            });
+
+            // добавляем пункты в меню
+            menuMain.Items.AddRange(new ToolStripItem[]
+            {
+                menuFile,
+                menuSettings,
+                menuView,
+            });
 
             // ====================================================================
             // ROOT
@@ -121,123 +196,79 @@ namespace Alicat
             root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             root.RowCount = 2;
             root.RowStyles.Clear();
-            root.RowStyles.Add(new RowStyle());                          // header
-            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));    // content
+            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));            // header
+            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));       // main layout
             root.Dock = DockStyle.Fill;
             root.Padding = new Padding(12);
             root.Name = "root";
             root.Size = new Size(1024, 520);
 
             root.Controls.Add(header, 0, 0);
-            root.Controls.Add(groupTop, 0, 1);
+            root.Controls.Add(layoutMain, 0, 1);
 
             // ====================================================================
-            // HEADER
+            // HEADER (только заголовок)
             // ====================================================================
-            header.ColumnCount = 3; // CHANGED: было 2
+            header.ColumnCount = 1;
             header.ColumnStyles.Clear();
             header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F)); // Title
-            header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));      // Options (NEW)
-            header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));      // Communication
             header.RowCount = 1;
             header.RowStyles.Clear();
-            header.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
+            header.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
             header.Dock = DockStyle.Top;
             header.Margin = new Padding(0, 0, 0, 8);
             header.Name = "header";
-            header.Size = new Size(1000, 48);
+            header.Size = new Size(1000, 40);
 
             lblTitle.Anchor = AnchorStyles.Left;
             lblTitle.AutoSize = true;
             lblTitle.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
             lblTitle.Text = "Alicat Controller";
 
-            // NEW: Options (слева от Communication)
-            btnOptions.Anchor = AnchorStyles.Right;
-            btnOptions.AutoSize = true;
-            btnOptions.Text = "Options";
-            btnOptions.Margin = new Padding(8, 8, 8, 8);
-            btnOptions.Name = "btnOptions";
-
-            btnCommunication.Anchor = AnchorStyles.Right;
-            btnCommunication.AutoSize = true;
-            btnCommunication.Text = "Communication…";
-            btnCommunication.Margin = new Padding(8, 8, 0, 8);
-            btnCommunication.Name = "btnCommunication";
-
             header.Controls.Add(lblTitle, 0, 0);
-            header.Controls.Add(btnOptions, 1, 0);       // NEW
-            header.Controls.Add(btnCommunication, 2, 0); // было 1,0
 
             // ====================================================================
-            // GROUP TOP
+            // LAYOUT MAIN (2x2 блоки)
             // ====================================================================
-            groupTop.AutoSize = true;
-            groupTop.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            groupTop.Dock = DockStyle.Fill;
-            groupTop.Padding = new Padding(12);
-            groupTop.Name = "groupTop";
-            groupTop.Controls.Add(tableTop);
+            layoutMain.Name = "layoutMain";
+            layoutMain.Dock = DockStyle.Fill;
+            layoutMain.Margin = new Padding(0);
+            layoutMain.ColumnCount = 2;
+            layoutMain.RowCount = 2;
 
-            // ====================================================================
-            // TABLE TOP (3 колонки)
-            // ====================================================================
-            tableTop.AutoSize = true;
-            tableTop.Dock = DockStyle.Fill;
-            tableTop.ColumnCount = 3;
-            tableTop.ColumnStyles.Clear();
-            tableTop.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F)); // +
-            tableTop.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F)); // Current
-            tableTop.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F)); // -
-            tableTop.RowCount = 3; // 1: +/-/current, 2: increment, 3: target
-            tableTop.RowStyles.Clear();
-            tableTop.RowStyles.Add(new RowStyle(SizeType.Absolute, 110F)); // верхняя линия
-            tableTop.RowStyles.Add(new RowStyle(SizeType.AutoSize));       // increment
-            tableTop.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));  // target тянется вниз
-            tableTop.Name = "tableTop";
-
-            // ---------- [+] ----------
-            btnGoPlus.Dock = DockStyle.Fill;
-            btnGoPlus.Margin = new Padding(0, 0, 6, 6);
-            btnGoPlus.Text = "GO: Value + increment";
-            tableTop.Controls.Add(btnGoPlus, 0, 0);
-
-            // ---------- [Current] ----------
-            panelCurrent.BackColor = Color.White;
-            panelCurrent.BorderStyle = BorderStyle.FixedSingle;
-            panelCurrent.Dock = DockStyle.Fill;
-            panelCurrent.Margin = new Padding(6, 0, 6, 6);
-            panelCurrent.Controls.Add(lblCurrentBig);
-            tableTop.Controls.Add(panelCurrent, 1, 0);
-
-            lblCurrentBig.Dock = DockStyle.Fill;
-            lblCurrentBig.Font = new Font("Segoe UI", 22F, FontStyle.Bold);
-            lblCurrentBig.Text = "0.0 PSIG";
-            lblCurrentBig.TextAlign = ContentAlignment.MiddleCenter;
-
-            // ---------- [–] ----------
-            btnGoMinus.Dock = DockStyle.Fill;
-            btnGoMinus.Margin = new Padding(6, 0, 0, 6);
-            btnGoMinus.Text = "GO: Value - increment";
-            tableTop.Controls.Add(btnGoMinus, 2, 0);
+            layoutMain.ColumnStyles.Clear();
+            layoutMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            layoutMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            layoutMain.RowStyles.Clear();
+            layoutMain.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            layoutMain.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
 
             // ====================================================================
-            // INCREMENT (2-я строка)
+            // BLOCK 1: Increment (без заголовка, кнопки 40/20/40)
             // ====================================================================
-            tableIncrement.AutoSize = true;
-            tableIncrement.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            tableIncrement.Dock = DockStyle.Top;
-            tableIncrement.Margin = new Padding(0, 4, 0, 0);
-            tableIncrement.ColumnCount = 3;
-            tableIncrement.ColumnStyles.Clear();
-            tableIncrement.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F)); // spacer
-            tableIncrement.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));      // label
-            tableIncrement.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));      // nud
+            grpIncrementBlock.Text = ""; // без заголовка
+            grpIncrementBlock.Dock = DockStyle.Fill;
+            grpIncrementBlock.Padding = new Padding(8);
 
+            var incLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 3,
+                RowCount = 3,
+                Margin = new Padding(0)
+            };
+            incLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+            incLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            incLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+            incLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));        // Increment
+            incLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));        // GO +
+            incLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));        // GO -
+
+            // Increment label + nud по центру (через средний столбец)
             lblIncrement.Anchor = AnchorStyles.Left;
             lblIncrement.AutoSize = true;
-            lblIncrement.Margin = new Padding(0, 6, 8, 6);
-            lblIncrement.Text = "Increment";
+            lblIncrement.Text = "Increment:";
+            lblIncrement.Margin = new Padding(0, 3, 0, 3);
 
             nudIncrement.DecimalPlaces = 1;
             nudIncrement.Increment = 0.1M;
@@ -245,232 +276,91 @@ namespace Alicat
             nudIncrement.Maximum = 100000M;
             nudIncrement.Value = 1.000M;
             nudIncrement.Size = new Size(110, 23);
-            nudIncrement.Margin = new Padding(0, 3, 0, 3);
+            nudIncrement.Margin = new Padding(0, 0, 0, 0);
             nudIncrement.Name = "nudIncrement";
+            nudIncrement.Anchor = AnchorStyles.Left | AnchorStyles.Right;
 
-            tableIncrement.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 0);
-            tableIncrement.Controls.Add(lblIncrement, 1, 0);
-            tableIncrement.Controls.Add(nudIncrement, 2, 0);
-
-            tableTop.Controls.Add(tableIncrement, 0, 1);
-            tableTop.SetColumnSpan(tableIncrement, 3);
-
-            this.grpPurge = new System.Windows.Forms.GroupBox();
-            this.chkConfirmPurge = new System.Windows.Forms.CheckBox();
-            this.btnPurge = new System.Windows.Forms.Button();
-
-            // 
-            // grpPurge
-            // 
-            this.grpPurge.Text = "Purge";
-            this.grpPurge.Name = "grpPurge";
-            this.grpPurge.Size = new System.Drawing.Size(200, 100); // подстрой под свою правую панель
-            this.grpPurge.Location = new System.Drawing.Point(750, 300); // поставь ниже Increment
-            this.grpPurge.TabStop = false;
-
-            // 
-            // chkConfirmPurge
-            // 
-            this.chkConfirmPurge.AutoSize = true;
-            this.chkConfirmPurge.Text = "Confirm purge to 0";
-            this.chkConfirmPurge.Location = new System.Drawing.Point(15, 25);
-            this.chkConfirmPurge.Name = "chkConfirmPurge";
-
-            // 
-            // btnPurge
-            // 
-            this.btnPurge.Text = "Purge";
-            this.btnPurge.Size = new System.Drawing.Size(150, 30);
-            this.btnPurge.Location = new System.Drawing.Point(15, 55);
-            this.btnPurge.Name = "btnPurge";
-            // обработчик добавим позже:
-            // this.btnPurge.Click += new System.EventHandler(this.btnPurge_Click);
-
-            // 
-            // Добавляем элементы в группу
-            // 
-            this.grpPurge.Controls.Add(this.chkConfirmPurge);
-            this.grpPurge.Controls.Add(this.btnPurge);
-
-            // 
-            // Добавляем группу на форму (в правую часть, под Increment)
-            // 
-            this.Controls.Add(this.grpPurge);
-
-            // ===================================================================
-            // ====INFORMATION=====
-            // ===================================================================
-
-            // ==========================================================
-            // === ГРУППА: ПОКАЗ ДАННЫХ ================================
-            // ==========================================================
-            this.grpData = new System.Windows.Forms.GroupBox();
-            this.grpData.Text = "SHOW VALUE";
-            this.grpData.Location = new System.Drawing.Point(50, 250);
-            this.grpData.Size = new System.Drawing.Size(270, 160);
-            this.grpData.TabStop = false;
-
-            // Pressure units
-            this.lblPressureUnits = new System.Windows.Forms.Label();
-            this.lblPressureUnits.AutoSize = true;
-            this.lblPressureUnits.Location = new System.Drawing.Point(15, 25);
-            this.lblPressureUnits.Text = "Pressure units:";
-
-            this.boxPressureUnits = new System.Windows.Forms.Label();
-            this.boxPressureUnits.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.boxPressureUnits.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.boxPressureUnits.Location = new System.Drawing.Point(150, 22);
-            this.boxPressureUnits.Size = new System.Drawing.Size(90, 20);
-            this.boxPressureUnits.Text = "—";
-
-            // Ramp speed units
-            this.lblRampSpeedUnits = new System.Windows.Forms.Label();
-            this.lblRampSpeedUnits.AutoSize = true;
-            this.lblRampSpeedUnits.Location = new System.Drawing.Point(15, 50);
-            this.lblRampSpeedUnits.Text = "Ramp speed units:";
-
-            this.boxRampSpeedUnits = new System.Windows.Forms.Label();
-            this.boxRampSpeedUnits.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.boxRampSpeedUnits.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.boxRampSpeedUnits.Location = new System.Drawing.Point(150, 47);
-            this.boxRampSpeedUnits.Size = new System.Drawing.Size(90, 20);
-            this.boxRampSpeedUnits.Text = "—";
-
-            // Set point
-            this.lblSetPoint = new System.Windows.Forms.Label();
-            this.lblSetPoint.AutoSize = true;
-            this.lblSetPoint.Location = new System.Drawing.Point(15, 75);
-            this.lblSetPoint.Text = "Set point:";
-
-            this.boxSetPoint = new System.Windows.Forms.Label();
-            this.boxSetPoint.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.boxSetPoint.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.boxSetPoint.Location = new System.Drawing.Point(150, 72);
-            this.boxSetPoint.Size = new System.Drawing.Size(90, 20);
-            this.boxSetPoint.Text = "—";
-
-            // Time to set point
-            this.lblTimeToSetPoint = new System.Windows.Forms.Label();
-            this.lblTimeToSetPoint.AutoSize = true;
-            this.lblTimeToSetPoint.Location = new System.Drawing.Point(15, 100);
-            this.lblTimeToSetPoint.Text = "Time to set point:";
-
-            this.boxTimeToSetPoint = new System.Windows.Forms.Label();
-            this.boxTimeToSetPoint.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.boxTimeToSetPoint.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.boxTimeToSetPoint.Location = new System.Drawing.Point(150, 97);
-            this.boxTimeToSetPoint.Size = new System.Drawing.Size(90, 20);
-            this.boxTimeToSetPoint.Text = "—";
-
-            // Status
-            this.lblStatus = new System.Windows.Forms.Label();
-            this.lblStatus.AutoSize = true;
-            this.lblStatus.Location = new System.Drawing.Point(15, 125);
-            this.lblStatus.Text = "Status:";
-
-            // ▲ вверх
-            this.icoUp = new System.Windows.Forms.Label();
-            this.icoUp.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.icoUp.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.icoUp.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.icoUp.Location = new System.Drawing.Point(150, 122);
-            this.icoUp.Size = new System.Drawing.Size(20, 20);
-            this.icoUp.Text = "▲";
-            this.icoUp.ForeColor = System.Drawing.Color.Gray;
-
-            // ● центр
-            this.icoMid = new System.Windows.Forms.Label();
-            this.icoMid.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.icoMid.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.icoMid.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.icoMid.Location = new System.Drawing.Point(175, 122);
-            this.icoMid.Size = new System.Drawing.Size(20, 20);
-            this.icoMid.Text = "●";
-            this.icoMid.ForeColor = System.Drawing.Color.Gray;
-
-            // ▼ вниз
-            this.icoDown = new System.Windows.Forms.Label();
-            this.icoDown.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.icoDown.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.icoDown.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.icoDown.Location = new System.Drawing.Point(200, 122);
-            this.icoDown.Size = new System.Drawing.Size(20, 20);
-            this.icoDown.Text = "▼";
-            this.icoDown.ForeColor = System.Drawing.Color.Gray;
-
-            // Добавляем в grpData
-            this.grpData.Controls.Add(this.lblPressureUnits);
-            this.grpData.Controls.Add(this.boxPressureUnits);
-            this.grpData.Controls.Add(this.lblRampSpeedUnits);
-            this.grpData.Controls.Add(this.boxRampSpeedUnits);
-            this.grpData.Controls.Add(this.lblSetPoint);
-            this.grpData.Controls.Add(this.boxSetPoint);
-            this.grpData.Controls.Add(this.lblTimeToSetPoint);
-            this.grpData.Controls.Add(this.boxTimeToSetPoint);
-            this.grpData.Controls.Add(this.lblStatus);
-            this.grpData.Controls.Add(this.icoUp);
-            this.grpData.Controls.Add(this.icoMid);
-            this.grpData.Controls.Add(this.icoDown);
-
-            // Добавляем на форму
-            this.Controls.Add(this.grpData);
-
-            // ====================================================================
-            // TARGET (3-я строка) — чистый дизайн
-            // ====================================================================
-            tableTarget.AutoSize = true;
-            tableTarget.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            tableTarget.Dock = DockStyle.Fill;               // занимает оставшееся место
-            tableTarget.Margin = new Padding(0, 10, 0, 0);
-            tableTarget.ColumnCount = 3;
-            tableTarget.ColumnStyles.Clear();
-            tableTarget.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
-            tableTarget.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F)); // центральная колонка с контентом
-            tableTarget.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
-
-            // Внутренняя стек-табличка для центральной колонки
-            var targetStack = new TableLayoutPanel
+            // строка 0: пусто | label + nud (внутри панели) | пусто
+            var incInner = new FlowLayoutPanel
             {
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                Dock = DockStyle.Top,
-                ColumnCount = 1,
+                FlowDirection = FlowDirection.LeftToRight,
+                Dock = DockStyle.Fill,
+                WrapContents = false,
+                Margin = new Padding(0),
+                Padding = new Padding(0)
+            };
+            incInner.Controls.Add(lblIncrement);
+            incInner.Controls.Add(nudIncrement);
+
+            incLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 0);
+            incLayout.Controls.Add(incInner, 1, 0);
+            incLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 0);
+
+            // кнопка GO + в центре (строка 1)
+            btnGoPlus.Text = "GO: + increment";
+            btnGoPlus.Margin = new Padding(0, 8, 0, 0);
+            btnGoPlus.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+
+            incLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 1);
+            incLayout.Controls.Add(btnGoPlus, 1, 1);
+            incLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 1);
+
+            // кнопка GO - в центре (строка 2)
+            btnGoMinus.Text = "GO: - increment";
+            btnGoMinus.Margin = new Padding(0, 8, 0, 0);
+            btnGoMinus.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+
+            incLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 2);
+            incLayout.Controls.Add(btnGoMinus, 1, 2);
+            incLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 2);
+
+            grpIncrementBlock.Controls.Add(incLayout);
+
+            // ====================================================================
+            // BLOCK 2: Target (без заголовка, кнопка по центру 40/20/40)
+            // ====================================================================
+            grpTargetBlock.Text = "";
+            grpTargetBlock.Dock = DockStyle.Fill;
+            grpTargetBlock.Padding = new Padding(8);
+
+            var targetLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 3,
                 RowCount = 4,
                 Margin = new Padding(0)
             };
-            targetStack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            targetStack.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // title
-            targetStack.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // textbox
-            targetStack.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // checkbox
-            targetStack.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // button
+            targetLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+            targetLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            targetLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+            targetLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // label
+            targetLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // textbox
+            targetLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // checkbox
+            targetLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // button
 
-            // Заголовок
             lblTargetTitle.AutoSize = true;
             lblTargetTitle.Font = new Font("Segoe UI", 10F);
             lblTargetTitle.Text = "Target value";
-            lblTargetTitle.Margin = new Padding(0, 0, 0, 6);
+            lblTargetTitle.Margin = new Padding(0, 0, 0, 4);
 
-            // Поле ввода
             txtTarget.Font = new Font("Segoe UI", 10F);
             txtTarget.PlaceholderText = "Target value";
             txtTarget.Size = new Size(220, 25);
-            txtTarget.Margin = new Padding(0, 0, 0, 6);
+            txtTarget.Margin = new Padding(0, 0, 0, 4);
             txtTarget.Name = "txtTarget";
 
-            // Чекбокс
             chkConfirmGo.AutoSize = true;
             chkConfirmGo.Font = new Font("Segoe UI", 9F);
             chkConfirmGo.Text = "Confirm to go";
-            chkConfirmGo.Margin = new Padding(0, 0, 0, 8);
+            chkConfirmGo.Margin = new Padding(0, 4, 0, 8);
             chkConfirmGo.Name = "chkConfirmGo";
 
-            // Кнопка
             btnGoTarget.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             btnGoTarget.Text = "Go to target";
-            btnGoTarget.Size = new Size(220, 36);
+            btnGoTarget.Size = new Size(220, 32);
             btnGoTarget.Margin = new Padding(0, 0, 0, 0);
             btnGoTarget.Name = "btnGoTarget";
-            //btnGoTarget.Enabled = false; // по умолчанию выключена
+            btnGoTarget.Enabled = false; // по умолчанию выключена
 
             // Мини-логика UI: активируем кнопку, когда отметили чекбокс
             chkConfirmGo.CheckedChanged += (s, e) =>
@@ -478,19 +368,230 @@ namespace Alicat
                 btnGoTarget.Enabled = chkConfirmGo.Checked;
             };
 
-            // Сборка стека
-            targetStack.Controls.Add(lblTargetTitle, 0, 0);
-            targetStack.Controls.Add(txtTarget, 0, 1);
-            targetStack.Controls.Add(chkConfirmGo, 0, 2);
-            targetStack.Controls.Add(btnGoTarget, 0, 3);
+            // Row 0: label по центру
+            targetLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 0);
+            targetLayout.Controls.Add(lblTargetTitle, 1, 0);
+            targetLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 0);
 
-            // Кладём стек в центральную колонку tableTarget
-            tableTarget.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 0);
-            tableTarget.Controls.Add(targetStack, 1, 0);
-            tableTarget.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 0);
+            // Row 1: textbox по центру
+            targetLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 1);
+            targetLayout.Controls.Add(txtTarget, 1, 1);
+            targetLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 1);
 
-            tableTop.Controls.Add(tableTarget, 0, 2);
-            tableTop.SetColumnSpan(tableTarget, 3);
+            // Row 2: checkbox по центру
+            targetLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 2);
+            targetLayout.Controls.Add(chkConfirmGo, 1, 2);
+            targetLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 2);
+
+            // Row 3: кнопка по центру
+            targetLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 3);
+            targetLayout.Controls.Add(btnGoTarget, 1, 3);
+            targetLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 3);
+
+            grpTargetBlock.Controls.Add(targetLayout);
+
+            // ===================================================================
+            // BLOCK 3: DATA (Current + values, Ramp Speed, ETA)
+            // ===================================================================
+            grpData.Text = "";
+            grpData.Dock = DockStyle.Fill;
+            grpData.Padding = new Padding(8);
+
+            var dataLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 2,
+                Margin = new Padding(0)
+            };
+            dataLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 80F)); // current
+            dataLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F)); // table
+
+            // --- Current panel ---
+            panelCurrent.BackColor = Color.White;
+            panelCurrent.BorderStyle = BorderStyle.FixedSingle;
+            panelCurrent.Dock = DockStyle.Fill;
+            panelCurrent.Margin = new Padding(0, 0, 0, 8);
+
+            lblCurrentBig.Dock = DockStyle.Fill;
+            lblCurrentBig.Font = new Font("Segoe UI", 22F, FontStyle.Bold);
+            lblCurrentBig.Text = "0.0 PSIG";
+            lblCurrentBig.TextAlign = ContentAlignment.MiddleCenter;
+
+            panelCurrent.Controls.Add(lblCurrentBig);
+            dataLayout.Controls.Add(panelCurrent, 0, 0);
+
+            // --- Таблица значений ---
+            var tableInfo = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 5,
+                Margin = new Padding(0)
+            };
+            tableInfo.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableInfo.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            for (int i = 0; i < 5; i++)
+                tableInfo.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
+            lblPressureUnits.AutoSize = true;
+            lblPressureUnits.Text = "Pressure units:";
+            lblPressureUnits.Margin = new Padding(0, 2, 0, 2);
+
+            boxPressureUnits.BorderStyle = BorderStyle.FixedSingle;
+            boxPressureUnits.TextAlign = ContentAlignment.MiddleCenter;
+            boxPressureUnits.Margin = new Padding(4, 2, 0, 2);
+            boxPressureUnits.Size = new Size(90, 20);
+            boxPressureUnits.Text = "—";
+
+            lblRampSpeedUnits.AutoSize = true;
+            lblRampSpeedUnits.Margin = new Padding(0, 2, 0, 2);
+            lblRampSpeedUnits.Text = "Ramp Speed:";
+
+            boxRampSpeedUnits.BorderStyle = BorderStyle.FixedSingle;
+            boxRampSpeedUnits.TextAlign = ContentAlignment.MiddleCenter;
+            boxRampSpeedUnits.Margin = new Padding(4, 2, 0, 2);
+            boxRampSpeedUnits.Size = new Size(90, 20);
+            boxRampSpeedUnits.Text = "—";
+
+            lblSetPoint.AutoSize = true;
+            lblSetPoint.Margin = new Padding(0, 2, 0, 2);
+            lblSetPoint.Text = "Set point:";
+
+            boxSetPoint.BorderStyle = BorderStyle.FixedSingle;
+            boxSetPoint.TextAlign = ContentAlignment.MiddleCenter;
+            boxSetPoint.Margin = new Padding(4, 2, 0, 2);
+            boxSetPoint.Size = new Size(90, 20);
+            boxSetPoint.Text = "—";
+
+            lblTimeToSetPoint.AutoSize = true;
+            lblTimeToSetPoint.Margin = new Padding(0, 2, 0, 2);
+            lblTimeToSetPoint.Text = "ETA:";
+
+            boxTimeToSetPoint.BorderStyle = BorderStyle.FixedSingle;
+            boxTimeToSetPoint.TextAlign = ContentAlignment.MiddleCenter;
+            boxTimeToSetPoint.Margin = new Padding(4, 2, 0, 2);
+            boxTimeToSetPoint.Size = new Size(90, 20);
+            boxTimeToSetPoint.Text = "—";
+
+            lblStatus.AutoSize = true;
+            lblStatus.Margin = new Padding(0, 2, 0, 2);
+            lblStatus.Text = "Status:";
+
+            icoUp.BorderStyle = BorderStyle.FixedSingle;
+            icoUp.TextAlign = ContentAlignment.MiddleCenter;
+            icoUp.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            icoUp.Size = new Size(20, 20);
+            icoUp.Text = "▲";
+            icoUp.ForeColor = Color.Gray;
+            icoUp.Margin = new Padding(0, 0, 4, 0);
+
+            icoMid.BorderStyle = BorderStyle.FixedSingle;
+            icoMid.TextAlign = ContentAlignment.MiddleCenter;
+            icoMid.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            icoMid.Size = new Size(20, 20);
+            icoMid.Text = "●";
+            icoMid.ForeColor = Color.Gray;
+            icoMid.Margin = new Padding(0, 0, 4, 0);
+
+            icoDown.BorderStyle = BorderStyle.FixedSingle;
+            icoDown.TextAlign = ContentAlignment.MiddleCenter;
+            icoDown.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            icoDown.Size = new Size(20, 20);
+            icoDown.Text = "▼";
+            icoDown.ForeColor = Color.Gray;
+            icoDown.Margin = new Padding(0, 0, 0, 0);
+
+            var panelStatusIcons = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false,
+                Margin = new Padding(4, 0, 0, 0)
+            };
+            panelStatusIcons.Controls.Add(icoUp);
+            panelStatusIcons.Controls.Add(icoMid);
+            panelStatusIcons.Controls.Add(icoDown);
+
+            tableInfo.Controls.Add(lblPressureUnits, 0, 0);
+            tableInfo.Controls.Add(boxPressureUnits, 1, 0);
+
+            tableInfo.Controls.Add(lblRampSpeedUnits, 0, 1);
+            tableInfo.Controls.Add(boxRampSpeedUnits, 1, 1);
+
+            tableInfo.Controls.Add(lblSetPoint, 0, 2);
+            tableInfo.Controls.Add(boxSetPoint, 1, 2);
+
+            tableInfo.Controls.Add(lblTimeToSetPoint, 0, 3);
+            tableInfo.Controls.Add(boxTimeToSetPoint, 1, 3);
+
+            tableInfo.Controls.Add(lblStatus, 0, 4);
+            tableInfo.Controls.Add(panelStatusIcons, 1, 4);
+
+            dataLayout.Controls.Add(tableInfo, 0, 1);
+            grpData.Controls.Add(dataLayout);
+
+            // ===================================================================
+            // BLOCK 4: PURGE
+            // ===================================================================
+            grpPurge.Text = "";
+            grpPurge.Dock = DockStyle.Fill;
+            grpPurge.Padding = new Padding(8);
+
+            chkConfirmPurge.AutoSize = true;
+            chkConfirmPurge.Text = "Confirm purge to 0";
+            chkConfirmPurge.Name = "chkConfirmPurge";
+            chkConfirmPurge.Margin = new Padding(0, 0, 0, 8);
+
+            btnPurge.Text = "Purge";
+            btnPurge.Name = "btnPurge";
+            btnPurge.Size = new Size(150, 30);
+            btnPurge.Margin = new Padding(0, 0, 0, 4);
+
+            var lblPurgeInfo = new Label
+            {
+                AutoSize = true,
+                Text = "Opens exhaust to 0,\nthen returns to control.",
+                Margin = new Padding(0, 4, 0, 0)
+            };
+
+            var purgeLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 3,
+                RowCount = 3,
+                Margin = new Padding(0)
+            };
+            purgeLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+            purgeLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            purgeLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+            purgeLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // checkbox
+            purgeLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // button
+            purgeLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // info
+
+            // Row 0: checkbox по центру
+            purgeLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 0);
+            purgeLayout.Controls.Add(chkConfirmPurge, 1, 0);
+            purgeLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 0);
+
+            // Row 1: кнопка по центру
+            purgeLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 1);
+            purgeLayout.Controls.Add(btnPurge, 1, 1);
+            purgeLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 1);
+
+            // Row 2: текст — середний столбец занимает всю ширину
+            purgeLayout.SetColumnSpan(lblPurgeInfo, 3);
+            purgeLayout.Controls.Add(lblPurgeInfo, 0, 2);
+
+            grpPurge.Controls.Add(purgeLayout);
+
+            // ====================================================================
+            // РАЗМЕЩЕНИЕ БЛОКОВ В layoutMain
+            // ====================================================================
+            layoutMain.Controls.Add(grpIncrementBlock, 0, 0); // Block 1
+            layoutMain.Controls.Add(grpTargetBlock,   1, 0); // Block 2
+            layoutMain.Controls.Add(grpData,          0, 1); // Block 3
+            layoutMain.Controls.Add(grpPurge,         1, 1); // Block 4
 
             // ====================================================================
             // ФОРМА
@@ -501,24 +602,28 @@ namespace Alicat
             MinimumSize = new Size(960, 420);
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Alicat — Controller";
-            Controls.Add(root);
             Name = "AlicatForm";
+
+            this.Controls.Add(this.root);
+            this.Controls.Add(this.menuMain);
+
+            MainMenuStrip = menuMain;
 
             // --- end layout resume ---
             root.ResumeLayout(false);
-            root.PerformLayout();
             header.ResumeLayout(false);
             header.PerformLayout();
-            groupTop.ResumeLayout(false);
-            groupTop.PerformLayout();
-            tableTop.ResumeLayout(false);
-            tableTop.PerformLayout();
-            tableIncrement.ResumeLayout(false);
-            tableIncrement.PerformLayout();
+            menuMain.ResumeLayout(false);
+            menuMain.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)nudIncrement).EndInit();
             panelCurrent.ResumeLayout(false);
-            tableTarget.ResumeLayout(false);
+            grpIncrementBlock.ResumeLayout(false);
+            grpTargetBlock.ResumeLayout(false);
+            grpData.ResumeLayout(false);
+            grpPurge.ResumeLayout(false);
+            grpPurge.PerformLayout();
             ResumeLayout(false);
+            PerformLayout();
         }
         #endregion
     }
