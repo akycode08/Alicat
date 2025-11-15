@@ -36,12 +36,13 @@ namespace Alicat
         {
             InitializeComponent();
 
+            menuSettingsOptions.Click += btnOptions_Click;
+            menuSettingsCommunication.Click += btnCommunication_Click;
             btnGoTarget.Click += btnGoTarget_Click;
             btnPurge.Click += btnPurge_Click;
             btnGoPlus.Click += btnGoPlus_Click;
             btnGoMinus.Click += btnGoMinus_Click;
-            btnCommunication.Click += btnCommunication_Click;
-            btnOptions.Click += btnOptions_Click;
+          
 
             txtTarget.TextChanged += (_, __) => ValidateTargetAgainstMax();
             chkConfirmGo.CheckedChanged += (_, __) => ValidateTargetAgainstMax();
