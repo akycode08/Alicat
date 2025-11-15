@@ -10,12 +10,13 @@ namespace Alicat
         // Root
         private TableLayoutPanel root;
 
-        // Header
-        private TableLayoutPanel header;
-        private Button btnUnits;
-        private Button btnSave;
-        private Button btnGraph;
-        private Button btnFuture;
+        private MenuStrip menuMain;
+        private ToolStripMenuItem menuUnits;
+        private ToolStripMenuItem menuSave;
+        private ToolStripMenuItem menuGraph;
+
+
+
 
         // Content
         private Panel contentHost;
@@ -62,6 +63,33 @@ namespace Alicat
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+
+            menuMain = new MenuStrip();
+            menuUnits = new ToolStripMenuItem();
+            menuSave = new ToolStripMenuItem();
+            menuGraph = new ToolStripMenuItem();
+
+            menuUnits.Name = "menuUnits";
+            menuUnits.Text = "Units";
+
+            menuSave.Name = "menuSave";
+            menuSave.Text = "Save";
+
+            menuGraph.Name = "menuGraph";
+            menuGraph.Text = "Graph";
+
+            menuMain.Items.AddRange(new ToolStripItem[]
+            {
+                menuUnits,
+                menuSave,
+                menuGraph
+            });
+
+            menuMain.Dock = DockStyle.Top;
+            menuMain.Name = "menuMain";
+
+            this.MainMenuStrip = menuMain;
+            this.Controls.Add(menuMain);
 
             // -------- Form --------
             this.SuspendLayout();
@@ -117,59 +145,9 @@ namespace Alicat
             root.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));   // Content
             this.Controls.Add(root);
 
-            // -------- Header (4 равные кнопки) --------
-            header = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 4,
-                RowCount = 1,
-                Padding = new Padding(12, 8, 12, 8),
-                BackColor = SystemColors.Control
-            };
-            header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25f));
-            header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25f));
-            header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25f));
-            header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25f));
 
-            btnUnits = new Button
-            {
-                Text = "Units",
-                Dock = DockStyle.Fill,
-                Margin = new Padding(6, 4, 6, 4),
-                AutoSize = false
-            };
-            btnSave = new Button
-            {
-                Text = "Save",
-                Dock = DockStyle.Fill,
-                Margin = new Padding(6, 4, 6, 4),
-                AutoSize = false
-            };
-            btnGraph = new Button
-            {
-                Text = "Graph",
-                Dock = DockStyle.Fill,
-                Margin = new Padding(6, 4, 6, 4),
-                AutoSize = false
-            };
-            btnFuture = new Button
-            {
-                Text = "—",
-                Dock = DockStyle.Fill,
-                Margin = new Padding(6, 4, 6, 4),
-                AutoSize = false
-            };
 
-            // Активная вкладка Units — визуально выделена
-            btnUnits.Font = new Font(btnUnits.Font, FontStyle.Bold);
-            btnUnits.UseVisualStyleBackColor = false;
-            btnUnits.BackColor = SystemColors.ControlLight;
 
-            header.Controls.Add(btnUnits, 0, 0);
-            header.Controls.Add(btnSave, 1, 0);
-            header.Controls.Add(btnGraph, 2, 0);
-            header.Controls.Add(btnFuture, 3, 0);
-            root.Controls.Add(header, 0, 0);
 
             // -------- Content host --------
             contentHost = new Panel
