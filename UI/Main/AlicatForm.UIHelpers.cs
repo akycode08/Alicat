@@ -2,12 +2,71 @@
 using System.Globalization;
 using System.Windows.Forms;
 using System.Drawing;
+using Alicat.UI.Features.Graph.Views;
+using Alicat.UI.Features.Table.Views;
+using Alicat.UI.Features.Statistics.Views;
+using Alicat.UI.Features.Terminal.Views;
+using Alicat.UI.Features.Terminal.Views;
+
 
 namespace Alicat
 {
     public partial class AlicatForm : Form
         {
-            private void ValidateTargetAgainstMax()
+        private void btnGraph_Click(object sender, EventArgs e)
+        {
+            var form = new GraphForm();
+            form.Show(this);
+        }
+
+        private void btnTable_Click(object sender, EventArgs e)
+        {
+            var form = new TableForm();
+            form.Show(this);
+        }
+
+        private void btnStatistic_Click(object sender, EventArgs e)
+        {
+            var form = new StatisticsForm();
+            form.Show(this);
+        }
+
+        private void btnTerminal_Click(object? sender, EventArgs e)
+        {
+            if (_terminalForm == null || _terminalForm.IsDisposed)
+            {
+                _terminalForm = new TerminalForm();
+                _terminalForm.CommandSent += TerminalForm_CommandSent;
+            }
+
+            _terminalForm.Show(this);
+            _terminalForm.Focus();
+        }
+
+        private void TerminalForm_CommandSent(string cmd)
+        {
+            if (_serial == null)
+            {
+                _terminalForm?.AppendLog("!! Serial not connected");
+                return;
+            }
+
+            try
+            {
+                _serial.Send(cmd);   // если метод называется иначе – подправь
+            }
+            catch (Exception ex)
+            {
+                _terminalForm?.AppendLog("!! Error: " + ex.Message);
+            }
+        }
+
+
+
+
+
+
+        private void ValidateTargetAgainstMax()
                 {
                     var text = txtTarget.Text?.Trim();
                     bool parsed = double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double targetVal);
