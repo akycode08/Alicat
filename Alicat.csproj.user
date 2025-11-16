@@ -1,6 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Compile Update="UI\Features\Graph\Views\GraphForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="UI\Features\Statistics\Views\StatisticsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="UI\Features\Table\Views\TableForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="UI\Features\Terminal\Views\TerminalForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="UI\Main\AlicatForm.Commands.cs">
       <SubType>Form</SubType>
     </Compile>
