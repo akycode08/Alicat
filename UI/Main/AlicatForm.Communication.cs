@@ -35,7 +35,10 @@ namespace Alicat
                 bool exh = line.IndexOf("EXH", StringComparison.OrdinalIgnoreCase) >= 0;
                 if (exh) _isExhaust = true;
 
-                if (!TryParseAls(line, out var cur, out var sp, out var unit))
+                // ⬇️ ЛОГ В ТЕРМИНАЛ (если окно открыто)
+                _terminalForm?.AppendLog("<< " + line);
+
+            if (!TryParseAls(line, out var cur, out var sp, out var unit))
                     return;
 
                 _current = cur;
