@@ -3,14 +3,12 @@
 // Описание: Разметка (дизайн) главной формы.
 // Макет:
 //   [MenuStrip]
-//   [Header]
+//   [Tabs: Graph | Table | Statistics | Terminal]  ← обычные кнопки
 //   [2x2 grid:
 //        Block 1: Increment
 //        Block 2: Target
 //        Block 3: Data (Current + values)
 //        Block 4: Purge]
-//
-// Кнопки узкие по центру (40% — 20% — 40%), без заголовков блоков.
 // ----------------------------------------------------------------------------
 
 using System;
@@ -26,7 +24,6 @@ namespace Alicat
         // ---------- Верхний уровень макета ----------
         private TableLayoutPanel root;
         private TableLayoutPanel header;
-        private Label lblTitle;
 
         // ---------- Главное меню ----------
         private MenuStrip menuMain;
@@ -35,6 +32,14 @@ namespace Alicat
         private ToolStripMenuItem menuView;
         private ToolStripMenuItem menuSettingsOptions;
         private ToolStripMenuItem menuSettingsCommunication;
+
+        // ---------- Вкладки (просто 4 кнопки) ----------
+        private Panel panelTabs;
+        private TableLayoutPanel tableTabs;
+        private Button btnGraph;
+        private Button btnTable;
+        private Button btnStatistics;
+        private Button btnTerminal;
 
         // ---------- Основная 2x2 сетка ----------
         private TableLayoutPanel layoutMain;
@@ -85,6 +90,7 @@ namespace Alicat
         }
 
         #region Windows Form Designer generated code
+
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
@@ -92,7 +98,6 @@ namespace Alicat
             // ========= ИНИЦИАЛИЗАЦИЯ КОНТРОЛОВ =========
             root = new TableLayoutPanel();
             header = new TableLayoutPanel();
-            lblTitle = new Label();
 
             // меню
             menuMain = new MenuStrip();
@@ -155,19 +160,15 @@ namespace Alicat
             menuMain.Dock = DockStyle.Top;
             menuMain.ImageScalingSize = new Size(20, 20);
 
-            // File
             menuFile.Name = "menuFile";
             menuFile.Text = "File";
 
-            // Settings
             menuSettings.Name = "menuSettings";
             menuSettings.Text = "Settings";
 
-            // View
             menuView.Name = "menuView";
             menuView.Text = "View";
 
-            // --- Settings submenu ---
             menuSettingsOptions.Name = "menuSettingsOptions";
             menuSettingsOptions.Text = "Options";
 
@@ -180,7 +181,6 @@ namespace Alicat
                 menuSettingsCommunication
             });
 
-            // добавляем пункты в меню
             menuMain.Items.AddRange(new ToolStripItem[]
             {
                 menuFile,
@@ -196,7 +196,7 @@ namespace Alicat
             root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             root.RowCount = 2;
             root.RowStyles.Clear();
-            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));            // header
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 45F));       // header (табы)
             root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));       // main layout
             root.Dock = DockStyle.Fill;
             root.Padding = new Padding(12);
@@ -207,25 +207,62 @@ namespace Alicat
             root.Controls.Add(layoutMain, 0, 1);
 
             // ====================================================================
-            // HEADER (только заголовок)
+            // HEADER (строка с 4 кнопками)
             // ====================================================================
             header.ColumnCount = 1;
             header.ColumnStyles.Clear();
-            header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F)); // Title
+            header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             header.RowCount = 1;
             header.RowStyles.Clear();
-            header.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
-            header.Dock = DockStyle.Top;
-            header.Margin = new Padding(0, 0, 0, 8);
+            header.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            header.Dock = DockStyle.Fill;
+            header.Margin = new Padding(0, 6, 0, 8);
             header.Name = "header";
-            header.Size = new Size(1000, 40);
+            header.Size = new Size(1000, 34);
 
-            lblTitle.Anchor = AnchorStyles.Left;
-            lblTitle.AutoSize = true;
-            lblTitle.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
-            lblTitle.Text = "Alicat Controller";
+            // ====== панель для кнопок ======
+            panelTabs = new Panel();
+            panelTabs.Dock = DockStyle.Fill;
+            panelTabs.BackColor = SystemColors.Control;
+            panelTabs.Padding = new Padding(0);
+            panelTabs.Margin = new Padding(0);
 
-            header.Controls.Add(lblTitle, 0, 0);
+            // ====== сетка 1x4 ======
+            tableTabs = new TableLayoutPanel();
+            tableTabs.ColumnCount = 4;
+            tableTabs.RowCount = 1;
+            tableTabs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            tableTabs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            tableTabs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            tableTabs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            tableTabs.Dock = DockStyle.Fill;
+            tableTabs.Margin = new Padding(0);
+            tableTabs.Padding = new Padding(4, 4, 4, 0);
+
+            // ====== 4 обычные кнопки ======
+            btnGraph = new Button();
+            btnGraph.Text = "Graph";
+            btnGraph.Dock = DockStyle.Fill;
+
+            btnTable = new Button();
+            btnTable.Text = "Table";
+            btnTable.Dock = DockStyle.Fill;
+
+            btnStatistics = new Button();
+            btnStatistics.Text = "Statistics";
+            btnStatistics.Dock = DockStyle.Fill;
+
+            btnTerminal = new Button();
+            btnTerminal.Text = "Terminal";
+            btnTerminal.Dock = DockStyle.Fill;
+
+            tableTabs.Controls.Add(btnGraph, 0, 0);
+            tableTabs.Controls.Add(btnTable, 1, 0);
+            tableTabs.Controls.Add(btnStatistics, 2, 0);
+            tableTabs.Controls.Add(btnTerminal, 3, 0);
+
+            panelTabs.Controls.Add(tableTabs);
+            header.Controls.Add(panelTabs, 0, 0);
 
             // ====================================================================
             // LAYOUT MAIN (2x2 блоки)
@@ -235,7 +272,6 @@ namespace Alicat
             layoutMain.Margin = new Padding(0);
             layoutMain.ColumnCount = 2;
             layoutMain.RowCount = 2;
-
             layoutMain.ColumnStyles.Clear();
             layoutMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             layoutMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
@@ -244,9 +280,9 @@ namespace Alicat
             layoutMain.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
 
             // ====================================================================
-            // BLOCK 1: Increment (без заголовка, кнопки 40/20/40)
+            // BLOCK 1: Increment
             // ====================================================================
-            grpIncrementBlock.Text = ""; // без заголовка
+            grpIncrementBlock.Text = "";
             grpIncrementBlock.Dock = DockStyle.Fill;
             grpIncrementBlock.Padding = new Padding(8);
 
@@ -260,11 +296,10 @@ namespace Alicat
             incLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
             incLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
             incLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
-            incLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));        // Increment
-            incLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));        // GO +
-            incLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));        // GO -
+            incLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            incLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            incLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-            // Increment label + nud по центру (через средний столбец)
             lblIncrement.Anchor = AnchorStyles.Left;
             lblIncrement.AutoSize = true;
             lblIncrement.Text = "Increment:";
@@ -280,7 +315,6 @@ namespace Alicat
             nudIncrement.Name = "nudIncrement";
             nudIncrement.Anchor = AnchorStyles.Left | AnchorStyles.Right;
 
-            // строка 0: пусто | label + nud (внутри панели) | пусто
             var incInner = new FlowLayoutPanel
             {
                 FlowDirection = FlowDirection.LeftToRight,
@@ -296,7 +330,6 @@ namespace Alicat
             incLayout.Controls.Add(incInner, 1, 0);
             incLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 0);
 
-            // кнопка GO + в центре (строка 1)
             btnGoPlus.Text = "GO: + increment";
             btnGoPlus.Margin = new Padding(0, 8, 0, 0);
             btnGoPlus.Anchor = AnchorStyles.Left | AnchorStyles.Right;
@@ -305,7 +338,6 @@ namespace Alicat
             incLayout.Controls.Add(btnGoPlus, 1, 1);
             incLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 1);
 
-            // кнопка GO - в центре (строка 2)
             btnGoMinus.Text = "GO: - increment";
             btnGoMinus.Margin = new Padding(0, 8, 0, 0);
             btnGoMinus.Anchor = AnchorStyles.Left | AnchorStyles.Right;
@@ -317,7 +349,7 @@ namespace Alicat
             grpIncrementBlock.Controls.Add(incLayout);
 
             // ====================================================================
-            // BLOCK 2: Target (без заголовка, кнопка по центру 40/20/40)
+            // BLOCK 2: Target
             // ====================================================================
             grpTargetBlock.Text = "";
             grpTargetBlock.Dock = DockStyle.Fill;
@@ -333,10 +365,10 @@ namespace Alicat
             targetLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
             targetLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
             targetLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
-            targetLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // label
-            targetLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // textbox
-            targetLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // checkbox
-            targetLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // button
+            targetLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            targetLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            targetLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            targetLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
             lblTargetTitle.AutoSize = true;
             lblTargetTitle.Font = new Font("Segoe UI", 10F);
@@ -351,7 +383,7 @@ namespace Alicat
 
             chkConfirmGo.AutoSize = true;
             chkConfirmGo.Font = new Font("Segoe UI", 9F);
-            chkConfirmGo.Text = "Confirm to go";
+            chkConfirmGo.Text = "Confirm";
             chkConfirmGo.Margin = new Padding(0, 4, 0, 8);
             chkConfirmGo.Name = "chkConfirmGo";
 
@@ -360,30 +392,25 @@ namespace Alicat
             btnGoTarget.Size = new Size(220, 32);
             btnGoTarget.Margin = new Padding(0, 0, 0, 0);
             btnGoTarget.Name = "btnGoTarget";
-            btnGoTarget.Enabled = false; // по умолчанию выключена
+            btnGoTarget.Enabled = false;
 
-            // Мини-логика UI: активируем кнопку, когда отметили чекбокс
             chkConfirmGo.CheckedChanged += (s, e) =>
             {
                 btnGoTarget.Enabled = chkConfirmGo.Checked;
             };
 
-            // Row 0: label по центру
             targetLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 0);
             targetLayout.Controls.Add(lblTargetTitle, 1, 0);
             targetLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 0);
 
-            // Row 1: textbox по центру
             targetLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 1);
             targetLayout.Controls.Add(txtTarget, 1, 1);
             targetLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 1);
 
-            // Row 2: checkbox по центру
             targetLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 2);
             targetLayout.Controls.Add(chkConfirmGo, 1, 2);
             targetLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 2);
 
-            // Row 3: кнопка по центру
             targetLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 3);
             targetLayout.Controls.Add(btnGoTarget, 1, 3);
             targetLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 3);
@@ -391,7 +418,7 @@ namespace Alicat
             grpTargetBlock.Controls.Add(targetLayout);
 
             // ===================================================================
-            // BLOCK 3: DATA (Current + values, Ramp Speed, ETA)
+            // BLOCK 3: DATA
             // ===================================================================
             grpData.Text = "";
             grpData.Dock = DockStyle.Fill;
@@ -404,10 +431,9 @@ namespace Alicat
                 RowCount = 2,
                 Margin = new Padding(0)
             };
-            dataLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 80F)); // current
-            dataLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F)); // table
+            dataLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 80F));
+            dataLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
-            // --- Current panel ---
             panelCurrent.BackColor = Color.White;
             panelCurrent.BorderStyle = BorderStyle.FixedSingle;
             panelCurrent.Dock = DockStyle.Fill;
@@ -421,7 +447,6 @@ namespace Alicat
             panelCurrent.Controls.Add(lblCurrentBig);
             dataLayout.Controls.Add(panelCurrent, 0, 0);
 
-            // --- Таблица значений ---
             var tableInfo = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
@@ -442,7 +467,7 @@ namespace Alicat
             boxPressureUnits.TextAlign = ContentAlignment.MiddleCenter;
             boxPressureUnits.Margin = new Padding(4, 2, 0, 2);
             boxPressureUnits.Size = new Size(90, 20);
-            boxPressureUnits.Text = "—";
+            boxPressureUnits.Text = "PSIG";
 
             lblRampSpeedUnits.AutoSize = true;
             lblRampSpeedUnits.Margin = new Padding(0, 2, 0, 2);
@@ -452,7 +477,7 @@ namespace Alicat
             boxRampSpeedUnits.TextAlign = ContentAlignment.MiddleCenter;
             boxRampSpeedUnits.Margin = new Padding(4, 2, 0, 2);
             boxRampSpeedUnits.Size = new Size(90, 20);
-            boxRampSpeedUnits.Text = "—";
+            boxRampSpeedUnits.Text = "PSIG/s";
 
             lblSetPoint.AutoSize = true;
             lblSetPoint.Margin = new Padding(0, 2, 0, 2);
@@ -462,7 +487,7 @@ namespace Alicat
             boxSetPoint.TextAlign = ContentAlignment.MiddleCenter;
             boxSetPoint.Margin = new Padding(4, 2, 0, 2);
             boxSetPoint.Size = new Size(90, 20);
-            boxSetPoint.Text = "—";
+            boxSetPoint.Text = "0 PSIG";
 
             lblTimeToSetPoint.AutoSize = true;
             lblTimeToSetPoint.Margin = new Padding(0, 2, 0, 2);
@@ -565,21 +590,18 @@ namespace Alicat
             purgeLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
             purgeLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
             purgeLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
-            purgeLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // checkbox
-            purgeLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // button
-            purgeLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // info
+            purgeLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            purgeLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            purgeLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-            // Row 0: checkbox по центру
             purgeLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 0);
             purgeLayout.Controls.Add(chkConfirmPurge, 1, 0);
             purgeLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 0);
 
-            // Row 1: кнопка по центру
             purgeLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 0, 1);
             purgeLayout.Controls.Add(btnPurge, 1, 1);
             purgeLayout.Controls.Add(new Panel() { Dock = DockStyle.Fill }, 2, 1);
 
-            // Row 2: текст — середний столбец занимает всю ширину
             purgeLayout.SetColumnSpan(lblPurgeInfo, 3);
             purgeLayout.Controls.Add(lblPurgeInfo, 0, 2);
 
@@ -588,10 +610,10 @@ namespace Alicat
             // ====================================================================
             // РАЗМЕЩЕНИЕ БЛОКОВ В layoutMain
             // ====================================================================
-            layoutMain.Controls.Add(grpIncrementBlock, 0, 0); // Block 1
-            layoutMain.Controls.Add(grpTargetBlock,   1, 0); // Block 2
-            layoutMain.Controls.Add(grpData,          0, 1); // Block 3
-            layoutMain.Controls.Add(grpPurge,         1, 1); // Block 4
+            layoutMain.Controls.Add(grpIncrementBlock, 0, 0);
+            layoutMain.Controls.Add(grpTargetBlock, 1, 0);
+            layoutMain.Controls.Add(grpData, 0, 1);
+            layoutMain.Controls.Add(grpPurge, 1, 1);
 
             // ====================================================================
             // ФОРМА
@@ -604,15 +626,14 @@ namespace Alicat
             Text = "Alicat — Controller";
             Name = "AlicatForm";
 
-            this.Controls.Add(this.root);
-            this.Controls.Add(this.menuMain);
-
+            Controls.Add(root);
+            Controls.Add(menuMain);
             MainMenuStrip = menuMain;
+            menuMain.BringToFront();
 
             // --- end layout resume ---
             root.ResumeLayout(false);
             header.ResumeLayout(false);
-            header.PerformLayout();
             menuMain.ResumeLayout(false);
             menuMain.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)nudIncrement).EndInit();
@@ -625,6 +646,7 @@ namespace Alicat
             ResumeLayout(false);
             PerformLayout();
         }
+
         #endregion
     }
 }
