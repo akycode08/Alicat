@@ -25,26 +25,28 @@ namespace Alicat
                     _serial.Send($"SR {r.ToString("G", CultureInfo.InvariantCulture)}");
             }
 
-            // ================= GO ± =================
-            private void btnGoPlus_Click(object? sender, EventArgs e)
-            {
-                var inc = (double)nudIncrement.Value;
-                var next = _setPoint + inc;
+      
 
-                if (next > _maxPressure)
+        // ================= GO ± =================
+        private void btnGoPlus_Click(object? sender, EventArgs e)
                 {
-                    System.Media.SystemSounds.Beep.Play();
-                    MessageBox.Show(this,
-                        $"Cannot exceed Max Pressure ({_maxPressure.ToString("0.###", CultureInfo.InvariantCulture)} PSI).",
-                        "Limit exceeded",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    ValidateTargetAgainstMax();
-                    return;
-                }
+                    var inc = (double)nudIncrement.Value;
+                    var next = _setPoint + inc;
 
-                SendSetPoint(next);
-                ValidateTargetAgainstMax();
-            }
+                    if (next > _maxPressure)
+                    {
+                        System.Media.SystemSounds.Beep.Play();
+                        MessageBox.Show(this,
+                            $"Cannot exceed Max Pressure ({_maxPressure.ToString("0.###", CultureInfo.InvariantCulture)} PSI).",
+                            "Limit exceeded",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        ValidateTargetAgainstMax();
+                        return;
+                    }
+
+                    SendSetPoint(next);
+                    ValidateTargetAgainstMax();
+                }
 
             private void btnGoMinus_Click(object? sender, EventArgs e)
             {
