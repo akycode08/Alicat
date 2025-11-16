@@ -1,14 +1,15 @@
-﻿using System;                           // базовые типы
+﻿using Alicat.Domain;
+using Alicat.Services.Controllers;
+using Alicat.Services.Protocol;
+using Alicat.Services.Serial;           // ✅ внешний SerialClient
+using Alicat.UI.Features.Terminal.Views;
+using System;                           // базовые типы
 using System.Diagnostics;
 using System.Globalization;             // парс чисел Invariant
 using System.IO.Ports;                  // SerialPort
 using System.Text;                      // Encoding.ASCII
 using System.Threading.Tasks;           // Task.Delay (на будущее)
 using System.Windows.Forms;             // WinForms
-using Alicat.Services.Serial;           // ✅ внешний SerialClient
-using Alicat.Domain;
-using Alicat.Services.Controllers;
-using Alicat.Services.Protocol;
 using Timer = System.Windows.Forms.Timer;
 
 namespace Alicat
@@ -31,6 +32,9 @@ namespace Alicat
         private readonly DeviceState _state = new();
         private RampController? _ramp;
 
+        private TerminalForm? _terminalForm;
+
+
 
         public AlicatForm()
         {
@@ -38,6 +42,12 @@ namespace Alicat
 
             menuSettingsOptions.Click += btnOptions_Click;
             menuSettingsCommunication.Click += btnCommunication_Click;
+
+            btnGraph.Click += btnGraph_Click;
+            btnTable.Click += btnTable_Click;
+            btnStatistics.Click += btnStatistic_Click;
+            btnTerminal.Click += btnTerminal_Click;
+
             btnGoTarget.Click += btnGoTarget_Click;
             btnPurge.Click += btnPurge_Click;
             btnGoPlus.Click += btnGoPlus_Click;
