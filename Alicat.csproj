@@ -19,6 +19,10 @@
     <Folder Include="UI\Components\" />
     <Folder Include="UI\Controls\" />
     <Folder Include="UI\Dialogs\" />
+    <Folder Include="UI\Features\Graph\NewFolder\" />
+    <Folder Include="UI\Features\Terminal\Logic\" />
+    <Folder Include="UI\Features\Terminal\Models\" />
+    <Folder Include="UI\Features\Terminal\Services\" />
     <Folder Include="UI\Panels\" />
     <Folder Include="UI\Styles\" />
     <Folder Include="Validation\" />
