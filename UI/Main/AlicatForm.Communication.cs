@@ -24,43 +24,61 @@ namespace Alicat
 
                 _serial.Attach();
                 _ramp = new RampController(_serial);
-                _serial.RequestAls();
+                _serial.Send("ASR");
+
 
             }
 
-            private void Serial_LineReceived(object? sender, string line)
+        private void Serial_LineReceived(object? sender, string line)
+        {
+            Debug.WriteLine("RX: " + line);
+
+            bool exh = line.IndexOf("EXH", StringComparison.OrdinalIgnoreCase) >= 0;
+            if (exh) _isExhaust = true;
+
+            // ⬇️ ЛОГ В ТЕРМИНАЛ (если окно открыто)
+            _terminalForm?.AppendLog("<< " + line);
+
+            // 1) Сначала пробуем распознать ответ ASR (Ramp Speed)
+            if (TryParseAsr(line, out var ramp, out var rampUnits))
             {
-                Debug.WriteLine("RX: " + line);
-
-                bool exh = line.IndexOf("EXH", StringComparison.OrdinalIgnoreCase) >= 0;
-                if (exh) _isExhaust = true;
-
-                // ⬇️ ЛОГ В ТЕРМИНАЛ (если окно открыто)
-                _terminalForm?.AppendLog("<< " + line);
-
-            if (!TryParseAls(line, out var cur, out var sp, out var unit))
-                    return;
-
-                _current = cur;
-                if (!_isExhaust) _setPoint = sp;
-                if (!string.IsNullOrWhiteSpace(unit)) _unit = unit!;
-
+                // Обновляем только Ramp Speed в блоке Data
                 BeginInvoke(new Action(() =>
                 {
-                    UI_SetTrendStatus(_lastCurrent, _current, _isExhaust);
-                    RefreshCurrent();
-                    UI_SetPressureUnits(_unit);
-                    UI_SetSetPoint(_isExhaust ? 0.0 : _setPoint, _unit);
-
-                    ValidateTargetAgainstMax();
-                    ValidateIncrementAgainstMax();
-
-                    _state.Update(_current, _setPoint, _unit, _isExhaust);
-                    _lastCurrent = _current;
+                    UI_SetRampSpeedUnits($"{TrimZeros(ramp)} {rampUnits}");
                 }));
+
+                // Это строка про скорость рампа — дальше ALS не трогаем
+                return;
             }
 
-            protected override void OnFormClosing(FormClosingEventArgs e)
+            // 2) Если это не ASR — как раньше, пробуем ALS
+            if (!TryParseAls(line, out var cur, out var sp, out var unit))
+                return;
+
+            _current = cur;
+            if (!_isExhaust) _setPoint = sp;
+            if (!string.IsNullOrWhiteSpace(unit)) _unit = unit!;
+
+            BeginInvoke(new Action(() =>
+            {
+                UI_SetTrendStatus(_lastCurrent, _current, _isExhaust);
+                RefreshCurrent();
+                UI_SetPressureUnits(_unit);
+                UI_SetSetPoint(_isExhaust ? 0.0 : _setPoint, _unit);
+
+                ValidateTargetAgainstMax();
+                ValidateIncrementAgainstMax();
+
+                _state.Update(_current, _setPoint, _unit, _isExhaust);
+                _lastCurrent = _current;
+            }));
+        }
+
+
+
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
             {
                 base.OnFormClosing(e);
                 _pollTimer.Stop();
