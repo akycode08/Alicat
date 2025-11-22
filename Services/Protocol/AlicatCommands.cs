@@ -11,7 +11,7 @@
         public static string SetSetPoint(double valueInvariant) => $"AS {valueInvariant}";
 
         // Рамп (скорость нарастания уставки)
-        public static string SetRamp(string valueInvariant) => $"SR {valueInvariant}";
+        public static string SetRamp(string valueInvariant) => $"ASR {valueInvariant}";
 
         // Режимы
         public const string ExhaustHold = "AE"; // открыть и держать выхлоп
