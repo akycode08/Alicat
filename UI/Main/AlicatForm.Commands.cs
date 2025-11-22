@@ -7,25 +7,25 @@ namespace Alicat
 {
     public partial class AlicatForm : Form
         {
-            private void btnOptions_Click(object? sender, EventArgs e)
-            {
-                using var dlg = new FormOptions();
-                dlg.StartPosition = FormStartPosition.CenterParent;
-                dlg.ShowDialog(this);
+        private void btnOptions_Click(object? sender, EventArgs e)
+        {
+            using var dlg = new FormOptions();
+            dlg.StartPosition = FormStartPosition.CenterParent;
+            dlg.ShowDialog(this);
 
-                ApplyOptionsToUi();
+            ApplyOptionsToUi();
 
-                var ramp = FormOptions.AppOptions.Current.PressureRamp;
-                _ramp?.TryApply(ramp);   // SR без конвертаций
+            var ramp = FormOptions.AppOptions.Current.PressureRamp;
+            _ramp?.TryApply(ramp);   // SR без конвертаций
 
 
-                // Если задан Ramp — шлём SR (без конвертаций)
-                // var ramp = FormOptions.AppOptions.Current.PressureRamp;
-                if (_serial != null && ramp is double r)
-                    _serial.Send($"SR {r.ToString("G", CultureInfo.InvariantCulture)}");
-            }
+            // Если задан Ramp — шлём SR (без конвертаций)
+            // var ramp = FormOptions.AppOptions.Current.PressureRamp;
+            if (_serial != null && ramp is double r)
+                _serial.Send($"SR {r.ToString("G", CultureInfo.InvariantCulture)}");
+        }
 
-      
+
 
         // ================= GO ± =================
         private void btnGoPlus_Click(object? sender, EventArgs e)
