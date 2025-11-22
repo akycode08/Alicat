@@ -105,5 +105,53 @@ namespace Alicat
             }
             return true;
         }
-     }
+
+        /// <summary>
+        /// Парсер ответа ASR, например:
+        /// "A 6.000001 10 4 PSIG/s"
+        /// ВАЖНО: возвращает true ТОЛЬКО если нашли единицы с "/s".
+        /// </summary>
+        private static bool TryParseAsr(string line, out double ramp, out string units)
+        {
+            ramp = 0;
+            units = "PSIG/s";
+
+            if (string.IsNullOrWhiteSpace(line))
+                return false;
+
+            var parts = line.Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2)
+                return false;
+
+            // Ожидаем, что первая часть — ID прибора (A)
+            if (!parts[0].Equals("A", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            // Вторая часть — значение скорости
+            if (!double.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out ramp))
+                return false;
+
+            // Ищем токен вида "PSIG/s" / "BAR/s" и т.п.
+            string? foundUnits = null;
+            for (int i = 1; i < parts.Length; i++)
+            {
+                var p = parts[i].Trim();
+                if (p.EndsWith("/s", StringComparison.OrdinalIgnoreCase))
+                {
+                    foundUnits = p;
+                    break;
+                }
+            }
+
+            // КЛЮЧЕВОЕ: если не нашли единицы с "/s" — это НЕ ASR, возвращаем false
+            if (string.IsNullOrWhiteSpace(foundUnits))
+                return false;
+
+            units = foundUnits;
+            return true;
+        }
+
+
+
+    }
 }
