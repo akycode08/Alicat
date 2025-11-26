@@ -13,10 +13,22 @@ namespace Alicat
 {
     public partial class AlicatForm : Form
         {
-        private void btnGraph_Click(object sender, EventArgs e)
+        private void btnGraph_Click(object? sender, EventArgs e)
         {
-            var form = new GraphForm();
-            form.Show(this);
+            // если окна ещё нет или оно было закрыто — создаём новое
+            if (_graphForm == null || _graphForm.IsDisposed)
+            {
+                _graphForm = new GraphForm();
+                _graphForm.Show(this); // делаем AlicatForm владельцем
+            }
+            else
+            {
+                // если уже открыто — просто выводим на передний план
+                if (_graphForm.WindowState == FormWindowState.Minimized)
+                    _graphForm.WindowState = FormWindowState.Normal;
+
+                _graphForm.Focus();
+            }
         }
 
         private void btnTable_Click(object sender, EventArgs e)
