@@ -1,7 +1,8 @@
-﻿using System.Globalization;
-using System.Threading.Tasks;
-using Alicat.Services.Controllers;
+﻿using Alicat.Services.Controllers;
 using Alicat.Services.Serial;
+using Alicat.UI.Features.Graph.Views;
+using System.Globalization;
+using System.Threading.Tasks;
 
 namespace Alicat
 {
@@ -205,6 +206,7 @@ namespace Alicat
                 _serial.Send($"AS {sp.ToString("F2", CultureInfo.InvariantCulture)}");
                 _serial.RequestAls();
             }
+
 
     }
 }
