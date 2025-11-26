@@ -3,6 +3,7 @@ using Alicat.Services.Controllers;
 using Alicat.Services.Protocol;
 using Alicat.Services.Serial;           // ✅ внешний SerialClient
 using Alicat.UI.Features.Terminal.Views;
+using Alicat.UI.Features.Graph.Views;
 using System;                           // базовые типы
 using System.Diagnostics;
 using System.Globalization;             // парс чисел Invariant
@@ -11,6 +12,7 @@ using System.Text;                      // Encoding.ASCII
 using System.Threading.Tasks;           // Task.Delay (на будущее)
 using System.Windows.Forms;             // WinForms
 using Timer = System.Windows.Forms.Timer;
+
 
 namespace Alicat
 {
@@ -33,6 +35,8 @@ namespace Alicat
         private RampController? _ramp;
 
         private TerminalForm? _terminalForm;
+        private GraphForm? _graphForm;
+
 
 
 
