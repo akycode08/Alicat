@@ -36,13 +36,15 @@ namespace Alicat
             bool exh = line.IndexOf("EXH", StringComparison.OrdinalIgnoreCase) >= 0;
             if (exh) _isExhaust = true;
 
-            // ⬇️ ЛОГ В ТЕРМИНАЛ (если окно открыто)
-            _terminalForm?.AppendLog("<< " + line);
+            // ЛОГ ТОЛЬКО ЕСЛИ ТЕРМИНАЛ ЖИВОЙ
+            if (_terminalForm != null && !_terminalForm.IsDisposed)
+            {
+                _terminalForm.AppendLog("<< " + line);
+            }
 
             // 1) Сначала пробуем распознать ответ ASR (Ramp Speed)
             if (TryParseAsr(line, out var ramp, out var rampUnits))
             {
-                // Обновляем только Ramp Speed в блоке Data
                 BeginInvoke(new Action(() =>
                 {
                     UI_SetRampSpeedUnits($"{TrimZeros(ramp)} {rampUnits}");
@@ -52,7 +54,7 @@ namespace Alicat
                 return;
             }
 
-            // 2) Если это не ASR — как раньше, пробуем ALS
+            // 2) Если это не ASR — пробуем ALS
             if (!TryParseAls(line, out var cur, out var sp, out var unit))
                 return;
 
@@ -72,10 +74,15 @@ namespace Alicat
 
                 _state.Update(_current, _setPoint, _unit, _isExhaust);
                 _lastCurrent = _current;
+
+                // 👉 ОБНОВЛЯЕМ ГРАФИК, ЕСЛИ ОКНО ОТКРЫТО
+                if (_graphForm != null && !_graphForm.IsDisposed)
+                {
+                    double? targetForGraph = _isExhaust ? (double?)null : _setPoint;
+                    _graphForm.AddSample(_current, targetForGraph);
+                }
             }));
         }
-
-
 
 
         protected override void OnFormClosing(FormClosingEventArgs e)
