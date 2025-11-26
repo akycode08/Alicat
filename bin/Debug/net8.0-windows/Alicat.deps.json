@@ -8,7 +8,8 @@
     ".NETCoreApp,Version=v8.0": {
       "Alicat/1.0.0": {
         "dependencies": {
-          "System.IO.Ports": "9.0.10"
+          "System.IO.Ports": "9.0.10",
+          "WinForms.DataVisualization": "1.10.0"
         },
         "runtime": {
           "Alicat.dll": {}
@@ -202,6 +203,18 @@
             "fileVersion": "9.0.1025.47515"
           }
         }
+      },
+      "WinForms.DataVisualization/1.10.0": {
+        "runtime": {
+          "lib/net6.0-windows7.0/WinForms.DataVisualization.Utilities.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.10.0.0"
+          },
+          "lib/net6.0-windows7.0/WinForms.DataVisualization.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.10.0.0"
+          }
+        }
       }
     }
   },
@@ -336,6 +349,13 @@
       "sha512": "sha512-jMvwu+NOk/+vlOzTp9vpxIeGq+yRA+3EbkmpLMs37AAy9cI8YlY/ntTHL00w26Tvu6cIkx0/TdjmeHm0l99Nqw==",
       "path": "system.io.ports/9.0.10",
       "hashPath": "system.io.ports.9.0.10.nupkg.sha512"
+    },
+    "WinForms.DataVisualization/1.10.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-QKFQUf6xnsseiRsWfIeKvbWRJWvOKOvkoec/pWxEjwYrr4Vix4xmAWmvTpJGxoeWRXOzV7Pprm5SCFqzXzBA4g==",
+      "path": "winforms.datavisualization/1.10.0",
+      "hashPath": "winforms.datavisualization.1.10.0.nupkg.sha512"
     }
   }
 }
