@@ -42,3 +42,5 @@ C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.UI.F
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.UI.Features.Statistics.Views.StatisticsForm.resources
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.UI.Features.Table.Views.TableForm.resources
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.UI.Features.Terminal.Views.TerminalForm.resources
+C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\WinForms.DataVisualization.Utilities.dll
+C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\WinForms.DataVisualization.dll
