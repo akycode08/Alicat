@@ -28,12 +28,48 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Text = "GraphForm";
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            chartPressure = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            ((System.ComponentModel.ISupportInitialize)chartPressure).BeginInit();
+            SuspendLayout();
+            // 
+            // chartPressure
+            // 
+            chartArea2.Name = "ChartArea1";
+            chartPressure.ChartAreas.Add(chartArea2);
+            chartPressure.Dock = DockStyle.Fill;
+            legend2.Name = "Legend1";
+            chartPressure.Legends.Add(legend2);
+            chartPressure.Location = new Point(0, 0);
+            chartPressure.Name = "chartPressure";
+            series2.ChartArea = "ChartArea1";
+            series2.Legend = "Legend1";
+            series2.Name = "Series1";
+            chartPressure.Series.Add(series2);
+            chartPressure.Size = new Size(1128, 619);
+            chartPressure.TabIndex = 0;
+            chartPressure.Text = "chart1";
+            //chartPressure.Click += chartPressure_Click;
+            // 
+            // GraphForm
+            // 
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(1128, 619);
+            Controls.Add(chartPressure);
+            Name = "GraphForm";
+            Text = "GraphForm";
+            //Load += GraphForm_Load;
+            ((System.ComponentModel.ISupportInitialize)chartPressure).EndInit();
+            ResumeLayout(false);
         }
 
         #endregion
+
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chartPressure;
     }
 }
