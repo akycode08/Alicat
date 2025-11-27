@@ -35,7 +35,7 @@ namespace Alicat.Services.Serial
             try { _port.Write(cmd + "\r"); } catch { /* ignore */ }
         }
 
-        public void RequestAls() => Send("ALS");
+        //public void RequestAls() => Send("ALS");
 
         private void Port_DataReceived(object? sender, SerialDataReceivedEventArgs e)
         {
