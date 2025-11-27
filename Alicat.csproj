@@ -9,22 +9,33 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Services\Options\**" />
+    <Compile Remove="UI\Controls\**" />
+    <Compile Remove="UI\Dialogs\**" />
+    <Compile Remove="UI\Panels\**" />
+    <EmbeddedResource Remove="Services\Options\**" />
+    <EmbeddedResource Remove="UI\Controls\**" />
+    <EmbeddedResource Remove="UI\Dialogs\**" />
+    <EmbeddedResource Remove="UI\Panels\**" />
+    <None Remove="Services\Options\**" />
+    <None Remove="UI\Controls\**" />
+    <None Remove="UI\Dialogs\**" />
+    <None Remove="UI\Panels\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="System.IO.Ports" Version="9.0.10" />
     <PackageReference Include="WinForms.DataVisualization" Version="1.10.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Infrastructure\" />
-    <Folder Include="Resources\" />
-    <Folder Include="Services\Options\" />
+    <Folder Include="Domain\Models\" />
+    <Folder Include="Services\Settings\" />
     <Folder Include="UI\Components\" />
-    <Folder Include="UI\Controls\" />
-    <Folder Include="UI\Dialogs\" />
     <Folder Include="UI\Features\Graph\NewFolder\" />
     <Folder Include="UI\Features\Terminal\Logic\" />
     <Folder Include="UI\Features\Terminal\Models\" />
     <Folder Include="UI\Features\Terminal\Services\" />
-    <Folder Include="UI\Panels\" />
     <Folder Include="UI\Styles\" />
     <Folder Include="Validation\" />
   </ItemGroup>
