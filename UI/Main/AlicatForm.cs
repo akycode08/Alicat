@@ -1,18 +1,17 @@
 ﻿using Alicat.Domain;
 using Alicat.Services.Controllers;
 using Alicat.Services.Protocol;
-using Alicat.Services.Serial;           // ✅ внешний SerialClient
+using Alicat.Services.Serial;           // SerialClient
 using Alicat.UI.Features.Terminal.Views;
 using Alicat.UI.Features.Graph.Views;
-using System;                           // базовые типы
+using System;
 using System.Diagnostics;
-using System.Globalization;             // парс чисел Invariant
-using System.IO.Ports;                  // SerialPort
-using System.Text;                      // Encoding.ASCII
-using System.Threading.Tasks;           // Task.Delay (на будущее)
-using System.Windows.Forms;             // WinForms
+using System.Globalization;
+using System.IO.Ports;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using Timer = System.Windows.Forms.Timer;
-
 
 namespace Alicat
 {
@@ -25,6 +24,7 @@ namespace Alicat
         private bool _isExhaust = false;
         private double? _lastCurrent = null;
 
+        // ✅ теперь форма хранит ссылку на SerialClient, а не сама работает с SerialPort
         private SerialClient? _serial;
         private readonly Timer _pollTimer = new() { Interval = 500 };
 
@@ -37,31 +37,32 @@ namespace Alicat
         private TerminalForm? _terminalForm;
         private GraphForm? _graphForm;
 
-
-
-
         public AlicatForm()
         {
             InitializeComponent();
 
+            // меню
             menuSettingsOptions.Click += btnOptions_Click;
             menuSettingsCommunication.Click += btnCommunication_Click;
 
+            // навигация
             btnGraph.Click += btnGraph_Click;
             btnTable.Click += btnTable_Click;
             btnStatistics.Click += btnStatistic_Click;
             btnTerminal.Click += btnTerminal_Click;
 
+            // управление давлением
             btnGoTarget.Click += btnGoTarget_Click;
             btnPurge.Click += btnPurge_Click;
             btnGoPlus.Click += btnGoPlus_Click;
             btnGoMinus.Click += btnGoMinus_Click;
-          
 
+            // валидация
             txtTarget.TextChanged += (_, __) => ValidateTargetAgainstMax();
             chkConfirmGo.CheckedChanged += (_, __) => ValidateTargetAgainstMax();
             nudIncrement.ValueChanged += (_, __) => ValidateIncrementAgainstMax();
 
+            // начальные значения UI
             UI_SetPressureUnits(_unit);
             UI_SetRampSpeedUnits("PSIG/s");
             UI_SetSetPoint(_setPoint, _unit);
@@ -72,7 +73,10 @@ namespace Alicat
 
             RefreshCurrent();
 
-            _pollTimer.Tick += (_, __) => _serial?.RequestAls();
+            // ❌ было: _serial?.RequestAls();
+            // ✅ стало: форма сама не знает команд, она просит SerialClient отправить строку из AlicatCommands
+            _pollTimer.Tick += (_, __) => _serial?.Send(AlicatCommands.ReadAls);
+
             ApplyOptionsToUi();
         }
 
@@ -105,7 +109,11 @@ namespace Alicat
             for (int i = 3; i < parts.Length; i++)
             {
                 var p = parts[i].Trim().ToUpperInvariant();
-                if (p is "PSIG" or "PSI" or "KPA" or "BAR") { unit = p; break; }
+                if (p is "PSIG" or "PSI" or "KPA" or "BAR")
+                {
+                    unit = p;
+                    break;
+                }
             }
             return true;
         }
@@ -113,7 +121,7 @@ namespace Alicat
         /// <summary>
         /// Парсер ответа ASR, например:
         /// "A 6.000001 10 4 PSIG/s"
-        /// ВАЖНО: возвращает true ТОЛЬКО если нашли единицы с "/s".
+        /// Возвращает true ТОЛЬКО если нашли единицы с "/s".
         /// </summary>
         private static bool TryParseAsr(string line, out double ramp, out string units)
         {
@@ -127,15 +135,12 @@ namespace Alicat
             if (parts.Length < 2)
                 return false;
 
-            // Ожидаем, что первая часть — ID прибора (A)
             if (!parts[0].Equals("A", StringComparison.OrdinalIgnoreCase))
                 return false;
 
-            // Вторая часть — значение скорости
             if (!double.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out ramp))
                 return false;
 
-            // Ищем токен вида "PSIG/s" / "BAR/s" и т.п.
             string? foundUnits = null;
             for (int i = 1; i < parts.Length; i++)
             {
@@ -147,7 +152,6 @@ namespace Alicat
                 }
             }
 
-            // КЛЮЧЕВОЕ: если не нашли единицы с "/s" — это НЕ ASR, возвращаем false
             if (string.IsNullOrWhiteSpace(foundUnits))
                 return false;
 
@@ -155,7 +159,6 @@ namespace Alicat
             return true;
         }
 
-
-
+        // 👉 если ниже файла у тебя есть другие методы AlicatForm — оставь их без изменений
     }
 }
