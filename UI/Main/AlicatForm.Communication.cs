@@ -81,7 +81,44 @@ namespace Alicat
                     double? targetForGraph = _isExhaust ? (double?)null : _setPoint;
                     _graphForm.AddSample(_current, targetForGraph);
                 }
+
+                if (_tableForm != null && !_tableForm.IsDisposed)
+                {
+                    if (ShouldLog(_current))
+                    {
+                        var spForLog = _isExhaust ? 0.0 : _setPoint;
+                        _tableForm.AddRecordFromDevice(_current, spForLog, _unit);
+                    }
+                }
+
+
             }));
+        }
+
+
+        private bool ShouldLog(double currentPressure)
+        {
+            if (_tableForm == null || _tableForm.IsDisposed)
+                return false;
+
+            double threshold = _tableForm.Threshold;
+
+            // первая запись всегда
+            if (_lastLoggedPressure == null)
+            {
+                _lastLoggedPressure = currentPressure;
+                return true;
+            }
+
+            double delta = Math.Abs(currentPressure - _lastLoggedPressure.Value);
+
+            if (delta >= threshold)
+            {
+                _lastLoggedPressure = currentPressure;
+                return true;
+            }
+
+            return false;
         }
 
 
