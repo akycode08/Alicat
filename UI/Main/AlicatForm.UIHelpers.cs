@@ -31,10 +31,21 @@ namespace Alicat
             }
         }
 
-        private void btnTable_Click(object sender, EventArgs e)
+        private void btnTable_Click(object? sender, EventArgs e)
         {
-            var form = new TableForm();
-            form.Show(this);
+            if (_tableForm == null || _tableForm.IsDisposed)
+            {
+                _tableForm = new TableForm();
+                _tableForm.StartPosition = FormStartPosition.CenterParent;
+                _tableForm.Show(this);   // не ShowDialog, окно живёт, пока не закроешь
+            }
+            else
+            {
+                if (_tableForm.WindowState == FormWindowState.Minimized)
+                    _tableForm.WindowState = FormWindowState.Normal;
+
+                _tableForm.Focus();
+            }
         }
 
         private void btnStatistic_Click(object sender, EventArgs e)
