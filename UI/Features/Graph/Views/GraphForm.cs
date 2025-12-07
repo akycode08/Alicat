@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Drawing.Text;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Security.Cryptography;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 
@@ -29,91 +23,124 @@ namespace Alicat.UI.Features.Graph.Views
             ConfigureChart();
 
             chartPressure.MouseDoubleClick += ChartPressure_MouseDoubleClick;
-
         }
 
         private void ConfigureChart()
         {
-            // чистим всё
             chartPressure.Series.Clear();
             chartPressure.ChartAreas.Clear();
             chartPressure.Legends.Clear();
 
-            // ==== DARK THEME ====
-            chartPressure.BackColor = Color.FromArgb(20, 20, 20);
-
+            // === ChartArea ===
             var area = new ChartArea("MainArea");
-            area.BackColor = Color.FromArgb(20, 20, 20);
+            area.BackColor = Color.FromArgb(24, 26, 33);
+            area.BorderColor = Color.Transparent;
 
-            area.AxisX.Title = "Time, s";
-            area.AxisY.Title = "Pressure, PSI";
+            if (!area.AxisX.ScaleView.IsZoomed)
+            {
+                if (_timeSeconds > TimeWindow)
+                {
+                    const double majorStep = 10.0; // тот же шаг, что и Interval
 
-            var gridColor = Color.FromArgb(60, 60, 60);
-            area.AxisX.MajorGrid.LineColor = gridColor;
-            area.AxisY.MajorGrid.LineColor = gridColor;
-            area.AxisX.MajorGrid.LineDashStyle = ChartDashStyle.Dash;
-            area.AxisY.MajorGrid.LineDashStyle = ChartDashStyle.Dash;
+                    // максимальное значение по X округляем вверх до ближайших 10 сек
+                    var max = Math.Ceiling(_timeSeconds / majorStep) * majorStep;
+                    var min = max - TimeWindow;
 
-            area.AxisX.LineColor = Color.LightGray;
-            area.AxisY.LineColor = Color.LightGray;
+                    area.AxisX.Minimum = min;
+                    area.AxisX.Maximum = max;
+                }
+            }
 
-            area.AxisX.LabelStyle.ForeColor = Color.White;
-            area.AxisY.LabelStyle.ForeColor = Color.White;
-            area.AxisX.TitleForeColor = Color.White;
-            area.AxisY.TitleForeColor = Color.White;
+            // X axis
+            area.AxisX.LineWidth = 2;
+            area.AxisX.LineColor = Color.FromArgb(60, 60, 70);
+            area.AxisX.LabelStyle.ForeColor = Color.FromArgb(150, 150, 160);
+            area.AxisX.MajorGrid.LineColor = Color.FromArgb(40, 40, 50);
+            area.AxisX.MajorGrid.LineDashStyle = ChartDashStyle.Solid;
 
-            // окно по оси X
+            area.AxisX.Interval = 10;          // шаг сетки и подписей 10 секунд
+            area.AxisX.LabelStyle.Format = "0"; // без десятых: 0, 10, 20...
             area.AxisX.Minimum = 0;
-            area.AxisX.Maximum = TimeWindow;
+            area.AxisX.Maximum = TimeWindow;    // 30, как у тебя
+
+            // Y axis
+            area.AxisY.LineWidth = 2;
+            area.AxisY.LineColor = Color.FromArgb(60, 60, 70);
+            area.AxisY.LabelStyle.ForeColor = Color.FromArgb(150, 150, 160);
+            area.AxisY.MajorGrid.LineColor = Color.FromArgb(40, 40, 50);
+            area.AxisY.MajorGrid.LineDashStyle = ChartDashStyle.Solid;
 
             chartPressure.ChartAreas.Add(area);
 
-            // Легенда
-            var legend = new Legend("MainLegend");
-            legend.BackColor = Color.FromArgb(20, 20, 20);
-            legend.ForeColor = Color.White;
+            // === Legend ===
+            /*var legend = new Legend("Legend1");
+            legend.BackColor = Color.Transparent;
+            legend.ForeColor = Color.FromArgb(200, 200, 210);
             chartPressure.Legends.Add(legend);
+            */
 
-            // Текущее давление
-            _seriesCurrent = new Series("Current pressure")
+            // === CURRENT LINE ===
+            _seriesCurrent = new Series("Current")
             {
                 ChartType = SeriesChartType.Line,
-                BorderWidth = 2,
-                Color = Color.DeepSkyBlue,
+                BorderWidth = 3,
+                Color = Color.FromArgb(0, 200, 255),
                 ChartArea = "MainArea",
-                Legend = "MainLegend",
-                XValueType = ChartValueType.Double,
-                YValueType = ChartValueType.Double
+                Legend = "Legend1"
             };
-
-            // Уставка
-            _seriesTarget = new Series("Target pressure")
-            {
-                ChartType = SeriesChartType.Line,
-                BorderWidth = 2,
-                Color = Color.Gold,
-                ChartArea = "MainArea",
-                Legend = "MainLegend",
-                XValueType = ChartValueType.Double,
-                YValueType = ChartValueType.Double
-            };
-
             chartPressure.Series.Add(_seriesCurrent);
+
+            // === TARGET LINE ===
+            _seriesTarget = new Series("Target")
+            {
+                ChartType = SeriesChartType.Line,
+                BorderWidth = 2,
+                Color = Color.FromArgb(255, 214, 69),
+                ChartArea = "MainArea",
+                Legend = "Legend1"
+            };
             chartPressure.Series.Add(_seriesTarget);
 
-            // === Zoom по оси Y ===
-            area.AxisY.ScaleView.Zoomable = true;          // можно масштабировать
-            area.CursorY.IsUserEnabled = true;             // включаем курсор
-            area.CursorY.IsUserSelectionEnabled = true;    // разрешаем выделение мышкой
+            // === MIN LIMIT (yellow dashed) ===
+            var sMin = new Series("Min")
+            {
+                ChartType = SeriesChartType.Line,
+                BorderWidth = 2,
+                Color = Color.FromArgb(255, 214, 69),
+                BorderDashStyle = ChartDashStyle.Dash,
+                ChartArea = "MainArea",
+                Legend = "Legend1"
+            };
+            chartPressure.Series.Add(sMin);
 
-            // === Zoom по оси X ===
+            // === MAX LIMIT (red dashed) ===
+            var sMax = new Series("Max")
+            {
+                ChartType = SeriesChartType.Line,
+                BorderWidth = 2,
+                Color = Color.FromArgb(255, 80, 80),
+                BorderDashStyle = ChartDashStyle.Dash,
+                ChartArea = "MainArea",
+                Legend = "Legend1"
+            };
+            chartPressure.Series.Add(sMax);
+
+            // === Zoom ===
+            area.AxisY.ScaleView.Zoomable = true;
+            area.CursorY.IsUserEnabled = true;
+            area.CursorY.IsUserSelectionEnabled = true;
+
             area.AxisX.ScaleView.Zoomable = true;
             area.CursorX.IsUserEnabled = true;
             area.CursorX.IsUserSelectionEnabled = true;
 
+            // отключаем Series1 из дизайнера
+            if (chartPressure.Series.Count > 4)
+                chartPressure.Series.RemoveAt(4);
         }
 
-        // === Публичный метод: потом сюда подадим реальные данные ===
+
+        // === Публичный метод: сюда подаём реальные данные ===
         public void AddSample(double currentPressure, double? targetPressure)
         {
             // если форму уже закрыли/разобрали — ничего не делаем
@@ -127,8 +154,12 @@ namespace Alicat.UI.Features.Graph.Views
 
             _timeSeconds += TimeStep;
 
-            // Автопрокрутка окна по X
-            var area = chartPressure.ChartAreas["MainArea"];
+            // Автопрокрутка окна по X (работаем с ChartArea из дизайнера)
+            if (chartPressure.ChartAreas.Count == 0)
+                return;
+
+            var area = chartPressure.ChartAreas[0];
+
             // Автопрокрутка только если по X нет зума
             if (!area.AxisX.ScaleView.IsZoomed)
             {
@@ -142,7 +173,10 @@ namespace Alicat.UI.Features.Graph.Views
 
         private void ChartPressure_MouseDoubleClick(object? sender, MouseEventArgs e)
         {
-            var area = chartPressure.ChartAreas["MainArea"];
+            if (chartPressure.ChartAreas.Count == 0)
+                return;
+
+            var area = chartPressure.ChartAreas[0];
 
             // Сброс zoom по обеим осям
             area.AxisY.ScaleView.ZoomReset(0);
@@ -164,6 +198,8 @@ namespace Alicat.UI.Features.Graph.Views
             area.RecalculateAxesScale();
         }
 
-
+        private void panelEmergencyHost_Paint(object sender, PaintEventArgs e)
+        {
+        }
     }
 }
