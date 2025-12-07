@@ -7,6 +7,9 @@
     <Compile Update="UI\Features\Statistics\Views\StatisticsForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Update="UI\Features\Table\AddCommentForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="UI\Features\Table\Views\TableForm.cs">
       <SubType>Form</SubType>
     </Compile>
