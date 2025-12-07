@@ -4,6 +4,7 @@ using Alicat.Services.Protocol;
 using Alicat.Services.Serial;           // SerialClient
 using Alicat.UI.Features.Terminal.Views;
 using Alicat.UI.Features.Graph.Views;
+using Alicat.UI.Features.Table.Views;
 using System;
 using System.Diagnostics;
 using System.Globalization;
@@ -24,6 +25,8 @@ namespace Alicat
         private bool _isExhaust = false;
         private double? _lastCurrent = null;
 
+        private double? _lastLoggedPressure = null;
+
         // ✅ теперь форма хранит ссылку на SerialClient, а не сама работает с SerialPort
         private SerialClient? _serial;
         private readonly Timer _pollTimer = new() { Interval = 500 };
@@ -36,6 +39,8 @@ namespace Alicat
 
         private TerminalForm? _terminalForm;
         private GraphForm? _graphForm;
+        private TableForm? _tableForm;
+
 
         public AlicatForm()
         {
