@@ -21,9 +21,30 @@ namespace Alicat.UI.Features.Graph.Views
         {
             InitializeComponent();
             ConfigureChart();
+            SetupGridControls();
 
             chartPressure.MouseDoubleClick += ChartPressure_MouseDoubleClick;
         }
+
+        private void SetupGridControls()
+        {
+            cmbXStep.Items.AddRange(new object[]
+            {
+                "5",
+                "10",
+                "20"
+            });
+            cmbXStep.SelectedIndex = 0;
+
+            cmbYStep.Items.AddRange(new object[]
+            {
+                "10",
+                "20",
+                "50"
+            });
+            cmbYStep.SelectedIndex = 1;
+        }
+
 
         private void ConfigureChart()
         {
@@ -200,6 +221,16 @@ namespace Alicat.UI.Features.Graph.Views
 
         private void panelEmergencyHost_Paint(object sender, PaintEventArgs e)
         {
+        }
+
+        private void lblTimeWindowTitle_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void lblXStep_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
