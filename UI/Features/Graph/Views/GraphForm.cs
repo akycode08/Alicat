@@ -21,13 +21,27 @@ namespace Alicat.UI.Features.Graph.Views
         {
             InitializeComponent();
             ConfigureChart();
-            SetupGridControls();
+            ComboBoxValues();
 
             chartPressure.MouseDoubleClick += ChartPressure_MouseDoubleClick;
         }
 
-        private void SetupGridControls()
+        private void ComboBoxValues()
         {
+            cmbDuration.Items.AddRange(new object[]
+            {
+                "1 min",
+                "5 min",
+                "15 min",
+                "30 min",
+                "1 hour",
+                "2 hour",
+                "4 hour",
+                "7 hour"
+
+            });
+            cmbDuration.SelectedIndex = 0;
+
             cmbXStep.Items.AddRange(new object[]
             {
                 "5",
@@ -79,7 +93,7 @@ namespace Alicat.UI.Features.Graph.Views
             area.AxisX.MajorGrid.LineColor = Color.FromArgb(40, 40, 50);
             area.AxisX.MajorGrid.LineDashStyle = ChartDashStyle.Solid;
 
-            area.AxisX.Interval = 10;          // шаг сетки и подписей 10 секунд
+            area.AxisX.Interval = 5;          // шаг сетки и подписей 10 секунд
             area.AxisX.LabelStyle.Format = "0"; // без десятых: 0, 10, 20...
             area.AxisX.Minimum = 0;
             area.AxisX.Maximum = TimeWindow;    // 30, как у тебя
@@ -229,6 +243,21 @@ namespace Alicat.UI.Features.Graph.Views
         }
 
         private void lblXStep_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label3_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label3_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }
