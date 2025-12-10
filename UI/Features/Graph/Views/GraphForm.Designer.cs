@@ -36,6 +36,32 @@
             panelLeft = new Panel();
             panelRight = new Panel();
             tableSettings = new TableLayoutPanel();
+            tlpAlerts = new TableLayoutPanel();
+            lblFlash = new Label();
+            lblSound = new Label();
+            lblAlertsTitle = new Label();
+            chkSound = new CheckBox();
+            chkFlash = new CheckBox();
+            tlpDisplay = new TableLayoutPanel();
+            lblDisplayTitle = new Label();
+            chkShowGrid = new CheckBox();
+            chkSmoothing = new CheckBox();
+            tlpThresholds = new TableLayoutPanel();
+            lblMinimum = new Label();
+            lblMaximum = new Label();
+            lblThresholdsTitle = new Label();
+            nudMaximum = new NumericUpDown();
+            numericUpDown2 = new NumericUpDown();
+            tlpGrid = new TableLayoutPanel();
+            cmbXStep = new ComboBox();
+            lblGridTitle = new Label();
+            cmbYStep = new ComboBox();
+            lblXStep = new Label();
+            lblYStep = new Label();
+            tlpTimeWindow = new TableLayoutPanel();
+            lblTimeWindowTitle = new Label();
+            cmbDuration = new ComboBox();
+            lblDuration = new Label();
             panelBottom = new Panel();
             panelHeader = new Panel();
             panelChartHeader = new Panel();
@@ -46,28 +72,20 @@
             lblLegendCurrent = new Label();
             lblLegendTarget = new Label();
             panelCenter = new Panel();
-            tlpTimeWindow = new TableLayoutPanel();
-            tlpGrid = new TableLayoutPanel();
-            tlpThresholds = new TableLayoutPanel();
-            tlpDisplay = new TableLayoutPanel();
-            tlpAlerts = new TableLayoutPanel();
-            label1 = new Label();
-            label2 = new Label();
-            comboBox1 = new ComboBox();
-            lblGridTitle = new Label();
-            lblXStep = new Label();
-            lblYStep = new Label();
-            cmbYStep = new ComboBox();
-            cmbXStep = new ComboBox();
             ((System.ComponentModel.ISupportInitialize)chartPressure).BeginInit();
             panelRight.SuspendLayout();
             tableSettings.SuspendLayout();
+            tlpAlerts.SuspendLayout();
+            tlpDisplay.SuspendLayout();
+            tlpThresholds.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)nudMaximum).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numericUpDown2).BeginInit();
+            tlpGrid.SuspendLayout();
+            tlpTimeWindow.SuspendLayout();
             panelChartHeader.SuspendLayout();
             panelChartButtons.SuspendLayout();
             flowLegend.SuspendLayout();
             panelCenter.SuspendLayout();
-            tlpTimeWindow.SuspendLayout();
-            tlpGrid.SuspendLayout();
             SuspendLayout();
             // 
             // chartPressure
@@ -94,7 +112,7 @@
             series1.Legend = "Legend1";
             series1.Name = "Series1";
             chartPressure.Series.Add(series1);
-            chartPressure.Size = new Size(567, 440);
+            chartPressure.Size = new Size(594, 350);
             chartPressure.TabIndex = 0;
             chartPressure.Text = "chart1";
             // 
@@ -104,7 +122,7 @@
             panelLeft.Dock = DockStyle.Left;
             panelLeft.Location = new Point(0, 50);
             panelLeft.Name = "panelLeft";
-            panelLeft.Size = new Size(200, 550);
+            panelLeft.Size = new Size(200, 460);
             panelLeft.TabIndex = 1;
             // 
             // panelRight
@@ -112,11 +130,11 @@
             panelRight.BackColor = Color.FromArgb(21, 23, 28);
             panelRight.Controls.Add(tableSettings);
             panelRight.Dock = DockStyle.Right;
-            panelRight.Location = new Point(767, 50);
+            panelRight.Location = new Point(794, 50);
             panelRight.Margin = new Padding(4);
             panelRight.Name = "panelRight";
             panelRight.Padding = new Padding(10, 4, 10, 4);
-            panelRight.Size = new Size(200, 550);
+            panelRight.Size = new Size(200, 460);
             panelRight.TabIndex = 2;
             // 
             // tableSettings
@@ -138,16 +156,404 @@
             tableSettings.RowStyles.Add(new RowStyle(SizeType.Percent, 16.666666F));
             tableSettings.RowStyles.Add(new RowStyle(SizeType.Percent, 16.666666F));
             tableSettings.RowStyles.Add(new RowStyle(SizeType.Percent, 16.666666F));
-            tableSettings.Size = new Size(180, 542);
+            tableSettings.Size = new Size(180, 452);
             tableSettings.TabIndex = 0;
+            // 
+            // tlpAlerts
+            // 
+            tlpAlerts.BackColor = Color.FromArgb(32, 35, 44);
+            tlpAlerts.ColumnCount = 2;
+            tlpAlerts.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
+            tlpAlerts.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+            tlpAlerts.Controls.Add(lblFlash, 0, 2);
+            tlpAlerts.Controls.Add(lblSound, 0, 1);
+            tlpAlerts.Controls.Add(lblAlertsTitle, 0, 0);
+            tlpAlerts.Controls.Add(chkSound, 1, 1);
+            tlpAlerts.Controls.Add(chkFlash, 1, 2);
+            tlpAlerts.Dock = DockStyle.Fill;
+            tlpAlerts.Location = new Point(3, 303);
+            tlpAlerts.Name = "tlpAlerts";
+            tlpAlerts.RowCount = 3;
+            tlpAlerts.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
+            tlpAlerts.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
+            tlpAlerts.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
+            tlpAlerts.Size = new Size(174, 69);
+            tlpAlerts.TabIndex = 4;
+            // 
+            // lblFlash
+            // 
+            lblFlash.AutoSize = true;
+            lblFlash.Dock = DockStyle.Top;
+            lblFlash.ForeColor = Color.FromArgb(210, 215, 225);
+            lblFlash.Location = new Point(4, 48);
+            lblFlash.Margin = new Padding(4, 4, 0, 0);
+            lblFlash.Name = "lblFlash";
+            lblFlash.Padding = new Padding(5, 5, 0, 0);
+            lblFlash.Size = new Size(100, 20);
+            lblFlash.TabIndex = 8;
+            lblFlash.Text = "⚡Flash";
+            // 
+            // lblSound
+            // 
+            lblSound.AutoSize = true;
+            lblSound.Dock = DockStyle.Top;
+            lblSound.ForeColor = Color.FromArgb(210, 215, 225);
+            lblSound.Location = new Point(4, 24);
+            lblSound.Margin = new Padding(4, 4, 0, 0);
+            lblSound.Name = "lblSound";
+            lblSound.Padding = new Padding(5, 5, 0, 0);
+            lblSound.Size = new Size(100, 20);
+            lblSound.TabIndex = 8;
+            lblSound.Text = "🔔 Sound";
+            // 
+            // lblAlertsTitle
+            // 
+            lblAlertsTitle.AutoSize = true;
+            lblAlertsTitle.Dock = DockStyle.Top;
+            lblAlertsTitle.Font = new Font("Segoe UI", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            lblAlertsTitle.ForeColor = Color.FromArgb(120, 125, 140);
+            lblAlertsTitle.LiveSetting = System.Windows.Forms.Automation.AutomationLiveSetting.Polite;
+            lblAlertsTitle.Location = new Point(5, 5);
+            lblAlertsTitle.Margin = new Padding(5, 5, 0, 0);
+            lblAlertsTitle.Name = "lblAlertsTitle";
+            lblAlertsTitle.Size = new Size(99, 13);
+            lblAlertsTitle.TabIndex = 9;
+            lblAlertsTitle.Text = "ALERTS";
+            // 
+            // chkSound
+            // 
+            chkSound.AutoSize = true;
+            chkSound.Dock = DockStyle.Fill;
+            chkSound.FlatAppearance.BorderSize = 0;
+            chkSound.FlatStyle = FlatStyle.Flat;
+            chkSound.Location = new Point(107, 23);
+            chkSound.Name = "chkSound";
+            chkSound.Size = new Size(64, 18);
+            chkSound.TabIndex = 10;
+            chkSound.UseVisualStyleBackColor = true;
+            // 
+            // chkFlash
+            // 
+            chkFlash.AutoSize = true;
+            chkFlash.Dock = DockStyle.Fill;
+            chkFlash.FlatAppearance.BorderSize = 0;
+            chkFlash.FlatStyle = FlatStyle.Flat;
+            chkFlash.Location = new Point(107, 47);
+            chkFlash.Name = "chkFlash";
+            chkFlash.Size = new Size(64, 19);
+            chkFlash.TabIndex = 11;
+            chkFlash.UseVisualStyleBackColor = true;
+            // 
+            // tlpDisplay
+            // 
+            tlpDisplay.BackColor = Color.FromArgb(32, 35, 44);
+            tlpDisplay.ColumnCount = 2;
+            tlpDisplay.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
+            tlpDisplay.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+            tlpDisplay.Controls.Add(lblDisplayTitle, 0, 0);
+            tlpDisplay.Controls.Add(chkShowGrid, 0, 1);
+            tlpDisplay.Controls.Add(chkSmoothing, 0, 2);
+            tlpDisplay.Dock = DockStyle.Fill;
+            tlpDisplay.Location = new Point(3, 228);
+            tlpDisplay.Name = "tlpDisplay";
+            tlpDisplay.RowCount = 3;
+            tlpDisplay.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
+            tlpDisplay.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
+            tlpDisplay.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
+            tlpDisplay.Size = new Size(174, 69);
+            tlpDisplay.TabIndex = 3;
+            // 
+            // lblDisplayTitle
+            // 
+            lblDisplayTitle.AutoSize = true;
+            lblDisplayTitle.Dock = DockStyle.Top;
+            lblDisplayTitle.Font = new Font("Segoe UI", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            lblDisplayTitle.ForeColor = Color.FromArgb(120, 125, 140);
+            lblDisplayTitle.LiveSetting = System.Windows.Forms.Automation.AutomationLiveSetting.Polite;
+            lblDisplayTitle.Location = new Point(5, 5);
+            lblDisplayTitle.Margin = new Padding(5, 5, 0, 0);
+            lblDisplayTitle.Name = "lblDisplayTitle";
+            lblDisplayTitle.Size = new Size(99, 13);
+            lblDisplayTitle.TabIndex = 8;
+            lblDisplayTitle.Text = "DISPLAY";
+            // 
+            // chkShowGrid
+            // 
+            chkShowGrid.AutoSize = true;
+            chkShowGrid.Checked = true;
+            chkShowGrid.CheckState = CheckState.Checked;
+            chkShowGrid.Dock = DockStyle.Top;
+            chkShowGrid.FlatStyle = FlatStyle.Flat;
+            chkShowGrid.ForeColor = Color.FromArgb(210, 215, 225);
+            chkShowGrid.Location = new Point(4, 24);
+            chkShowGrid.Margin = new Padding(4, 4, 0, 0);
+            chkShowGrid.Name = "chkShowGrid";
+            chkShowGrid.Padding = new Padding(5, 1, 0, 0);
+            chkShowGrid.Size = new Size(100, 20);
+            chkShowGrid.TabIndex = 9;
+            chkShowGrid.Text = "Show Grid";
+            chkShowGrid.UseVisualStyleBackColor = true;
+            // 
+            // chkSmoothing
+            // 
+            chkSmoothing.AutoSize = true;
+            chkSmoothing.Checked = true;
+            chkSmoothing.CheckState = CheckState.Checked;
+            chkSmoothing.Dock = DockStyle.Top;
+            chkSmoothing.FlatStyle = FlatStyle.Flat;
+            chkSmoothing.ForeColor = Color.FromArgb(210, 215, 225);
+            chkSmoothing.Location = new Point(4, 48);
+            chkSmoothing.Margin = new Padding(4, 4, 0, 0);
+            chkSmoothing.Name = "chkSmoothing";
+            chkSmoothing.Padding = new Padding(5, 1, 0, 0);
+            chkSmoothing.Size = new Size(100, 20);
+            chkSmoothing.TabIndex = 10;
+            chkSmoothing.Text = "Smoothing";
+            chkSmoothing.UseVisualStyleBackColor = true;
+            // 
+            // tlpThresholds
+            // 
+            tlpThresholds.BackColor = Color.FromArgb(32, 35, 44);
+            tlpThresholds.ColumnCount = 2;
+            tlpThresholds.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
+            tlpThresholds.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+            tlpThresholds.Controls.Add(lblMinimum, 0, 2);
+            tlpThresholds.Controls.Add(lblMaximum, 0, 1);
+            tlpThresholds.Controls.Add(lblThresholdsTitle, 0, 0);
+            tlpThresholds.Controls.Add(nudMaximum, 1, 1);
+            tlpThresholds.Controls.Add(numericUpDown2, 1, 2);
+            tlpThresholds.Dock = DockStyle.Fill;
+            tlpThresholds.Location = new Point(3, 153);
+            tlpThresholds.Name = "tlpThresholds";
+            tlpThresholds.RowCount = 3;
+            tlpThresholds.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
+            tlpThresholds.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
+            tlpThresholds.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
+            tlpThresholds.Size = new Size(174, 69);
+            tlpThresholds.TabIndex = 2;
+            // 
+            // lblMinimum
+            // 
+            lblMinimum.AutoSize = true;
+            lblMinimum.Dock = DockStyle.Top;
+            lblMinimum.ForeColor = Color.FromArgb(210, 215, 225);
+            lblMinimum.Location = new Point(4, 48);
+            lblMinimum.Margin = new Padding(4, 4, 0, 0);
+            lblMinimum.Name = "lblMinimum";
+            lblMinimum.Padding = new Padding(5, 5, 0, 0);
+            lblMinimum.Size = new Size(100, 20);
+            lblMinimum.TabIndex = 7;
+            lblMinimum.Text = "Minimum";
+            // 
+            // lblMaximum
+            // 
+            lblMaximum.AutoSize = true;
+            lblMaximum.Dock = DockStyle.Top;
+            lblMaximum.ForeColor = Color.FromArgb(210, 215, 225);
+            lblMaximum.Location = new Point(4, 24);
+            lblMaximum.Margin = new Padding(4, 4, 0, 0);
+            lblMaximum.Name = "lblMaximum";
+            lblMaximum.Padding = new Padding(5, 5, 0, 0);
+            lblMaximum.Size = new Size(100, 20);
+            lblMaximum.TabIndex = 7;
+            lblMaximum.Text = "Maximum";
+            lblMaximum.Click += label3_Click_1;
+            // 
+            // lblThresholdsTitle
+            // 
+            lblThresholdsTitle.AutoSize = true;
+            lblThresholdsTitle.Dock = DockStyle.Top;
+            lblThresholdsTitle.Font = new Font("Segoe UI", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            lblThresholdsTitle.ForeColor = Color.FromArgb(120, 125, 140);
+            lblThresholdsTitle.LiveSetting = System.Windows.Forms.Automation.AutomationLiveSetting.Polite;
+            lblThresholdsTitle.Location = new Point(5, 5);
+            lblThresholdsTitle.Margin = new Padding(5, 5, 0, 0);
+            lblThresholdsTitle.Name = "lblThresholdsTitle";
+            lblThresholdsTitle.Size = new Size(99, 13);
+            lblThresholdsTitle.TabIndex = 7;
+            lblThresholdsTitle.Text = "THRESHOLDS";
+            lblThresholdsTitle.Click += label3_Click;
+            // 
+            // nudMaximum
+            // 
+            nudMaximum.BackColor = Color.FromArgb(21, 23, 28);
+            nudMaximum.BorderStyle = BorderStyle.None;
+            nudMaximum.DecimalPlaces = 1;
+            nudMaximum.Dock = DockStyle.Top;
+            nudMaximum.ForeColor = Color.FromArgb(230, 80, 80);
+            nudMaximum.Location = new Point(107, 23);
+            nudMaximum.Maximum = new decimal(new int[] { 150, 0, 0, 0 });
+            nudMaximum.Name = "nudMaximum";
+            nudMaximum.Size = new Size(64, 19);
+            nudMaximum.TabIndex = 8;
+            nudMaximum.TextAlign = HorizontalAlignment.Center;
+            nudMaximum.Value = new decimal(new int[] { 150, 0, 0, 0 });
+            // 
+            // numericUpDown2
+            // 
+            numericUpDown2.BackColor = Color.FromArgb(21, 23, 28);
+            numericUpDown2.BorderStyle = BorderStyle.None;
+            numericUpDown2.DecimalPlaces = 1;
+            numericUpDown2.Dock = DockStyle.Top;
+            numericUpDown2.ForeColor = Color.FromArgb(255, 214, 69);
+            numericUpDown2.Location = new Point(107, 47);
+            numericUpDown2.Maximum = new decimal(new int[] { 10, 0, 0, 0 });
+            numericUpDown2.Name = "numericUpDown2";
+            numericUpDown2.Size = new Size(64, 19);
+            numericUpDown2.TabIndex = 9;
+            numericUpDown2.TextAlign = HorizontalAlignment.Center;
+            numericUpDown2.Value = new decimal(new int[] { 10, 0, 0, 0 });
+            // 
+            // tlpGrid
+            // 
+            tlpGrid.BackColor = Color.FromArgb(32, 35, 44);
+            tlpGrid.ColumnCount = 2;
+            tlpGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
+            tlpGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+            tlpGrid.Controls.Add(cmbXStep, 1, 1);
+            tlpGrid.Controls.Add(lblGridTitle, 0, 0);
+            tlpGrid.Controls.Add(cmbYStep, 1, 2);
+            tlpGrid.Controls.Add(lblXStep, 0, 2);
+            tlpGrid.Controls.Add(lblYStep, 0, 1);
+            tlpGrid.Dock = DockStyle.Fill;
+            tlpGrid.ForeColor = Color.FromArgb(120, 125, 140);
+            tlpGrid.Location = new Point(3, 78);
+            tlpGrid.Name = "tlpGrid";
+            tlpGrid.RowCount = 3;
+            tlpGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
+            tlpGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
+            tlpGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
+            tlpGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            tlpGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            tlpGrid.Size = new Size(174, 69);
+            tlpGrid.TabIndex = 1;
+            // 
+            // cmbXStep
+            // 
+            cmbXStep.BackColor = Color.FromArgb(40, 43, 52);
+            cmbXStep.Dock = DockStyle.Top;
+            cmbXStep.ForeColor = Color.White;
+            cmbXStep.FormattingEnabled = true;
+            cmbXStep.Location = new Point(107, 23);
+            cmbXStep.Name = "cmbXStep";
+            cmbXStep.Size = new Size(64, 23);
+            cmbXStep.TabIndex = 6;
+            // 
+            // lblGridTitle
+            // 
+            lblGridTitle.AutoSize = true;
+            lblGridTitle.Dock = DockStyle.Top;
+            lblGridTitle.Font = new Font("Segoe UI", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            lblGridTitle.LiveSetting = System.Windows.Forms.Automation.AutomationLiveSetting.Polite;
+            lblGridTitle.Location = new Point(5, 5);
+            lblGridTitle.Margin = new Padding(5, 5, 0, 0);
+            lblGridTitle.Name = "lblGridTitle";
+            lblGridTitle.Size = new Size(99, 13);
+            lblGridTitle.TabIndex = 0;
+            lblGridTitle.Text = "GRID";
+            // 
+            // cmbYStep
+            // 
+            cmbYStep.BackColor = Color.FromArgb(40, 43, 52);
+            cmbYStep.Dock = DockStyle.Top;
+            cmbYStep.ForeColor = Color.White;
+            cmbYStep.FormattingEnabled = true;
+            cmbYStep.Location = new Point(107, 47);
+            cmbYStep.Name = "cmbYStep";
+            cmbYStep.Size = new Size(64, 23);
+            cmbYStep.TabIndex = 4;
+            // 
+            // lblXStep
+            // 
+            lblXStep.AutoSize = true;
+            lblXStep.Dock = DockStyle.Top;
+            lblXStep.ForeColor = Color.FromArgb(210, 215, 225);
+            lblXStep.Location = new Point(4, 48);
+            lblXStep.Margin = new Padding(4, 4, 0, 0);
+            lblXStep.Name = "lblXStep";
+            lblXStep.Padding = new Padding(5, 5, 0, 0);
+            lblXStep.Size = new Size(100, 20);
+            lblXStep.TabIndex = 1;
+            lblXStep.Text = "X Step";
+            lblXStep.Click += lblXStep_Click;
+            // 
+            // lblYStep
+            // 
+            lblYStep.AutoSize = true;
+            lblYStep.Dock = DockStyle.Top;
+            lblYStep.ForeColor = Color.FromArgb(210, 215, 225);
+            lblYStep.Location = new Point(4, 24);
+            lblYStep.Margin = new Padding(4, 4, 0, 0);
+            lblYStep.Name = "lblYStep";
+            lblYStep.Padding = new Padding(5, 5, 0, 0);
+            lblYStep.Size = new Size(100, 20);
+            lblYStep.TabIndex = 2;
+            lblYStep.Text = "Y Step";
+            // 
+            // tlpTimeWindow
+            // 
+            tlpTimeWindow.BackColor = Color.FromArgb(32, 35, 44);
+            tlpTimeWindow.ColumnCount = 2;
+            tlpTimeWindow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
+            tlpTimeWindow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+            tlpTimeWindow.Controls.Add(lblTimeWindowTitle, 0, 0);
+            tlpTimeWindow.Controls.Add(cmbDuration, 1, 1);
+            tlpTimeWindow.Controls.Add(lblDuration, 0, 1);
+            tlpTimeWindow.Dock = DockStyle.Fill;
+            tlpTimeWindow.Location = new Point(3, 3);
+            tlpTimeWindow.Name = "tlpTimeWindow";
+            tlpTimeWindow.RowCount = 3;
+            tlpTimeWindow.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
+            tlpTimeWindow.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
+            tlpTimeWindow.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
+            tlpTimeWindow.Size = new Size(174, 69);
+            tlpTimeWindow.TabIndex = 0;
+            // 
+            // lblTimeWindowTitle
+            // 
+            lblTimeWindowTitle.AutoSize = true;
+            lblTimeWindowTitle.Dock = DockStyle.Top;
+            lblTimeWindowTitle.Font = new Font("Segoe UI", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            lblTimeWindowTitle.ForeColor = Color.FromArgb(120, 125, 140);
+            lblTimeWindowTitle.LiveSetting = System.Windows.Forms.Automation.AutomationLiveSetting.Polite;
+            lblTimeWindowTitle.Location = new Point(5, 5);
+            lblTimeWindowTitle.Margin = new Padding(5, 5, 0, 0);
+            lblTimeWindowTitle.Name = "lblTimeWindowTitle";
+            lblTimeWindowTitle.Size = new Size(99, 13);
+            lblTimeWindowTitle.TabIndex = 12;
+            lblTimeWindowTitle.Text = "TIME WINDOW";
+            // 
+            // cmbDuration
+            // 
+            cmbDuration.BackColor = Color.FromArgb(40, 43, 52);
+            cmbDuration.Dock = DockStyle.Top;
+            cmbDuration.ForeColor = Color.White;
+            cmbDuration.FormattingEnabled = true;
+            cmbDuration.Location = new Point(107, 23);
+            cmbDuration.Name = "cmbDuration";
+            cmbDuration.Size = new Size(64, 23);
+            cmbDuration.TabIndex = 10;
+            // 
+            // lblDuration
+            // 
+            lblDuration.AutoSize = true;
+            lblDuration.Dock = DockStyle.Top;
+            lblDuration.ForeColor = Color.FromArgb(210, 215, 225);
+            lblDuration.Location = new Point(4, 24);
+            lblDuration.Margin = new Padding(4, 4, 0, 0);
+            lblDuration.Name = "lblDuration";
+            lblDuration.Padding = new Padding(5, 5, 0, 0);
+            lblDuration.Size = new Size(100, 20);
+            lblDuration.TabIndex = 11;
+            lblDuration.Text = "Duration";
             // 
             // panelBottom
             // 
             panelBottom.BackColor = Color.FromArgb(21, 23, 28);
             panelBottom.Dock = DockStyle.Bottom;
-            panelBottom.Location = new Point(200, 530);
+            panelBottom.Location = new Point(200, 440);
             panelBottom.Name = "panelBottom";
-            panelBottom.Size = new Size(567, 70);
+            panelBottom.Size = new Size(594, 70);
             panelBottom.TabIndex = 3;
             // 
             // panelHeader
@@ -156,7 +562,7 @@
             panelHeader.Dock = DockStyle.Top;
             panelHeader.Location = new Point(0, 0);
             panelHeader.Name = "panelHeader";
-            panelHeader.Size = new Size(967, 50);
+            panelHeader.Size = new Size(994, 50);
             panelHeader.TabIndex = 4;
             // 
             // panelChartHeader
@@ -167,7 +573,7 @@
             panelChartHeader.Dock = DockStyle.Top;
             panelChartHeader.Location = new Point(200, 50);
             panelChartHeader.Name = "panelChartHeader";
-            panelChartHeader.Size = new Size(567, 40);
+            panelChartHeader.Size = new Size(594, 40);
             panelChartHeader.TabIndex = 5;
             // 
             // panelChartButtons
@@ -175,7 +581,7 @@
             panelChartButtons.Controls.Add(btnChartReset);
             panelChartButtons.Controls.Add(btnFullscreen);
             panelChartButtons.Dock = DockStyle.Right;
-            panelChartButtons.Location = new Point(367, 0);
+            panelChartButtons.Location = new Point(394, 0);
             panelChartButtons.Name = "panelChartButtons";
             panelChartButtons.Size = new Size(200, 40);
             panelChartButtons.TabIndex = 1;
@@ -261,189 +667,15 @@
             panelCenter.Dock = DockStyle.Fill;
             panelCenter.Location = new Point(200, 90);
             panelCenter.Name = "panelCenter";
-            panelCenter.Size = new Size(567, 440);
+            panelCenter.Size = new Size(594, 350);
             panelCenter.TabIndex = 6;
-            // 
-            // tlpTimeWindow
-            // 
-            tlpTimeWindow.BackColor = Color.FromArgb(32, 35, 44);
-            tlpTimeWindow.ColumnCount = 2;
-            tlpTimeWindow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
-            tlpTimeWindow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
-            tlpTimeWindow.Controls.Add(label1, 0, 0);
-            tlpTimeWindow.Controls.Add(label2, 0, 1);
-            tlpTimeWindow.Controls.Add(comboBox1, 1, 1);
-            tlpTimeWindow.Dock = DockStyle.Fill;
-            tlpTimeWindow.Location = new Point(3, 3);
-            tlpTimeWindow.Name = "tlpTimeWindow";
-            tlpTimeWindow.RowCount = 3;
-            tlpTimeWindow.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
-            tlpTimeWindow.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
-            tlpTimeWindow.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
-            tlpTimeWindow.Size = new Size(174, 84);
-            tlpTimeWindow.TabIndex = 0;
-            // 
-            // tlpGrid
-            // 
-            tlpGrid.BackColor = Color.FromArgb(32, 35, 44);
-            tlpGrid.ColumnCount = 2;
-            tlpGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
-            tlpGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
-            tlpGrid.Controls.Add(cmbXStep, 1, 1);
-            tlpGrid.Controls.Add(lblGridTitle, 0, 0);
-            tlpGrid.Controls.Add(lblXStep, 0, 1);
-            tlpGrid.Controls.Add(lblYStep, 0, 2);
-            tlpGrid.Controls.Add(cmbYStep, 1, 2);
-            tlpGrid.Dock = DockStyle.Fill;
-            tlpGrid.ForeColor = Color.FromArgb(120, 125, 140);
-            tlpGrid.Location = new Point(3, 93);
-            tlpGrid.Name = "tlpGrid";
-            tlpGrid.RowCount = 3;
-            tlpGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
-            tlpGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
-            tlpGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
-            tlpGrid.Size = new Size(174, 84);
-            tlpGrid.TabIndex = 1;
-            // 
-            // tlpThresholds
-            // 
-            tlpThresholds.BackColor = Color.FromArgb(32, 35, 44);
-            tlpThresholds.ColumnCount = 2;
-            tlpThresholds.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
-            tlpThresholds.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
-            tlpThresholds.Dock = DockStyle.Fill;
-            tlpThresholds.Location = new Point(3, 183);
-            tlpThresholds.Name = "tlpThresholds";
-            tlpThresholds.RowCount = 3;
-            tlpThresholds.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
-            tlpThresholds.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
-            tlpThresholds.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
-            tlpThresholds.Size = new Size(174, 84);
-            tlpThresholds.TabIndex = 2;
-            // 
-            // tlpDisplay
-            // 
-            tlpDisplay.BackColor = Color.FromArgb(32, 35, 44);
-            tlpDisplay.ColumnCount = 2;
-            tlpDisplay.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
-            tlpDisplay.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
-            tlpDisplay.Dock = DockStyle.Fill;
-            tlpDisplay.Location = new Point(3, 273);
-            tlpDisplay.Name = "tlpDisplay";
-            tlpDisplay.RowCount = 3;
-            tlpDisplay.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
-            tlpDisplay.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
-            tlpDisplay.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
-            tlpDisplay.Size = new Size(174, 84);
-            tlpDisplay.TabIndex = 3;
-            // 
-            // tlpAlerts
-            // 
-            tlpAlerts.BackColor = Color.FromArgb(32, 35, 44);
-            tlpAlerts.ColumnCount = 2;
-            tlpAlerts.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
-            tlpAlerts.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
-            tlpAlerts.Dock = DockStyle.Fill;
-            tlpAlerts.Location = new Point(3, 363);
-            tlpAlerts.Name = "tlpAlerts";
-            tlpAlerts.RowCount = 3;
-            tlpAlerts.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
-            tlpAlerts.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
-            tlpAlerts.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
-            tlpAlerts.Size = new Size(174, 84);
-            tlpAlerts.TabIndex = 4;
-            // 
-            // label1
-            // 
-            label1.AutoSize = true;
-            label1.Location = new Point(3, 0);
-            label1.Name = "label1";
-            label1.Size = new Size(38, 15);
-            label1.TabIndex = 0;
-            label1.Text = "label1";
-            // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.Location = new Point(3, 25);
-            label2.Name = "label2";
-            label2.Size = new Size(38, 15);
-            label2.TabIndex = 1;
-            label2.Text = "label2";
-            // 
-            // comboBox1
-            // 
-            comboBox1.FormattingEnabled = true;
-            comboBox1.Location = new Point(107, 28);
-            comboBox1.Name = "comboBox1";
-            comboBox1.Size = new Size(64, 23);
-            comboBox1.TabIndex = 2;
-            // 
-            // lblGridTitle
-            // 
-            lblGridTitle.AutoSize = true;
-            lblGridTitle.Font = new Font("Segoe UI", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lblGridTitle.LiveSetting = System.Windows.Forms.Automation.AutomationLiveSetting.Polite;
-            lblGridTitle.Location = new Point(5, 5);
-            lblGridTitle.Margin = new Padding(5, 5, 0, 0);
-            lblGridTitle.Name = "lblGridTitle";
-            lblGridTitle.Size = new Size(33, 13);
-            lblGridTitle.TabIndex = 0;
-            lblGridTitle.Text = "GRID";
-            // 
-            // lblXStep
-            // 
-            lblXStep.AutoSize = true;
-            lblXStep.ForeColor = Color.FromArgb(210, 215, 225);
-            lblXStep.Location = new Point(4, 29);
-            lblXStep.Margin = new Padding(4, 4, 0, 0);
-            lblXStep.Name = "lblXStep";
-            lblXStep.Padding = new Padding(5, 5, 0, 0);
-            lblXStep.Size = new Size(45, 20);
-            lblXStep.TabIndex = 1;
-            lblXStep.Text = "X Step";
-            lblXStep.Click += lblXStep_Click;
-            // 
-            // lblYStep
-            // 
-            lblYStep.AutoSize = true;
-            lblYStep.ForeColor = Color.FromArgb(210, 215, 225);
-            lblYStep.Location = new Point(4, 58);
-            lblYStep.Margin = new Padding(4, 4, 0, 0);
-            lblYStep.Name = "lblYStep";
-            lblYStep.Padding = new Padding(5, 5, 0, 0);
-            lblYStep.Size = new Size(45, 20);
-            lblYStep.TabIndex = 2;
-            lblYStep.Text = "Y Step";
-            // 
-            // cmbYStep
-            // 
-            cmbYStep.BackColor = Color.FromArgb(40, 43, 52);
-            cmbYStep.Dock = DockStyle.Fill;
-            cmbYStep.ForeColor = Color.White;
-            cmbYStep.FormattingEnabled = true;
-            cmbYStep.Location = new Point(107, 57);
-            cmbYStep.Name = "cmbYStep";
-            cmbYStep.Size = new Size(64, 23);
-            cmbYStep.TabIndex = 4;
-            // 
-            // cmbXStep
-            // 
-            cmbXStep.BackColor = Color.FromArgb(40, 43, 52);
-            cmbXStep.Dock = DockStyle.Fill;
-            cmbXStep.ForeColor = Color.White;
-            cmbXStep.FormattingEnabled = true;
-            cmbXStep.Location = new Point(107, 28);
-            cmbXStep.Name = "cmbXStep";
-            cmbXStep.Size = new Size(64, 23);
-            cmbXStep.TabIndex = 6;
             // 
             // GraphForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(17, 19, 23);
-            ClientSize = new Size(967, 600);
+            ClientSize = new Size(994, 510);
             Controls.Add(panelCenter);
             Controls.Add(panelChartHeader);
             Controls.Add(panelBottom);
@@ -455,6 +687,18 @@
             ((System.ComponentModel.ISupportInitialize)chartPressure).EndInit();
             panelRight.ResumeLayout(false);
             tableSettings.ResumeLayout(false);
+            tlpAlerts.ResumeLayout(false);
+            tlpAlerts.PerformLayout();
+            tlpDisplay.ResumeLayout(false);
+            tlpDisplay.PerformLayout();
+            tlpThresholds.ResumeLayout(false);
+            tlpThresholds.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)nudMaximum).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numericUpDown2).EndInit();
+            tlpGrid.ResumeLayout(false);
+            tlpGrid.PerformLayout();
+            tlpTimeWindow.ResumeLayout(false);
+            tlpTimeWindow.PerformLayout();
             panelChartHeader.ResumeLayout(false);
             panelChartHeader.PerformLayout();
             panelChartButtons.ResumeLayout(false);
@@ -462,10 +706,6 @@
             flowLegend.ResumeLayout(false);
             flowLegend.PerformLayout();
             panelCenter.ResumeLayout(false);
-            tlpTimeWindow.ResumeLayout(false);
-            tlpTimeWindow.PerformLayout();
-            tlpGrid.ResumeLayout(false);
-            tlpGrid.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -491,13 +731,26 @@
         private TableLayoutPanel tlpDisplay;
         private TableLayoutPanel tlpThresholds;
         private TableLayoutPanel tlpGrid;
-        private Label label1;
-        private Label label2;
-        private ComboBox comboBox1;
         private Label lblGridTitle;
         private Label lblXStep;
         private Label lblYStep;
         private ComboBox cmbXStep;
         private ComboBox cmbYStep;
+        private Label lblThresholdsTitle;
+        private Label lblAlertsTitle;
+        private Label lblDisplayTitle;
+        private Label lblMinimum;
+        private Label lblMaximum;
+        private Label lblFlash;
+        private Label lblSound;
+        private Label lblTimeWindowTitle;
+        private ComboBox cmbDuration;
+        private Label lblDuration;
+        private NumericUpDown nudMaximum;
+        private NumericUpDown numericUpDown2;
+        private CheckBox chkShowGrid;
+        private CheckBox chkSmoothing;
+        private CheckBox chkSound;
+        private CheckBox chkFlash;
     }
 }
