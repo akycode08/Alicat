@@ -647,7 +647,7 @@
             lblXStep.Padding = new Padding(5, 5, 0, 0);
             lblXStep.Size = new Size(100, 20);
             lblXStep.TabIndex = 1;
-            lblXStep.Text = "X Step";
+            lblXStep.Text = "Y Step";
             lblXStep.Click += lblXStep_Click;
             // 
             // lblYStep
@@ -661,7 +661,7 @@
             lblYStep.Padding = new Padding(5, 5, 0, 0);
             lblYStep.Size = new Size(100, 20);
             lblYStep.TabIndex = 2;
-            lblYStep.Text = "Y Step";
+            lblYStep.Text = "X Step";
             // 
             // tlpTimeWindow
             // 
