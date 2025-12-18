@@ -26,8 +26,11 @@ namespace Alicat
                 _ramp = new RampController(_serial);
                 _serial.Send("ASR");
 
+                // Старт новой сессии
+                _dataStore.StartSession();
 
-            }
+
+        }
 
         private void Serial_LineReceived(object? sender, string line)
         {
@@ -74,6 +77,9 @@ namespace Alicat
 
                 _state.Update(_current, _setPoint, _unit, _isExhaust);
                 _lastCurrent = _current;
+
+                // 👉 ЗАПИСЫВАЕМ В STORE (всегда, независимо от открытых окон)
+                _dataStore.RecordSample(_current, _isExhaust ? 0.0 : _setPoint, _unit);
 
                 // 👉 ОБНОВЛЯЕМ ГРАФИК, ЕСЛИ ОКНО ОТКРЫТО
                 if (_graphForm != null && !_graphForm.IsDisposed)
@@ -126,6 +132,7 @@ namespace Alicat
             {
                 base.OnFormClosing(e);
                 _pollTimer.Stop();
+                _dataStore.EndSession();
                 _serial?.Dispose();
             }
 

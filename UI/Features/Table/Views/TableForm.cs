@@ -9,15 +9,27 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing.Text;
+using Alicat.Services.Data;
+using DataPointModel = Alicat.Services.Data.DataPoint;
 
 namespace Alicat.UI.Features.Table.Views
 {
     public partial class TableForm : Form
     {
-        public TableForm()
+        private readonly SessionDataStore _dataStore;
+
+        public TableForm(SessionDataStore dataStore)
         {
+            _dataStore = dataStore;
+
             InitializeComponent();
             dgvLog.CellDoubleClick += dgvLog_CellDoubleClick;
+
+            // Загрузить историю из Store
+            LoadHistoryFromStore();
+
+            // Подписаться на новые точки
+            _dataStore.OnNewPoint += OnNewPointReceived;
         }
 
         public double Threshold => (double)numThreshold.Value;
@@ -163,6 +175,82 @@ namespace Alicat.UI.Features.Table.Views
 
                 row.Visible = visible;
             }
+        }
+
+        // =========================
+        // SessionDataStore integration
+        // =========================
+        private void LoadHistoryFromStore()
+        {
+            foreach (var point in _dataStore.Points)
+            {
+                AddRowFromPoint(point);
+            }
+        }
+
+        private void OnNewPointReceived(DataPointModel point)
+        {
+            if (IsDisposed) return;
+
+            // Вызываем в UI потоке
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => OnNewPointReceived(point)));
+                return;
+            }
+
+            // Проверяем threshold
+            if (ShouldLogPoint(point))
+            {
+                AddRowFromPoint(point);
+            }
+        }
+
+        private double? _lastLoggedPressure = null;
+
+        private bool ShouldLogPoint(DataPointModel point)
+        {
+            double threshold = Threshold;
+
+            // первая запись всегда
+            if (_lastLoggedPressure == null)
+            {
+                _lastLoggedPressure = point.Current;
+                return true;
+            }
+
+            double delta = Math.Abs(point.Current - _lastLoggedPressure.Value);
+
+            if (delta >= threshold)
+            {
+                _lastLoggedPressure = point.Current;
+                return true;
+            }
+
+            return false;
+        }
+
+        private void AddRowFromPoint(DataPointModel point)
+        {
+            int rowIndex = dgvLog.Rows.Add();
+            var row = dgvLog.Rows[rowIndex];
+
+            row.Cells["colTime"].Value = point.Timestamp.ToString("HH:mm:ss");
+            row.Cells["colPressure"].Value = point.Current.ToString("G", CultureInfo.InvariantCulture);
+            row.Cells["colSetpoint"].Value = point.Target.ToString("G", CultureInfo.InvariantCulture);
+            row.Cells["colComment"].Value = point.Event ?? "";
+
+            // автопрокрутка вниз
+            dgvLog.FirstDisplayedScrollingRowIndex = rowIndex;
+
+            ApplyCurrentFilter();
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            // Отписаться от событий
+            _dataStore.OnNewPoint -= OnNewPointReceived;
+            base.OnFormClosing(e);
         }
 
     }

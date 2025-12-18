@@ -2,11 +2,14 @@
 using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+using Alicat.Services.Data;
+using DataPointModel = Alicat.Services.Data.DataPoint;
 
 namespace Alicat.UI.Features.Graph.Views
 {
     public partial class GraphForm : Form
     {
+        private readonly SessionDataStore _dataStore;
         // --- series ---
         private Series _seriesCurrent = null!;
         private Series _seriesTarget = null!;
@@ -58,8 +61,9 @@ namespace Alicat.UI.Features.Graph.Views
             ("10 hours", 36000,  3600)
         };
 
-        public GraphForm()
+        public GraphForm(SessionDataStore dataStore)
         {
+            _dataStore = dataStore;
             InitializeComponent();
             ConfigureChart();
             ComboBoxValues();
@@ -97,6 +101,12 @@ namespace Alicat.UI.Features.Graph.Views
             chartPressure.MouseLeave += ChartPressure_MouseLeave;
 
             ApplySmoothing();
+
+            // Загрузить историю из Store
+            LoadHistoryFromStore();
+
+            // Подписаться на новые точки
+            _dataStore.OnNewPoint += OnNewPointReceived;
         }
 
         // =========================
@@ -731,6 +741,49 @@ namespace Alicat.UI.Features.Graph.Views
             }
 
             _cursorInfoPanel.Visible = true;
+        }
+
+        // =========================
+        // SessionDataStore integration
+        // =========================
+        private void LoadHistoryFromStore()
+        {
+            foreach (var point in _dataStore.Points)
+            {
+                _seriesCurrent.Points.AddXY(point.ElapsedSeconds, point.Current);
+
+                if (point.Target > 0)
+                {
+                    _lastTargetValue = point.Target;
+                }
+
+                _timeSeconds = point.ElapsedSeconds + TimeStep;
+            }
+
+            ApplyTimeWindow(forceTrim: true);
+            ApplyThresholdLines();
+            UpdateTargetLine();
+        }
+
+        private void OnNewPointReceived(DataPointModel point)
+        {
+            if (IsDisposed) return;
+
+            // Вызываем в UI потоке
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => OnNewPointReceived(point)));
+                return;
+            }
+
+            AddSample(point.Current, point.Target > 0 ? point.Target : null);
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            // Отписаться от событий
+            _dataStore.OnNewPoint -= OnNewPointReceived;
+            base.OnFormClosing(e);
         }
 
         // ===== designer stubs =====

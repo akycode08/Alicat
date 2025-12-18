@@ -18,7 +18,7 @@ namespace Alicat
             // если окна ещё нет или оно было закрыто — создаём новое
             if (_graphForm == null || _graphForm.IsDisposed)
             {
-                _graphForm = new GraphForm();
+                _graphForm = new GraphForm(_dataStore);
                 _graphForm.Show(this); // делаем AlicatForm владельцем
             }
             else
@@ -35,7 +35,7 @@ namespace Alicat
         {
             if (_tableForm == null || _tableForm.IsDisposed)
             {
-                _tableForm = new TableForm();
+                _tableForm = new TableForm(_dataStore);
                 _tableForm.StartPosition = FormStartPosition.CenterParent;
                 _tableForm.Show(this);   // не ShowDialog, окно живёт, пока не закроешь
             }

@@ -12,6 +12,7 @@ using System.IO.Ports;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Alicat.Services.Data;
 using Timer = System.Windows.Forms.Timer;
 
 namespace Alicat
@@ -36,6 +37,8 @@ namespace Alicat
 
         private readonly DeviceState _state = new();
         private RampController? _ramp;
+
+        private readonly SessionDataStore _dataStore = new();
 
         private TerminalForm? _terminalForm;
         private GraphForm? _graphForm;
