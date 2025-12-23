@@ -52,6 +52,7 @@ namespace Alicat
             // меню
             menuSettingsOptions.Click += btnOptions_Click;
             menuSettingsCommunication.Click += btnCommunication_Click;
+            menuFileNewSession.Click += menuFileNewSession_Click;
 
             // навигация
             btnGraph.Click += btnGraph_Click;

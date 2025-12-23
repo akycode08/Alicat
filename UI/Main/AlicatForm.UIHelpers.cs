@@ -84,7 +84,28 @@ namespace Alicat
             }
         }
 
+        private void menuFileNewSession_Click(object? sender, EventArgs e)
+        {
+            using var folderDialog = new FolderBrowserDialog();
+            folderDialog.Description = "Select folder for session data";
 
+            if (folderDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            // Генерируем имя файла по дате/времени
+            string fileName = $"session_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.csv";
+            string fullPath = System.IO.Path.Combine(folderDialog.SelectedPath, fileName);
+
+            // Запускаем сессию с записью в файл
+            _dataStore.StartSession(fullPath);
+
+            MessageBox.Show(
+                $"Session started!\n\nSaving to:\n{fullPath}",
+                "New Session",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information
+            );
+        }
 
 
 

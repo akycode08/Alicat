@@ -26,9 +26,10 @@ namespace Alicat
                 _ramp = new RampController(_serial);
                 _serial.Send("ASR");
 
-                // Старт новой сессии
-                _dataStore.StartSession();
-
+                if (!_dataStore.IsRunning)
+                {
+                    _dataStore.StartSession();
+                }
 
         }
 

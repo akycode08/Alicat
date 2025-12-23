@@ -28,6 +28,7 @@ namespace Alicat
         // ---------- Главное меню ----------
         private MenuStrip menuMain;
         private ToolStripMenuItem menuFile;
+        private ToolStripMenuItem menuFileNewSession;
         private ToolStripMenuItem menuSettings;
         private ToolStripMenuItem menuView;
         private ToolStripMenuItem menuSettingsOptions;
@@ -162,6 +163,12 @@ namespace Alicat
 
             menuFile.Name = "menuFile";
             menuFile.Text = "File";
+
+            menuFileNewSession = new ToolStripMenuItem();
+            menuFileNewSession.Name = "menuFileNewSession";
+            menuFileNewSession.Text = "New Session...";
+
+            menuFile.DropDownItems.Add(menuFileNewSession);
 
             menuSettings.Name = "menuSettings";
             menuSettings.Text = "Settings";
