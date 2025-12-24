@@ -29,6 +29,7 @@ namespace Alicat
         private MenuStrip menuMain;
         private ToolStripMenuItem menuFile;
         private ToolStripMenuItem menuFileNewSession;
+        private ToolStripMenuItem menuFileTestMode;
         private ToolStripMenuItem menuSettings;
         private ToolStripMenuItem menuView;
         private ToolStripMenuItem menuSettingsOptions;
@@ -169,6 +170,12 @@ namespace Alicat
             menuFileNewSession.Text = "New Session...";
 
             menuFile.DropDownItems.Add(menuFileNewSession);
+
+            menuFileTestMode = new ToolStripMenuItem();
+            menuFileTestMode.Name = "menuFileTestMode";
+            menuFileTestMode.Text = "Start Test Mode";
+
+            menuFile.DropDownItems.Add(menuFileTestMode);
 
             menuSettings.Name = "menuSettings";
             menuSettings.Text = "Settings";

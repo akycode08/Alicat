@@ -474,12 +474,36 @@ namespace Alicat.UI.Features.Graph.Views
 
             UpdateGridStepXDisplay();
 
-            ApplyTimeWindow(forceTrim: true);
-            ApplyThresholdLines();
-            UpdateTargetLine();
+            RedrawFromStore();
 
             ApplyGridSettings();
             UpdateCustomLabelsX();
+        }
+
+        private void RedrawFromStore()
+        {
+            // Очистить текущие точки
+            _seriesCurrent.Points.Clear();
+            _lastTargetValue = null;
+            _timeSeconds = 0;
+
+            // Перерисовать из Store
+            foreach (var point in _dataStore.Points)
+            {
+                _seriesCurrent.Points.AddXY(point.ElapsedSeconds, point.Current);
+
+                if (point.Target > 0)
+                {
+                    _lastTargetValue = point.Target;
+                }
+
+                _timeSeconds = point.ElapsedSeconds + TimeStep;
+            }
+
+            // Применить окно времени БЕЗ трима
+            ApplyTimeWindow(forceTrim: false);
+            ApplyThresholdLines();
+            UpdateTargetLine();
         }
 
         // =========================
