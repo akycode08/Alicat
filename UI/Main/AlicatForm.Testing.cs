@@ -28,7 +28,7 @@ namespace Alicat
         private void StartTestMode()
         {
             _testRandom = new Random();
-            _testTimer = new System.Windows.Forms.Timer { Interval = 15000 }; // 30 сек
+            _testTimer = new System.Windows.Forms.Timer { Interval = 120000 }; // 30 сек
             _testTimer.Tick += TestTimer_Tick;
             _testTimer.Start();
             _isTestRunning = true;
