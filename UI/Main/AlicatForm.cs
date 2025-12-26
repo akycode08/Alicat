@@ -83,10 +83,8 @@ namespace Alicat
 
             // Начальные значения UI
             UI_SetPressureUnits(_unit);
-            UI_SetRampSpeedUnits("PSIG/s");
             UI_SetSetPoint(_setPoint, _unit);
             RefreshCurrent();
-            UpdateIncrementButtons();
 
             // Polling timer
             _pollTimer.Tick += (_, __) => _serial?.Send(AlicatCommands.ReadAls);
@@ -113,7 +111,7 @@ namespace Alicat
             UpdateIncrementButtons();
 
             // Update max pressure display
-            lblMaxPressureValue.Text = $"{_maxPressure:F0} PSIG";
+            lblMaxPressureValue.Text = $"{_maxPressure:F0} {_unit}";
         }
 
         // ====================================================================
@@ -133,13 +131,82 @@ namespace Alicat
             for (int i = 3; i < parts.Length; i++)
             {
                 var p = parts[i].Trim().ToUpperInvariant();
-                if (p is "PSIG" or "PSI" or "KPA" or "BAR")
+
+                // Поддерживаемые единицы измерения давления из таблицы Alicat
+                // Устройство возвращает единицы с "G" в конце (barG, kPaG, PSIG и т.д.)
+                // 0: Unit not specified (пустая единица)
+                // 1: Unknown unit ("---")
+                // 2: Pa / PaG
+                // 3: hPa / hPaG
+                // 4: kPa / kPaG
+                // 5: MPa / MPaG
+                // 6: mbar / mbarG
+                // 7: bar / barG
+                // 8: g/cm² / g/cm²G
+                // 9: kg/cm / kg/cmG
+                // 10: PSI / PSIG
+                // 11: PSF / PSFG
+                // 12: mTorr / mTorrG
+                // 13: torr / torrG
+
+                // Проверяем единицы с "G" в конце и без
+                if (p is "PA" or "PAG" or "HPA" or "HPAG" or "KPA" or "KPAG" or "MPA" or "MPAG" or
+                    "MBAR" or "MBARG" or "BAR" or "BARG" or
+                    "G/CM²" or "G/CM2" or "GCM²" or "GCM2" or "G/CM²G" or "G/CM2G" or "GCM²G" or "GCM2G" or
+                    "KG/CM" or "KGCM" or "KG/CMG" or "KGCMG" or
+                    "PSIG" or "PSI" or "PSFG" or "PSF" or
+                    "MTORR" or "MTORRG" or "TORR" or "TORRG" or
+                    "---" or "")
                 {
-                    unit = p;
+                    // Нормализуем единицы к стандартному виду (убираем "G" в конце)
+                    unit = NormalizeUnit(p);
                     break;
                 }
             }
             return true;
+        }
+
+        /// <summary>
+        /// Нормализует единицу измерения к стандартному виду для отображения.
+        /// Убирает "G" в конце для единиц, которые не должны его иметь (barG → bar, kPaG → kPa).
+        /// </summary>
+        private static string NormalizeUnit(string unit)
+        {
+            if (string.IsNullOrWhiteSpace(unit) || unit == "---" || unit == "")
+                return "PSIG"; // Default unit
+
+            var upper = unit.ToUpperInvariant();
+
+            // Убираем "G" в конце, если есть (кроме PSIG, который уже содержит G)
+            if (upper.EndsWith("G") && upper != "PSIG" && upper != "PSFG")
+            {
+                upper = upper.Substring(0, upper.Length - 1);
+            }
+
+            // Обработка вариантов g/cm²
+            if (upper == "G/CM²" || upper == "G/CM2" || upper == "GCM²" || upper == "GCM2")
+                return "g/cm²";
+
+            // Обработка вариантов kg/cm
+            if (upper == "KG/CM" || upper == "KGCM")
+                return "kg/cm";
+
+            return upper switch
+            {
+                "PA" => "Pa",
+                "HPA" => "hPa",
+                "KPA" => "kPa",
+                "MPA" => "MPa",
+                "MBAR" => "mbar",
+                "BAR" => "bar",
+                "PSIG" => "PSIG",
+                "PSI" => "PSI",
+                "PSFG" => "PSF",
+                "PSF" => "PSF",
+                "MTORR" => "mTorr",
+                "TORR" => "torr",
+                _ => unit // Возвращаем как есть, если не распознали
+            };
         }
 
         private static bool TryParseAsr(string line, out double ramp, out string units)
@@ -174,7 +241,11 @@ namespace Alicat
             if (string.IsNullOrWhiteSpace(foundUnits))
                 return false;
 
-            units = foundUnits;
+            // Извлекаем единицу без "/s", нормализуем и добавляем "/s" обратно
+            var unitWithoutSlash = foundUnits.Substring(0, foundUnits.Length - 2).Trim();
+            var normalizedUnit = NormalizeUnit(unitWithoutSlash);
+            units = $"{normalizedUnit}/s";
+
             return true;
         }
 
@@ -236,8 +307,8 @@ namespace Alicat
 
         private void UpdateIncrementButtons()
         {
-            btnIncrease.Text = $"▲ Increase (+{_currentIncrement:F1} PSIG)";
-            btnDecrease.Text = $"▼ Decrease (-{_currentIncrement:F1} PSIG)";
+            btnIncrease.Text = $"▲ Increase (+{_currentIncrement:F1} {_unit})";
+            btnDecrease.Text = $"▼ Decrease (-{_currentIncrement:F1} {_unit})";
         }
 
         // ====================================================================

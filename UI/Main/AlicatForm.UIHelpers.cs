@@ -32,6 +32,9 @@ namespace Alicat
         {
             string displayUnits = string.IsNullOrWhiteSpace(units) ? "PSIG" : units.Trim();
 
+            // Обновляем внутреннюю переменную единиц
+            _unit = displayUnits;
+
             // System Settings panel
             lblUnitsValue.Text = displayUnits;
 
@@ -46,6 +49,15 @@ namespace Alicat
 
             // Increment control
             lblIncrementUnit.Text = displayUnits;
+
+            // Update buttons with new units
+            UpdateIncrementButtons();
+
+            // Update max pressure with new units
+            lblMaxPressureValue.Text = $"{_maxPressure:F0} {displayUnits}";
+
+            // Update ramp speed with new units
+            UI_SetRampSpeedUnits($"{displayUnits}/s");
         }
 
         /// <summary>
