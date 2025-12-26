@@ -54,7 +54,9 @@ namespace Alicat
         private Panel panelToolbar;
         private FlowLayoutPanel toolbarFlow;
         private Label lblToolbarControl;
+        private Button btnControl;
         private Button btnPurge;
+        private Panel indicatorOrange;
         private Label lblToolbarWindows;
         private Button btnGraph;
         private Button btnTable;
@@ -240,7 +242,9 @@ namespace Alicat
             panelToolbar = new Panel();
             toolbarFlow = new FlowLayoutPanel();
             lblToolbarControl = new Label();
+            btnControl = new Button();
             btnPurge = new Button();
+            indicatorOrange = new Panel();
             lblToolbarWindows = new Label();
             btnGraph = new Button();
             btnTable = new Button();
@@ -423,7 +427,7 @@ namespace Alicat
 
             rootLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));  // status
-            rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 38F));  // toolbar
+            rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45F));  // toolbar
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));  // content
 
             // ====================================================================
@@ -504,48 +508,72 @@ namespace Alicat
             toolbarFlow.FlowDirection = FlowDirection.LeftToRight;
             toolbarFlow.WrapContents = false;
             toolbarFlow.Margin = new Padding(0);
-            toolbarFlow.Padding = new Padding(0, 5, 0, 5);
+            toolbarFlow.Padding = new Padding(0);
+            toolbarFlow.Height = 45;
 
             lblToolbarControl.AutoSize = true;
             lblToolbarControl.Text = "Control:";
             lblToolbarControl.Font = new Font("Segoe UI", 9F);
-            lblToolbarControl.Margin = new Padding(0, 7, 8, 0);
+            lblToolbarControl.Margin = new Padding(0, 13, 8, 0);
 
-            btnPurge.Text = "🧪  Purge";
-            btnPurge.AutoSize = true;
-            btnPurge.Margin = new Padding(0, 0, 22, 0);
-            btnPurge.Padding = new Padding(10, 6, 10, 6);
+            btnControl.Text = "Control";
+            btnControl.Width = 100;
+            btnControl.Height = 45;
+            btnControl.Margin = new Padding(0, 0, 0, 0);
+            btnControl.Padding = new Padding(0);
+            btnControl.FlatStyle = FlatStyle.Flat;
+            btnControl.Font = new Font("Segoe UI", 9F);
+
+            btnPurge.Text = "Purge";
+            btnPurge.Width = 100;
+            btnPurge.Height = 45;
+            btnPurge.Margin = new Padding(0, 0, 8, 0);
+            btnPurge.Padding = new Padding(0);
             btnPurge.FlatStyle = FlatStyle.Flat;
+            btnPurge.Font = new Font("Segoe UI", 9F);
             btnPurge.Click += btnPurge_Click;
+
+            indicatorOrange.Width = 12;
+            indicatorOrange.Height = 12;
+            indicatorOrange.Margin = new Padding(0, 16, 16, 0);
+            indicatorOrange.BackColor = Color.FromArgb(255, 165, 0);
 
             lblToolbarWindows.AutoSize = true;
             lblToolbarWindows.Text = "Windows:";
             lblToolbarWindows.Font = new Font("Segoe UI", 9F);
-            lblToolbarWindows.Margin = new Padding(0, 7, 10, 0);
+            lblToolbarWindows.Margin = new Padding(0, 13, 10, 0);
 
-            btnGraph.Text = "📊  Graph";
-            btnGraph.AutoSize = true;
+            btnGraph.Text = "Graph";
+            btnGraph.Width = 80;
+            btnGraph.Height = 45;
             btnGraph.Margin = new Padding(0, 0, 6, 0);
-            btnGraph.Padding = new Padding(10, 6, 10, 6);
+            btnGraph.Padding = new Padding(0);
             btnGraph.FlatStyle = FlatStyle.Flat;
+            btnGraph.Font = new Font("Segoe UI", 9F);
             btnGraph.Click += btnGraph_Click;
 
-            btnTable.Text = "📋  Table";
-            btnTable.AutoSize = true;
+            btnTable.Text = "Table";
+            btnTable.Width = 80;
+            btnTable.Height = 45;
             btnTable.Margin = new Padding(0, 0, 6, 0);
-            btnTable.Padding = new Padding(10, 6, 10, 6);
+            btnTable.Padding = new Padding(0);
             btnTable.FlatStyle = FlatStyle.Flat;
+            btnTable.Font = new Font("Segoe UI", 9F);
             btnTable.Click += btnTable_Click;
 
-            btnTerminal.Text = "💻  Terminal";
-            btnTerminal.AutoSize = true;
+            btnTerminal.Text = "Terminal";
+            btnTerminal.Width = 80;
+            btnTerminal.Height = 45;
             btnTerminal.Margin = new Padding(0);
-            btnTerminal.Padding = new Padding(10, 6, 10, 6);
+            btnTerminal.Padding = new Padding(0);
             btnTerminal.FlatStyle = FlatStyle.Flat;
+            btnTerminal.Font = new Font("Segoe UI", 9F);
             btnTerminal.Click += btnTerminal_Click;
 
             toolbarFlow.Controls.Add(lblToolbarControl);
+            toolbarFlow.Controls.Add(btnControl);
             toolbarFlow.Controls.Add(btnPurge);
+            toolbarFlow.Controls.Add(indicatorOrange);
             toolbarFlow.Controls.Add(lblToolbarWindows);
             toolbarFlow.Controls.Add(btnGraph);
             toolbarFlow.Controls.Add(btnTable);
@@ -614,7 +642,7 @@ namespace Alicat
             // Current card
             cardCurrent.Dock = DockStyle.Fill;
             cardCurrent.Margin = new Padding(0);
-            cardCurrent.Padding = new Padding(20);
+            cardCurrent.Padding = new Padding(0, 0, 0, 20);
             cardCurrent.BorderStyle = BorderStyle.FixedSingle;
 
             lblCurrentTitle.Dock = DockStyle.Top;
@@ -624,7 +652,7 @@ namespace Alicat
             lblCurrentTitle.Text = "CURRENT PRESSURE";
 
             lblCurrentValue.Dock = DockStyle.Top;
-            lblCurrentValue.Height = 92;
+            lblCurrentValue.Height = 90;
             lblCurrentValue.TextAlign = ContentAlignment.MiddleCenter;
             lblCurrentValue.Font = new Font("Segoe UI", 60F, FontStyle.Bold);
             lblCurrentValue.Text = "0.0";
@@ -635,7 +663,8 @@ namespace Alicat
             lblCurrentUnit.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
             lblCurrentUnit.Text = "PSIG";
 
-            lblCurrentRate.Dock = DockStyle.Fill;
+            lblCurrentRate.Dock = DockStyle.Top;
+            lblCurrentRate.Height = 25;
             lblCurrentRate.TextAlign = ContentAlignment.MiddleCenter;
             lblCurrentRate.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             lblCurrentRate.Text = "→ 0.0 /s";
@@ -648,7 +677,7 @@ namespace Alicat
             // Target card
             cardTarget.Dock = DockStyle.Fill;
             cardTarget.Margin = new Padding(0);
-            cardTarget.Padding = new Padding(20);
+            cardTarget.Padding = new Padding(0, 0, 0, 20);
             cardTarget.BorderStyle = BorderStyle.FixedSingle;
 
             lblTargetTitle.Dock = DockStyle.Top;
@@ -658,7 +687,7 @@ namespace Alicat
             lblTargetTitle.Text = "TARGET PRESSURE";
 
             lblTargetValue.Dock = DockStyle.Top;
-            lblTargetValue.Height = 92;
+            lblTargetValue.Height = 90;
             lblTargetValue.TextAlign = ContentAlignment.MiddleCenter;
             lblTargetValue.Font = new Font("Segoe UI", 60F, FontStyle.Bold);
             lblTargetValue.Text = "0.0";
@@ -669,7 +698,8 @@ namespace Alicat
             lblTargetUnit.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
             lblTargetUnit.Text = "PSIG";
 
-            lblTargetStatus.Dock = DockStyle.Fill;
+            lblTargetStatus.Dock = DockStyle.Top;
+            lblTargetStatus.Height = 25;
             lblTargetStatus.TextAlign = ContentAlignment.MiddleCenter;
             lblTargetStatus.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             lblTargetStatus.Text = "At target";
@@ -686,17 +716,18 @@ namespace Alicat
             // ---- Set Target section
             sectionSetTarget.Dock = DockStyle.Fill;
             sectionSetTarget.Margin = new Padding(0);
-            sectionSetTarget.Padding = new Padding(18);
+            sectionSetTarget.Padding = new Padding(18, 0, 18, 30);
             sectionSetTarget.BorderStyle = BorderStyle.FixedSingle;
 
             lblSetTargetTitle.Dock = DockStyle.Top;
-            lblSetTargetTitle.Height = 26;
+            lblSetTargetTitle.Height = 25;
             lblSetTargetTitle.TextAlign = ContentAlignment.MiddleLeft;
             lblSetTargetTitle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             lblSetTargetTitle.Text = "Set Target Pressure";
 
-            setTargetRow.Dock = DockStyle.Fill;
-            setTargetRow.Margin = new Padding(0, 10, 0, 0);
+            setTargetRow.Dock = DockStyle.Top;
+            setTargetRow.Height = 50;
+            setTargetRow.Margin = new Padding(0, 0, 0, 0);
             setTargetRow.Padding = new Padding(0);
             setTargetRow.ColumnCount = 4;
             setTargetRow.RowCount = 1;
