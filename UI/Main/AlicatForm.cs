@@ -133,30 +133,32 @@ namespace Alicat
                 var p = parts[i].Trim().ToUpperInvariant();
                 
                 // Поддерживаемые единицы измерения давления из таблицы Alicat
+                // Устройство возвращает единицы с "G" в конце (barG, kPaG, PSIG и т.д.)
                 // 0: Unit not specified (пустая единица)
                 // 1: Unknown unit ("---")
-                // 2: Pa
-                // 3: hPa
-                // 4: kPa
-                // 5: MPa
-                // 6: mbar
-                // 7: bar
-                // 8: g/cm²
-                // 9: kg/cm
-                // 10: PSI
-                // 11: PSF
-                // 12: mTorr
-                // 13: torr
+                // 2: Pa / PaG
+                // 3: hPa / hPaG
+                // 4: kPa / kPaG
+                // 5: MPa / MPaG
+                // 6: mbar / mbarG
+                // 7: bar / barG
+                // 8: g/cm² / g/cm²G
+                // 9: kg/cm / kg/cmG
+                // 10: PSI / PSIG
+                // 11: PSF / PSFG
+                // 12: mTorr / mTorrG
+                // 13: torr / torrG
                 
-                if (p is "PA" or "HPA" or "KPA" or "MPA" or 
-                    "MBAR" or "BAR" or 
-                    "G/CM²" or "G/CM2" or "GCM²" or "GCM2" or
-                    "KG/CM" or "KGCM" or
-                    "PSIG" or "PSI" or "PSF" or
-                    "MTORR" or "TORR" or
+                // Проверяем единицы с "G" в конце и без
+                if (p is "PA" or "PAG" or "HPA" or "HPAG" or "KPA" or "KPAG" or "MPA" or "MPAG" or 
+                    "MBAR" or "MBARG" or "BAR" or "BARG" or 
+                    "G/CM²" or "G/CM2" or "GCM²" or "GCM2" or "G/CM²G" or "G/CM2G" or "GCM²G" or "GCM2G" or
+                    "KG/CM" or "KGCM" or "KG/CMG" or "KGCMG" or
+                    "PSIG" or "PSI" or "PSFG" or "PSF" or
+                    "MTORR" or "MTORRG" or "TORR" or "TORRG" or
                     "---" or "")
                 {
-                    // Нормализуем единицы к стандартному виду
+                    // Нормализуем единицы к стандартному виду (убираем "G" в конце)
                     unit = NormalizeUnit(p);
                     break;
                 }
@@ -166,6 +168,7 @@ namespace Alicat
 
         /// <summary>
         /// Нормализует единицу измерения к стандартному виду для отображения.
+        /// Убирает "G" в конце для единиц, которые не должны его иметь (barG → bar, kPaG → kPa).
         /// </summary>
         private static string NormalizeUnit(string unit)
         {
@@ -173,6 +176,12 @@ namespace Alicat
                 return "PSIG"; // Default unit
 
             var upper = unit.ToUpperInvariant();
+            
+            // Убираем "G" в конце, если есть (кроме PSIG, который уже содержит G)
+            if (upper.EndsWith("G") && upper != "PSIG" && upper != "PSFG")
+            {
+                upper = upper.Substring(0, upper.Length - 1);
+            }
             
             // Обработка вариантов g/cm²
             if (upper == "G/CM²" || upper == "G/CM2" || upper == "GCM²" || upper == "GCM2")
@@ -192,6 +201,7 @@ namespace Alicat
                 "BAR" => "bar",
                 "PSIG" => "PSIG",
                 "PSI" => "PSI",
+                "PSFG" => "PSF",
                 "PSF" => "PSF",
                 "MTORR" => "mTorr",
                 "TORR" => "torr",
