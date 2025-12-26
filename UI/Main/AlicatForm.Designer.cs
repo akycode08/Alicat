@@ -1,9 +1,11 @@
 ﻿// ----------------------------------------------------------------------------
-// Файл: AlicatForm.Designer.cs (ФИНАЛЬНАЯ ВЕРСИЯ)
-// Все исправлено: System Settings labels видны, точные пропорции
+// Файл: AlicatForm.Designer.cs  (DESIGNER-FRIENDLY + View Light/Dark)
+// Цель: чтобы Visual Studio WinForms Designer открывался и макет был как на скрине.
+// ВАЖНО: В InitializeComponent нет циклов, нет helper-методов, нет var.
 // ----------------------------------------------------------------------------
 
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -11,12 +13,16 @@ namespace Alicat
 {
     partial class AlicatForm
     {
-        private System.ComponentModel.IContainer components = null;
+        private IContainer components = null;
 
-        // ========== MAIN LAYOUT ==========
+        // =========================
+        // ROOT
+        // =========================
         private TableLayoutPanel rootLayout;
 
-        // ========== MENU BAR ==========
+        // =========================
+        // MENU
+        // =========================
         private MenuStrip menuMain;
         private ToolStripMenuItem menuFile;
         private ToolStripMenuItem menuFileNewSession;
@@ -30,16 +36,23 @@ namespace Alicat
         private ToolStripMenuItem menuHelp;
         private ToolStripLabel toolStripVersion;
 
-        // ========== STATUS BAR ==========
+        // =========================
+        // STATUS BAR
+        // =========================
         private Panel panelStatusBar;
-        private Label lblConnectionStatus;
+        private TableLayoutPanel statusLayout;
+        private FlowLayoutPanel statusConnPanel;
         private Label lblStatusDot;
+        private Label lblConnectionStatus;
         private Label lblBaudRate;
         private Label lblLastUpdate;
         private PictureBox picLogo;
 
-        // ========== TOOLBAR ==========
+        // =========================
+        // TOOLBAR
+        // =========================
         private Panel panelToolbar;
+        private FlowLayoutPanel toolbarFlow;
         private Label lblToolbarControl;
         private Button btnPurge;
         private Label lblToolbarWindows;
@@ -47,12 +60,14 @@ namespace Alicat
         private Button btnTable;
         private Button btnTerminal;
 
-        // ========== CONTENT ==========
+        // =========================
+        // CONTENT
+        // =========================
         private TableLayoutPanel layoutContent;
         private Panel panelLeft;
         private Panel panelRight;
 
-        // ========== LEFT: SECTIONS ==========
+        // LEFT SIDE LAYOUT
         private TableLayoutPanel leftLayout;
 
         // Pressure cards row
@@ -69,61 +84,80 @@ namespace Alicat
         private Label lblTargetUnit;
         private Label lblTargetStatus;
 
-        // Set Target
+        // Set Target section
         private Panel sectionSetTarget;
         private Label lblSetTargetTitle;
+        private TableLayoutPanel setTargetRow;
         private TextBox txtTargetInput;
         private Label lblTargetInputUnit;
         private Button btnGoToTarget;
 
-        // Pressure Control
+        // Pressure Control section
         private Panel sectionPressureControl;
         private Label lblPressureControlTitle;
+        private TableLayoutPanel incrementRow;
         private Label lblIncrementLabel;
         private Button btnIncrementMinus;
         private TextBox txtIncrement;
         private Button btnIncrementPlus;
         private Label lblIncrementUnit;
+
         private Label lblAdjustPressureLabel;
         private Button btnIncrease;
         private Button btnDecrease;
 
-        // ========== RIGHT ==========
+        // RIGHT SIDE LAYOUT
         private TableLayoutPanel rightLayout;
 
+        // System Settings panel
         private Panel panelSystemSettings;
         private Label lblSystemSettingsTitle;
+        private TableLayoutPanel systemSettingsStack;
 
         private Panel settingRampSpeed;
+        private TableLayoutPanel settingRampSpeedRow;
         private Panel stripRampSpeed;
         private Label lblRampSpeedLabel;
         private Label lblRampSpeedValue;
 
         private Panel settingMaxPressure;
+        private TableLayoutPanel settingMaxPressureRow;
         private Panel stripMaxPressure;
         private Label lblMaxPressureLabel;
         private Label lblMaxPressureValue;
 
         private Panel settingUnits;
+        private TableLayoutPanel settingUnitsRow;
         private Panel stripUnits;
         private Label lblUnitsLabel;
         private Label lblUnitsValue;
 
         private Panel settingConnection;
+        private TableLayoutPanel settingConnectionRow;
         private Panel stripConnection;
         private Label lblConnectionLabel;
         private Label lblConnectionValue;
 
         private Panel settingBaudRate;
+        private TableLayoutPanel settingBaudRateRow;
         private Panel stripBaudRate;
         private Label lblBaudRateLabel;
         private Label lblBaudRateValue;
 
+        // Status Info panel
         private Panel panelStatusInfo;
         private Label lblStatusInfoTitle;
         private Label lblStatusInfoText;
 
-        // ========== THEME COLORS ==========
+        // Spacers
+        private Panel spacerContentCol;
+        private Panel spacerLeftGap1;
+        private Panel spacerLeftGap2;
+        private Panel spacerRightGap;
+
+        // =========================
+        // THEME FIELDS
+        // =========================
         private bool isDarkTheme = false;
 
         private readonly Color lightBgPrimary = Color.FromArgb(240, 240, 240);
@@ -156,8 +190,7 @@ namespace Alicat
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
-                components.Dispose();
+            if (disposing && (components != null)) components.Dispose();
             base.Dispose(disposing);
         }
 
@@ -165,10 +198,11 @@ namespace Alicat
 
         private void InitializeComponent()
         {
-            components = new System.ComponentModel.Container();
+            components = new Container();
 
-            rootLayout = new TableLayoutPanel();
-
+            // =========================
+            // Menu
+            // =========================
             menuMain = new MenuStrip();
             menuFile = new ToolStripMenuItem();
             menuFileNewSession = new ToolStripMenuItem();
@@ -182,14 +216,28 @@ namespace Alicat
             menuHelp = new ToolStripMenuItem();
             toolStripVersion = new ToolStripLabel();
 
+            // =========================
+            // Root
+            // =========================
+            rootLayout = new TableLayoutPanel();
+
+            // =========================
+            // Status bar
+            // =========================
             panelStatusBar = new Panel();
+            statusLayout = new TableLayoutPanel();
+            statusConnPanel = new FlowLayoutPanel();
             lblStatusDot = new Label();
             lblConnectionStatus = new Label();
             lblBaudRate = new Label();
             lblLastUpdate = new Label();
             picLogo = new PictureBox();
 
+            // =========================
+            // Toolbar
+            // =========================
             panelToolbar = new Panel();
+            toolbarFlow = new FlowLayoutPanel();
             lblToolbarControl = new Label();
             btnPurge = new Button();
             lblToolbarWindows = new Label();
@@ -197,12 +245,22 @@ namespace Alicat
             btnTable = new Button();
             btnTerminal = new Button();
 
+            // =========================
+            // Content
+            // =========================
             layoutContent = new TableLayoutPanel();
             panelLeft = new Panel();
             panelRight = new Panel();
 
+            spacerContentCol = new Panel();
+            spacerLeftGap1 = new Panel();
+            spacerLeftGap2 = new Panel();
+            spacerRightGap = new Panel();
+
+            // Left
             leftLayout = new TableLayoutPanel();
             layoutPressureCards = new TableLayoutPanel();
+
             cardCurrent = new Panel();
             lblCurrentTitle = new Label();
             lblCurrentValue = new Label();
@@ -217,12 +275,14 @@ namespace Alicat
 
             sectionSetTarget = new Panel();
             lblSetTargetTitle = new Label();
+            setTargetRow = new TableLayoutPanel();
             txtTargetInput = new TextBox();
             lblTargetInputUnit = new Label();
             btnGoToTarget = new Button();
 
             sectionPressureControl = new Panel();
             lblPressureControlTitle = new Label();
+            incrementRow = new TableLayoutPanel();
             lblIncrementLabel = new Label();
             btnIncrementMinus = new Button();
             txtIncrement = new TextBox();
@@ -232,33 +292,47 @@ namespace Alicat
             btnIncrease = new Button();
             btnDecrease = new Button();
 
+            // Right
             rightLayout = new TableLayoutPanel();
             panelSystemSettings = new Panel();
             lblSystemSettingsTitle = new Label();
+            systemSettingsStack = new TableLayoutPanel();
+
+            settingRampSpeed = new Panel();
+            settingRampSpeedRow = new TableLayoutPanel();
+            stripRampSpeed = new Panel();
+            lblRampSpeedLabel = new Label();
+            lblRampSpeedValue = new Label();
+
+            settingMaxPressure = new Panel();
+            settingMaxPressureRow = new TableLayoutPanel();
+            stripMaxPressure = new Panel();
+            lblMaxPressureLabel = new Label();
+            lblMaxPressureValue = new Label();
+
+            settingUnits = new Panel();
+            settingUnitsRow = new TableLayoutPanel();
+            stripUnits = new Panel();
+            lblUnitsLabel = new Label();
+            lblUnitsValue = new Label();
+
+            settingConnection = new Panel();
+            settingConnectionRow = new TableLayoutPanel();
+            stripConnection = new Panel();
+            lblConnectionLabel = new Label();
+            lblConnectionValue = new Label();
+
+            settingBaudRate = new Panel();
+            settingBaudRateRow = new TableLayoutPanel();
+            stripBaudRate = new Panel();
+            lblBaudRateLabel = new Label();
+            lblBaudRateValue = new Label();
 
             panelStatusInfo = new Panel();
             lblStatusInfoTitle = new Label();
             lblStatusInfoText = new Label();
 
-            // ✅ INITIALIZE SYSTEM SETTINGS LABELS (prevent null reference)
-            lblRampSpeedLabel = new Label();
-            lblRampSpeedValue = new Label();
-            lblMaxPressureLabel = new Label();
-            lblMaxPressureValue = new Label();
-            lblUnitsLabel = new Label();
-            lblUnitsValue = new Label();
-            lblConnectionLabel = new Label();
-            lblConnectionValue = new Label();
-            lblBaudRateLabel = new Label();
-            lblBaudRateValue = new Label();
-            stripRampSpeed = new Panel();
-            stripMaxPressure = new Panel();
-            stripUnits = new Panel();
-            stripConnection = new Panel();
-            stripBaudRate = new Panel();
-
-            menuMain.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)picLogo).BeginInit();
+            ((ISupportInitialize)picLogo).BeginInit();
             SuspendLayout();
 
             // ====================================================================
@@ -276,11 +350,13 @@ namespace Alicat
 
             menuFileNewSession.Name = "menuFileNewSession";
             menuFileNewSession.Text = "New Session...";
+            menuFileNewSession.Click += menuFileNewSession_Click;
 
             menuFileTestMode.Name = "menuFileTestMode";
             menuFileTestMode.Text = "Start Test Mode";
 
-            menuFile.DropDownItems.AddRange(new ToolStripItem[] {
+            menuFile.DropDownItems.AddRange(new ToolStripItem[]
+            {
                 menuFileNewSession,
                 menuFileTestMode
             });
@@ -290,11 +366,14 @@ namespace Alicat
 
             menuSettingsOptions.Name = "menuSettingsOptions";
             menuSettingsOptions.Text = "Options";
+            menuSettingsOptions.Click += btnOptions_Click;
 
             menuSettingsCommunication.Name = "menuSettingsCommunication";
             menuSettingsCommunication.Text = "Communication";
+            menuSettingsCommunication.Click += btnCommunication_Click;
 
-            menuSettings.DropDownItems.AddRange(new ToolStripItem[] {
+            menuSettings.DropDownItems.AddRange(new ToolStripItem[]
+            {
                 menuSettingsOptions,
                 menuSettingsCommunication
             });
@@ -309,9 +388,11 @@ namespace Alicat
 
             menuViewDarkTheme.Name = "menuViewDarkTheme";
             menuViewDarkTheme.Text = "Dark Theme";
+            menuViewDarkTheme.Checked = false;
             menuViewDarkTheme.Click += MenuViewDarkTheme_Click;
 
-            menuView.DropDownItems.AddRange(new ToolStripItem[] {
+            menuView.DropDownItems.AddRange(new ToolStripItem[]
+            {
                 menuViewLightTheme,
                 menuViewDarkTheme
             });
@@ -324,46 +405,38 @@ namespace Alicat
             toolStripVersion.Alignment = ToolStripItemAlignment.Right;
             toolStripVersion.ForeColor = Color.Gray;
 
-            menuMain.Items.AddRange(new ToolStripItem[] {
-                menuFile,
-                menuSettings,
-                menuView,
-                menuHelp,
-                toolStripVersion
+            menuMain.Items.AddRange(new ToolStripItem[]
+            {
+                menuFile, menuSettings, menuView, menuHelp, toolStripVersion
             });
 
             // ====================================================================
-            // ROOT LAYOUT
+            // ROOT LAYOUT (status + toolbar + content)
             // ====================================================================
             rootLayout.ColumnCount = 1;
-            rootLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             rootLayout.RowCount = 3;
-            rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
-            rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 38F));
-            rootLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             rootLayout.Dock = DockStyle.Fill;
             rootLayout.Margin = new Padding(0);
             rootLayout.Padding = new Padding(0);
 
-            rootLayout.Controls.Add(panelStatusBar, 0, 0);
-            rootLayout.Controls.Add(panelToolbar, 0, 1);
-            rootLayout.Controls.Add(layoutContent, 0, 2);
+            rootLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));  // status
+            rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 38F));  // toolbar
+            rootLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));  // content
 
             // ====================================================================
             // STATUS BAR
             // ====================================================================
             panelStatusBar.Dock = DockStyle.Fill;
-            panelStatusBar.Padding = new Padding(16, 0, 16, 0);
             panelStatusBar.Margin = new Padding(0);
+            panelStatusBar.Padding = new Padding(16, 0, 16, 0);
 
-            var statusLayout = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 7,
-                RowCount = 1,
-                Margin = new Padding(0),
-                Padding = new Padding(0)
-            };
+            statusLayout.Dock = DockStyle.Fill;
+            statusLayout.Margin = new Padding(0);
+            statusLayout.Padding = new Padding(0);
+            statusLayout.ColumnCount = 7;
+            statusLayout.RowCount = 1;
+
             statusLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             statusLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
             statusLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
@@ -371,44 +444,42 @@ namespace Alicat
             statusLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             statusLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             statusLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            statusLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
-            var statusConnPanel = new FlowLayoutPanel
-            {
-                FlowDirection = FlowDirection.LeftToRight,
-                AutoSize = true,
-                Margin = new Padding(0),
-                Padding = new Padding(0)
-            };
+            statusConnPanel.FlowDirection = FlowDirection.LeftToRight;
+            statusConnPanel.WrapContents = false;
+            statusConnPanel.AutoSize = true;
+            statusConnPanel.Margin = new Padding(0);
+            statusConnPanel.Padding = new Padding(0);
 
+            lblStatusDot.AutoSize = true;
             lblStatusDot.Text = "●";
             lblStatusDot.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            lblStatusDot.AutoSize = true;
             lblStatusDot.Margin = new Padding(0, 14, 8, 0);
 
+            lblConnectionStatus.AutoSize = true;
             lblConnectionStatus.Text = "Connected (COM3)";
             lblConnectionStatus.Font = new Font("Segoe UI", 9F);
-            lblConnectionStatus.AutoSize = true;
             lblConnectionStatus.Margin = new Padding(0, 16, 0, 0);
-            lblConnectionStatus.MinimumSize = new Size(110, 0);
 
             statusConnPanel.Controls.Add(lblStatusDot);
             statusConnPanel.Controls.Add(lblConnectionStatus);
 
+            lblBaudRate.AutoSize = true;
             lblBaudRate.Text = "Baud: 19200";
             lblBaudRate.Font = new Font("Segoe UI", 9F);
-            lblBaudRate.AutoSize = true;
             lblBaudRate.Margin = new Padding(0, 16, 0, 0);
 
+            lblLastUpdate.AutoSize = true;
             lblLastUpdate.Text = "Last update: 0.5s ago";
             lblLastUpdate.Font = new Font("Segoe UI", 9F);
-            lblLastUpdate.AutoSize = true;
             lblLastUpdate.Margin = new Padding(0, 16, 0, 0);
 
+            picLogo.SizeMode = PictureBoxSizeMode.Zoom;
             picLogo.Width = 180;
             picLogo.Height = 45;
-            picLogo.Anchor = AnchorStyles.Right;
             picLogo.Margin = new Padding(0, 2, 0, 0);
-            picLogo.SizeMode = PictureBoxSizeMode.Zoom;
+            picLogo.Anchor = AnchorStyles.Right;
 
             statusLayout.Controls.Add(statusConnPanel, 0, 0);
             statusLayout.Controls.Add(new Panel(), 1, 0);
@@ -424,51 +495,52 @@ namespace Alicat
             // TOOLBAR
             // ====================================================================
             panelToolbar.Dock = DockStyle.Fill;
-            panelToolbar.Padding = new Padding(16, 0, 16, 0);
             panelToolbar.Margin = new Padding(0);
+            panelToolbar.Padding = new Padding(16, 0, 16, 0);
 
-            var toolbarFlow = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = false,
-                Margin = new Padding(0),
-                Padding = new Padding(0, 5, 0, 5)
-            };
+            toolbarFlow.Dock = DockStyle.Fill;
+            toolbarFlow.FlowDirection = FlowDirection.LeftToRight;
+            toolbarFlow.WrapContents = false;
+            toolbarFlow.Margin = new Padding(0);
+            toolbarFlow.Padding = new Padding(0, 5, 0, 5);
 
-            lblToolbarControl.Text = "Control:";
-            lblToolbarControl.Font = new Font("Segoe UI", 9F, FontStyle.Regular);
             lblToolbarControl.AutoSize = true;
+            lblToolbarControl.Text = "Control:";
+            lblToolbarControl.Font = new Font("Segoe UI", 9F);
             lblToolbarControl.Margin = new Padding(0, 7, 8, 0);
 
-            btnPurge.Text = "🧪 Purge";
+            btnPurge.Text = "🧪  Purge";
             btnPurge.AutoSize = true;
             btnPurge.Margin = new Padding(0, 0, 22, 0);
             btnPurge.Padding = new Padding(10, 6, 10, 6);
             btnPurge.FlatStyle = FlatStyle.Flat;
+            btnPurge.Click += btnPurge_Click;
 
-            lblToolbarWindows.Text = "Windows:";
-            lblToolbarWindows.Font = new Font("Segoe UI", 9F, FontStyle.Regular);
             lblToolbarWindows.AutoSize = true;
+            lblToolbarWindows.Text = "Windows:";
+            lblToolbarWindows.Font = new Font("Segoe UI", 9F);
             lblToolbarWindows.Margin = new Padding(0, 7, 10, 0);
 
-            btnGraph.Text = "📊 Graph";
+            btnGraph.Text = "📊  Graph";
             btnGraph.AutoSize = true;
             btnGraph.Margin = new Padding(0, 0, 6, 0);
             btnGraph.Padding = new Padding(10, 6, 10, 6);
             btnGraph.FlatStyle = FlatStyle.Flat;
+            btnGraph.Click += btnGraph_Click;
 
-            btnTable.Text = "📋 Table";
+            btnTable.Text = "📋  Table";
             btnTable.AutoSize = true;
             btnTable.Margin = new Padding(0, 0, 6, 0);
             btnTable.Padding = new Padding(10, 6, 10, 6);
             btnTable.FlatStyle = FlatStyle.Flat;
+            btnTable.Click += btnTable_Click;
 
-            btnTerminal.Text = "💻 Terminal";
+            btnTerminal.Text = "💻  Terminal";
             btnTerminal.AutoSize = true;
             btnTerminal.Margin = new Padding(0);
             btnTerminal.Padding = new Padding(10, 6, 10, 6);
             btnTerminal.FlatStyle = FlatStyle.Flat;
+            btnTerminal.Click += btnTerminal_Click;
 
             toolbarFlow.Controls.Add(lblToolbarControl);
             toolbarFlow.Controls.Add(btnPurge);
@@ -480,295 +552,235 @@ namespace Alicat
             panelToolbar.Controls.Add(toolbarFlow);
 
             // ====================================================================
-            // CONTENT LAYOUT
+            // CONTENT LAYOUT (Left 840 + gap 20 + Right 400)
             // ====================================================================
             layoutContent.ColumnCount = 3;
+            layoutContent.RowCount = 1;
+            layoutContent.Dock = DockStyle.Fill;
+            layoutContent.Margin = new Padding(0);
+            layoutContent.Padding = new Padding(20);
+
             layoutContent.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 840F));
             layoutContent.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
             layoutContent.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 400F));
-            layoutContent.RowCount = 1;
             layoutContent.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            layoutContent.Dock = DockStyle.Fill;
-            layoutContent.Padding = new Padding(20);
-            layoutContent.Margin = new Padding(0);
 
-            layoutContent.Controls.Add(panelLeft, 0, 0);
-            layoutContent.Controls.Add(new Panel(), 1, 0);
-            layoutContent.Controls.Add(panelRight, 2, 0);
+            spacerContentCol.Dock = DockStyle.Fill;
 
-            // ====================================================================
-            // LEFT PANEL
-            // ====================================================================
             panelLeft.Dock = DockStyle.Fill;
             panelLeft.Margin = new Padding(0);
             panelLeft.Padding = new Padding(0);
 
+            panelRight.Dock = DockStyle.Fill;
+            panelRight.Margin = new Padding(0);
+            panelRight.Padding = new Padding(0);
+
+            layoutContent.Controls.Add(panelLeft, 0, 0);
+            layoutContent.Controls.Add(spacerContentCol, 1, 0);
+            layoutContent.Controls.Add(panelRight, 2, 0);
+
+            // ====================================================================
+            // LEFT LAYOUT (cards / set target / control)
+            // ====================================================================
+            leftLayout.ColumnCount = 1;
+            leftLayout.RowCount = 5;
             leftLayout.Dock = DockStyle.Fill;
             leftLayout.Margin = new Padding(0);
             leftLayout.Padding = new Padding(0);
-            leftLayout.ColumnCount = 1;
-            leftLayout.RowCount = 5;
-            leftLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 240F));
-            leftLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
-            leftLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 116F));
-            leftLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
-            leftLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            leftLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 240F)); // cards
+            leftLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));  // gap
+            leftLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 116F)); // set target
+            leftLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));  // gap
+            leftLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));  // control
 
             panelLeft.Controls.Add(leftLayout);
 
-            // Pressure Cards
+            // ---- cards row: 410 + 20 + 410
+            layoutPressureCards.ColumnCount = 3;
+            layoutPressureCards.RowCount = 1;
             layoutPressureCards.Dock = DockStyle.Fill;
             layoutPressureCards.Margin = new Padding(0);
             layoutPressureCards.Padding = new Padding(0);
-            layoutPressureCards.ColumnCount = 3;
-            layoutPressureCards.RowCount = 1;
             layoutPressureCards.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 410F));
             layoutPressureCards.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
             layoutPressureCards.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 410F));
             layoutPressureCards.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
-            // Current Card
+            spacerLeftGap1.Dock = DockStyle.Fill;
+
+            // Current card
             cardCurrent.Dock = DockStyle.Fill;
             cardCurrent.Margin = new Padding(0);
-            cardCurrent.Padding = new Padding(24);
+            cardCurrent.Padding = new Padding(20);
             cardCurrent.BorderStyle = BorderStyle.FixedSingle;
 
-            var currentLayout = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                Margin = new Padding(0),
-                Padding = new Padding(0),
-                ColumnCount = 1,
-                RowCount = 4
-            };
-            currentLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 22F));
-            currentLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 92F));
-            currentLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
-            currentLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-
-            lblCurrentTitle.Text = "CURRENT PRESSURE";
-            lblCurrentTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            lblCurrentTitle.Dock = DockStyle.Fill;
+            lblCurrentTitle.Dock = DockStyle.Top;
+            lblCurrentTitle.Height = 30;
             lblCurrentTitle.TextAlign = ContentAlignment.MiddleCenter;
-            lblCurrentTitle.Margin = new Padding(0, 0, 0, 6);
+            lblCurrentTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblCurrentTitle.Text = "CURRENT PRESSURE";
 
-            lblCurrentValue.Text = "100.0";
-            lblCurrentValue.Font = new Font("Segoe UI", 56F, FontStyle.Bold);
-            lblCurrentValue.Dock = DockStyle.Fill;
+            lblCurrentValue.Dock = DockStyle.Top;
+            lblCurrentValue.Height = 92;
             lblCurrentValue.TextAlign = ContentAlignment.MiddleCenter;
-            lblCurrentValue.Margin = new Padding(0);
+            lblCurrentValue.Font = new Font("Segoe UI", 60F, FontStyle.Bold);
+            lblCurrentValue.Text = "0.0";
 
-            lblCurrentUnit.Text = "PSIG";
-            lblCurrentUnit.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
-            lblCurrentUnit.Dock = DockStyle.Fill;
+            lblCurrentUnit.Dock = DockStyle.Top;
+            lblCurrentUnit.Height = 35;
             lblCurrentUnit.TextAlign = ContentAlignment.MiddleCenter;
-            lblCurrentUnit.Margin = new Padding(0, 0, 0, 6);
+            lblCurrentUnit.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
+            lblCurrentUnit.Text = "PSIG";
 
-            lblCurrentRate.Text = "→ 0.0 /s";
-            lblCurrentRate.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             lblCurrentRate.Dock = DockStyle.Fill;
             lblCurrentRate.TextAlign = ContentAlignment.MiddleCenter;
-            lblCurrentRate.Margin = new Padding(0);
+            lblCurrentRate.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            lblCurrentRate.Text = "→ 0.0 /s";
 
-            currentLayout.Controls.Add(lblCurrentTitle, 0, 0);
-            currentLayout.Controls.Add(lblCurrentValue, 0, 1);
-            currentLayout.Controls.Add(lblCurrentUnit, 0, 2);
-            currentLayout.Controls.Add(lblCurrentRate, 0, 3);
+            cardCurrent.Controls.Add(lblCurrentRate);
+            cardCurrent.Controls.Add(lblCurrentUnit);
+            cardCurrent.Controls.Add(lblCurrentValue);
+            cardCurrent.Controls.Add(lblCurrentTitle);
 
-            cardCurrent.Controls.Add(currentLayout);
-
-            // Target Card
+            // Target card
             cardTarget.Dock = DockStyle.Fill;
             cardTarget.Margin = new Padding(0);
-            cardTarget.Padding = new Padding(24);
+            cardTarget.Padding = new Padding(20);
             cardTarget.BorderStyle = BorderStyle.FixedSingle;
 
-            var targetLayout = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                Margin = new Padding(0),
-                Padding = new Padding(0),
-                ColumnCount = 1,
-                RowCount = 4
-            };
-            targetLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 22F));
-            targetLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 92F));
-            targetLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
-            targetLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-
-            lblTargetTitle.Text = "TARGET PRESSURE";
-            lblTargetTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            lblTargetTitle.Dock = DockStyle.Fill;
+            lblTargetTitle.Dock = DockStyle.Top;
+            lblTargetTitle.Height = 30;
             lblTargetTitle.TextAlign = ContentAlignment.MiddleCenter;
-            lblTargetTitle.Margin = new Padding(0, 0, 0, 6);
+            lblTargetTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblTargetTitle.Text = "TARGET PRESSURE";
 
-            lblTargetValue.Text = "100.0";
-            lblTargetValue.Font = new Font("Segoe UI", 56F, FontStyle.Bold);
-            lblTargetValue.Dock = DockStyle.Fill;
+            lblTargetValue.Dock = DockStyle.Top;
+            lblTargetValue.Height = 92;
             lblTargetValue.TextAlign = ContentAlignment.MiddleCenter;
-            lblTargetValue.Margin = new Padding(0);
+            lblTargetValue.Font = new Font("Segoe UI", 60F, FontStyle.Bold);
+            lblTargetValue.Text = "0.0";
 
-            lblTargetUnit.Text = "PSIG";
-            lblTargetUnit.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
-            lblTargetUnit.Dock = DockStyle.Fill;
+            lblTargetUnit.Dock = DockStyle.Top;
+            lblTargetUnit.Height = 35;
             lblTargetUnit.TextAlign = ContentAlignment.MiddleCenter;
-            lblTargetUnit.Margin = new Padding(0, 0, 0, 6);
+            lblTargetUnit.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
+            lblTargetUnit.Text = "PSIG";
 
-            lblTargetStatus.Text = "At target";
-            lblTargetStatus.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             lblTargetStatus.Dock = DockStyle.Fill;
             lblTargetStatus.TextAlign = ContentAlignment.MiddleCenter;
-            lblTargetStatus.Margin = new Padding(0);
+            lblTargetStatus.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            lblTargetStatus.Text = "At target";
 
-            targetLayout.Controls.Add(lblTargetTitle, 0, 0);
-            targetLayout.Controls.Add(lblTargetValue, 0, 1);
-            targetLayout.Controls.Add(lblTargetUnit, 0, 2);
-            targetLayout.Controls.Add(lblTargetStatus, 0, 3);
-
-            cardTarget.Controls.Add(targetLayout);
+            cardTarget.Controls.Add(lblTargetStatus);
+            cardTarget.Controls.Add(lblTargetUnit);
+            cardTarget.Controls.Add(lblTargetValue);
+            cardTarget.Controls.Add(lblTargetTitle);
 
             layoutPressureCards.Controls.Add(cardCurrent, 0, 0);
-            layoutPressureCards.Controls.Add(new Panel(), 1, 0);
+            layoutPressureCards.Controls.Add(spacerLeftGap1, 1, 0);
             layoutPressureCards.Controls.Add(cardTarget, 2, 0);
 
-            // Set Target Section
+            // ---- Set Target section
             sectionSetTarget.Dock = DockStyle.Fill;
             sectionSetTarget.Margin = new Padding(0);
             sectionSetTarget.Padding = new Padding(18);
             sectionSetTarget.BorderStyle = BorderStyle.FixedSingle;
 
-            var setTargetLayout = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                Margin = new Padding(0),
-                Padding = new Padding(0),
-                ColumnCount = 1,
-                RowCount = 2
-            };
-            setTargetLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 26F));
-            setTargetLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-
-            lblSetTargetTitle.Text = "Set Target Pressure";
-            lblSetTargetTitle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            lblSetTargetTitle.Dock = DockStyle.Fill;
+            lblSetTargetTitle.Dock = DockStyle.Top;
+            lblSetTargetTitle.Height = 26;
             lblSetTargetTitle.TextAlign = ContentAlignment.MiddleLeft;
-            lblSetTargetTitle.Margin = new Padding(0, 0, 0, 10);
+            lblSetTargetTitle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            lblSetTargetTitle.Text = "Set Target Pressure";
 
-            var setTargetRow = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                Margin = new Padding(0),
-                Padding = new Padding(0),
-                ColumnCount = 4,
-                RowCount = 1
-            };
-            setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 60F));
-            setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 16F));
-            setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180F));
+            setTargetRow.Dock = DockStyle.Fill;
+            setTargetRow.Margin = new Padding(0, 10, 0, 0);
+            setTargetRow.Padding = new Padding(0);
+            setTargetRow.ColumnCount = 4;
+            setTargetRow.RowCount = 1;
+            setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F)); // input
+            setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70F)); // unit
+            setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 15F)); // gap
+            setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 170F)); // button
+            setTargetRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
-            txtTargetInput.Text = "100.0";
-            txtTargetInput.Font = new Font("Courier New", 12F);
             txtTargetInput.Dock = DockStyle.Fill;
-            txtTargetInput.Margin = new Padding(0);
+            txtTargetInput.Font = new Font("Courier New", 12F);
+            txtTargetInput.Text = "100.0";
 
-            lblTargetInputUnit.Text = "PSIG";
-            lblTargetInputUnit.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             lblTargetInputUnit.Dock = DockStyle.Fill;
             lblTargetInputUnit.TextAlign = ContentAlignment.MiddleLeft;
-            lblTargetInputUnit.Margin = new Padding(8, 0, 0, 0);
-            lblTargetInputUnit.AutoSize = false;
+            lblTargetInputUnit.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblTargetInputUnit.Text = "PSIG";
+            lblTargetInputUnit.Margin = new Padding(10, 0, 0, 0);
 
-            btnGoToTarget.Text = "🎯 Go to Target";
-            btnGoToTarget.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             btnGoToTarget.Dock = DockStyle.Fill;
-            btnGoToTarget.Margin = new Padding(0);
+            btnGoToTarget.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnGoToTarget.Text = "🎯  Go to Target";
             btnGoToTarget.FlatStyle = FlatStyle.Flat;
+            btnGoToTarget.Click += btnGoTarget_Click;
 
             setTargetRow.Controls.Add(txtTargetInput, 0, 0);
             setTargetRow.Controls.Add(lblTargetInputUnit, 1, 0);
             setTargetRow.Controls.Add(new Panel(), 2, 0);
             setTargetRow.Controls.Add(btnGoToTarget, 3, 0);
 
-            setTargetLayout.Controls.Add(lblSetTargetTitle, 0, 0);
-            setTargetLayout.Controls.Add(setTargetRow, 0, 1);
+            sectionSetTarget.Controls.Add(setTargetRow);
+            sectionSetTarget.Controls.Add(lblSetTargetTitle);
 
-            sectionSetTarget.Controls.Add(setTargetLayout);
-
-            // Pressure Control Section
+            // ---- Pressure Control section
             sectionPressureControl.Dock = DockStyle.Fill;
             sectionPressureControl.Margin = new Padding(0);
             sectionPressureControl.Padding = new Padding(18);
             sectionPressureControl.BorderStyle = BorderStyle.FixedSingle;
 
-            var pressureControlLayout = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                Margin = new Padding(0),
-                Padding = new Padding(0),
-                ColumnCount = 1,
-                RowCount = 6
-            };
-            pressureControlLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 28F));
-            pressureControlLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 10F));
-            pressureControlLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 52F));
-            pressureControlLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 26F));
-            pressureControlLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 70F));
-            pressureControlLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 70F));
-
-            lblPressureControlTitle.Text = "Pressure Control";
-            lblPressureControlTitle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            lblPressureControlTitle.Dock = DockStyle.Fill;
+            lblPressureControlTitle.Dock = DockStyle.Top;
+            lblPressureControlTitle.Height = 28;
             lblPressureControlTitle.TextAlign = ContentAlignment.MiddleLeft;
-            lblPressureControlTitle.Margin = new Padding(0);
+            lblPressureControlTitle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            lblPressureControlTitle.Text = "Pressure Control";
 
-            var incrementRow = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                Margin = new Padding(0),
-                Padding = new Padding(0),
-                ColumnCount = 6,
-                RowCount = 1
-            };
-            incrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90F));
-            incrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 46F));
-            incrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 110F));
-            incrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 46F));
-            incrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70F));
-            incrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            incrementRow.Dock = DockStyle.Top;
+            incrementRow.Height = 52;
+            incrementRow.Margin = new Padding(0, 16, 0, 0);
+            incrementRow.Padding = new Padding(0);
+            incrementRow.ColumnCount = 6;
+            incrementRow.RowCount = 1;
 
-            lblIncrementLabel.Text = "Increment:";
-            lblIncrementLabel.Font = new Font("Segoe UI", 10F, FontStyle.Regular);
+            incrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90F));  // label
+            incrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 46F));  // minus
+            incrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 110F)); // value
+            incrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 46F));  // plus
+            incrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70F));  // unit
+            incrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));  // filler
+
             lblIncrementLabel.Dock = DockStyle.Fill;
             lblIncrementLabel.TextAlign = ContentAlignment.MiddleLeft;
-            lblIncrementLabel.Margin = new Padding(0);
+            lblIncrementLabel.Font = new Font("Segoe UI", 10F);
+            lblIncrementLabel.Text = "Increment:";
 
-            btnIncrementMinus.Text = "−";
-            btnIncrementMinus.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
             btnIncrementMinus.Dock = DockStyle.Fill;
-            btnIncrementMinus.Margin = new Padding(0, 0, 10, 0);
             btnIncrementMinus.FlatStyle = FlatStyle.Flat;
-            btnIncrementMinus.TextAlign = ContentAlignment.MiddleCenter;
+            btnIncrementMinus.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
+            btnIncrementMinus.Text = "−";
+            btnIncrementMinus.Click += btnIncrementMinus_Click;
 
-            txtIncrement.Text = "5.0";
-            txtIncrement.Font = new Font("Courier New", 12F, FontStyle.Bold);
             txtIncrement.Dock = DockStyle.Fill;
+            txtIncrement.Font = new Font("Courier New", 12F, FontStyle.Bold);
             txtIncrement.TextAlign = HorizontalAlignment.Center;
-            txtIncrement.Margin = new Padding(0, 0, 10, 0);
+            txtIncrement.Text = "5.0";
 
-            btnIncrementPlus.Text = "+";
-            btnIncrementPlus.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
             btnIncrementPlus.Dock = DockStyle.Fill;
-            btnIncrementPlus.Margin = new Padding(0, 0, 10, 0);
             btnIncrementPlus.FlatStyle = FlatStyle.Flat;
-            btnIncrementPlus.TextAlign = ContentAlignment.MiddleCenter;
+            btnIncrementPlus.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
+            btnIncrementPlus.Text = "+";
+            btnIncrementPlus.Click += btnIncrementPlus_Click;
 
-            lblIncrementUnit.Text = "PSIG";
-            lblIncrementUnit.Font = new Font("Segoe UI", 10F, FontStyle.Regular);
             lblIncrementUnit.Dock = DockStyle.Fill;
             lblIncrementUnit.TextAlign = ContentAlignment.MiddleLeft;
-            lblIncrementUnit.Margin = new Padding(0);
-            lblIncrementUnit.AutoSize = false;
+            lblIncrementUnit.Font = new Font("Segoe UI", 10F);
+            lblIncrementUnit.Text = "PSIG";
+            lblIncrementUnit.Margin = new Padding(8, 0, 0, 0);
 
             incrementRow.Controls.Add(lblIncrementLabel, 0, 0);
             incrementRow.Controls.Add(btnIncrementMinus, 1, 0);
@@ -777,206 +789,341 @@ namespace Alicat
             incrementRow.Controls.Add(lblIncrementUnit, 4, 0);
             incrementRow.Controls.Add(new Panel(), 5, 0);
 
-            lblAdjustPressureLabel.Text = "Adjust Pressure:";
-            lblAdjustPressureLabel.Font = new Font("Segoe UI", 10F, FontStyle.Regular);
-            lblAdjustPressureLabel.Dock = DockStyle.Fill;
+            lblAdjustPressureLabel.Dock = DockStyle.Top;
+            lblAdjustPressureLabel.Height = 26;
+            lblAdjustPressureLabel.Margin = new Padding(0, 16, 0, 0);
             lblAdjustPressureLabel.TextAlign = ContentAlignment.MiddleLeft;
-            lblAdjustPressureLabel.Margin = new Padding(0, 10, 0, 0);
+            lblAdjustPressureLabel.Font = new Font("Segoe UI", 10F);
+            lblAdjustPressureLabel.Text = "Adjust Pressure:";
 
-            btnIncrease.Text = "▲  Increase (+5.0 PSIG)";
-            btnIncrease.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            btnIncrease.Dock = DockStyle.Fill;
-            btnIncrease.Margin = new Padding(0, 8, 0, 8);
+            btnIncrease.Dock = DockStyle.Top;
+            btnIncrease.Height = 55;
+            btnIncrease.Margin = new Padding(0, 10, 0, 10);
             btnIncrease.FlatStyle = FlatStyle.Flat;
+            btnIncrease.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            btnIncrease.Text = "▲  Increase (+5.0 PSIG)";
+            btnIncrease.Click += btnIncrease_Click;
 
-            btnDecrease.Text = "▼  Decrease (-5.0 PSIG)";
-            btnDecrease.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            btnDecrease.Dock = DockStyle.Fill;
+            btnDecrease.Dock = DockStyle.Top;
+            btnDecrease.Height = 55;
             btnDecrease.Margin = new Padding(0);
             btnDecrease.FlatStyle = FlatStyle.Flat;
+            btnDecrease.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            btnDecrease.Text = "▼  Decrease (-5.0 PSIG)";
+            btnDecrease.Click += btnDecrease_Click;
 
-            pressureControlLayout.Controls.Add(lblPressureControlTitle, 0, 0);
-            pressureControlLayout.Controls.Add(new Panel(), 0, 1);
-            pressureControlLayout.Controls.Add(incrementRow, 0, 2);
-            pressureControlLayout.Controls.Add(lblAdjustPressureLabel, 0, 3);
-            pressureControlLayout.Controls.Add(btnIncrease, 0, 4);
-            pressureControlLayout.Controls.Add(btnDecrease, 0, 5);
+            sectionPressureControl.Controls.Add(btnDecrease);
+            sectionPressureControl.Controls.Add(btnIncrease);
+            sectionPressureControl.Controls.Add(lblAdjustPressureLabel);
+            sectionPressureControl.Controls.Add(incrementRow);
+            sectionPressureControl.Controls.Add(lblPressureControlTitle);
 
-            sectionPressureControl.Controls.Add(pressureControlLayout);
+            // Add to left stack
+            spacerLeftGap2.Dock = DockStyle.Fill;
 
             leftLayout.Controls.Add(layoutPressureCards, 0, 0);
-            leftLayout.Controls.Add(new Panel(), 0, 1);
+            leftLayout.Controls.Add(spacerLeftGap2, 0, 1);
             leftLayout.Controls.Add(sectionSetTarget, 0, 2);
             leftLayout.Controls.Add(new Panel(), 0, 3);
             leftLayout.Controls.Add(sectionPressureControl, 0, 4);
 
             // ====================================================================
-            // RIGHT PANEL
+            // RIGHT LAYOUT (System Settings + gap + Status Info)
             // ====================================================================
-            panelRight.Dock = DockStyle.Fill;
-            panelRight.Margin = new Padding(0);
-            panelRight.Padding = new Padding(0);
-
+            rightLayout.ColumnCount = 1;
+            rightLayout.RowCount = 3;
             rightLayout.Dock = DockStyle.Fill;
             rightLayout.Margin = new Padding(0);
             rightLayout.Padding = new Padding(0);
-            rightLayout.ColumnCount = 1;
-            rightLayout.RowCount = 3;
             rightLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 300F));
             rightLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
             rightLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
             panelRight.Controls.Add(rightLayout);
 
-            // System Settings Panel
+            // ---- System Settings panel
             panelSystemSettings.Dock = DockStyle.Fill;
             panelSystemSettings.Margin = new Padding(0);
             panelSystemSettings.Padding = new Padding(16);
             panelSystemSettings.BorderStyle = BorderStyle.FixedSingle;
 
-            lblSystemSettingsTitle.Text = "System Settings";
-            lblSystemSettingsTitle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             lblSystemSettingsTitle.Dock = DockStyle.Top;
             lblSystemSettingsTitle.Height = 28;
-            lblSystemSettingsTitle.TextAlign = ContentAlignment.MiddleLeft;
             lblSystemSettingsTitle.Margin = new Padding(0, 0, 0, 10);
+            lblSystemSettingsTitle.TextAlign = ContentAlignment.MiddleLeft;
+            lblSystemSettingsTitle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            lblSystemSettingsTitle.Text = "System Settings";
 
-            var settingsStack = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                Margin = new Padding(0),
-                Padding = new Padding(0),
-                ColumnCount = 1,
-                RowCount = 6
-            };
-            settingsStack.RowStyles.Add(new RowStyle(SizeType.Absolute, 28F));
-            settingsStack.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
-            settingsStack.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
-            settingsStack.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
-            settingsStack.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
-            settingsStack.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
+            systemSettingsStack.Dock = DockStyle.Fill;
+            systemSettingsStack.Margin = new Padding(0);
+            systemSettingsStack.Padding = new Padding(0);
+            systemSettingsStack.ColumnCount = 1;
+            systemSettingsStack.RowCount = 5;
+            systemSettingsStack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            systemSettingsStack.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
+            systemSettingsStack.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
+            systemSettingsStack.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
+            systemSettingsStack.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
+            systemSettingsStack.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
 
-            // ✅ CREATE SETTINGS ITEMS (using pre-initialized labels)
-            settingRampSpeed = CreateSettingItem(stripRampSpeed, lblRampSpeedLabel, lblRampSpeedValue, "Ramp Speed", "10 PSIG/s");
-            settingMaxPressure = CreateSettingItem(stripMaxPressure, lblMaxPressureLabel, lblMaxPressureValue, "Max Pressure", "140 PSIG");
-            settingUnits = CreateSettingItem(stripUnits, lblUnitsLabel, lblUnitsValue, "Units", "PSIG");
-            settingConnection = CreateSettingItem(stripConnection, lblConnectionLabel, lblConnectionValue, "Connection", "COM3");
-            settingBaudRate = CreateSettingItem(stripBaudRate, lblBaudRateLabel, lblBaudRateValue, "Baud Rate", "19200");
+            // 1) Ramp Speed
+            settingRampSpeed.Dock = DockStyle.Fill;
+            settingRampSpeed.Margin = new Padding(0, 0, 0, 10);
+            settingRampSpeed.BorderStyle = BorderStyle.FixedSingle;
 
-            settingsStack.Controls.Add(new Panel(), 0, 0);
-            settingsStack.Controls.Add(settingRampSpeed, 0, 1);
-            settingsStack.Controls.Add(settingMaxPressure, 0, 2);
-            settingsStack.Controls.Add(settingUnits, 0, 3);
-            settingsStack.Controls.Add(settingConnection, 0, 4);
-            settingsStack.Controls.Add(settingBaudRate, 0, 5);
+            settingRampSpeedRow.Dock = DockStyle.Fill;
+            settingRampSpeedRow.Margin = new Padding(0);
+            settingRampSpeedRow.Padding = new Padding(0);
+            settingRampSpeedRow.ColumnCount = 3;
+            settingRampSpeedRow.RowCount = 1;
+            settingRampSpeedRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 4F));
+            settingRampSpeedRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65F));
+            settingRampSpeedRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+            settingRampSpeedRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
-            panelSystemSettings.Controls.Add(settingsStack);
+            stripRampSpeed.Dock = DockStyle.Fill;
+            stripRampSpeed.Margin = new Padding(0);
+
+            lblRampSpeedLabel.Dock = DockStyle.Fill;
+            lblRampSpeedLabel.Margin = new Padding(12, 0, 0, 0);
+            lblRampSpeedLabel.TextAlign = ContentAlignment.MiddleLeft;
+            lblRampSpeedLabel.Font = new Font("Segoe UI", 10F);
+            lblRampSpeedLabel.Text = "Ramp Speed";
+
+            lblRampSpeedValue.Dock = DockStyle.Fill;
+            lblRampSpeedValue.Margin = new Padding(0, 0, 12, 0);
+            lblRampSpeedValue.TextAlign = ContentAlignment.MiddleRight;
+            lblRampSpeedValue.Font = new Font("Courier New", 10F, FontStyle.Bold);
+            lblRampSpeedValue.Text = "PSIG/s";
+
+            settingRampSpeedRow.Controls.Add(stripRampSpeed, 0, 0);
+            settingRampSpeedRow.Controls.Add(lblRampSpeedLabel, 1, 0);
+            settingRampSpeedRow.Controls.Add(lblRampSpeedValue, 2, 0);
+            settingRampSpeed.Controls.Add(settingRampSpeedRow);
+
+            // 2) Max Pressure
+            settingMaxPressure.Dock = DockStyle.Fill;
+            settingMaxPressure.Margin = new Padding(0, 0, 0, 10);
+            settingMaxPressure.BorderStyle = BorderStyle.FixedSingle;
+
+            settingMaxPressureRow.Dock = DockStyle.Fill;
+            settingMaxPressureRow.Margin = new Padding(0);
+            settingMaxPressureRow.Padding = new Padding(0);
+            settingMaxPressureRow.ColumnCount = 3;
+            settingMaxPressureRow.RowCount = 1;
+            settingMaxPressureRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 4F));
+            settingMaxPressureRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65F));
+            settingMaxPressureRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+            settingMaxPressureRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            stripMaxPressure.Dock = DockStyle.Fill;
+            stripMaxPressure.Margin = new Padding(0);
+
+            lblMaxPressureLabel.Dock = DockStyle.Fill;
+            lblMaxPressureLabel.Margin = new Padding(12, 0, 0, 0);
+            lblMaxPressureLabel.TextAlign = ContentAlignment.MiddleLeft;
+            lblMaxPressureLabel.Font = new Font("Segoe UI", 10F);
+            lblMaxPressureLabel.Text = "Max Pressure";
+
+            lblMaxPressureValue.Dock = DockStyle.Fill;
+            lblMaxPressureValue.Margin = new Padding(0, 0, 12, 0);
+            lblMaxPressureValue.TextAlign = ContentAlignment.MiddleRight;
+            lblMaxPressureValue.Font = new Font("Courier New", 10F, FontStyle.Bold);
+            lblMaxPressureValue.Text = "200 PSIG";
+
+            settingMaxPressureRow.Controls.Add(stripMaxPressure, 0, 0);
+            settingMaxPressureRow.Controls.Add(lblMaxPressureLabel, 1, 0);
+            settingMaxPressureRow.Controls.Add(lblMaxPressureValue, 2, 0);
+            settingMaxPressure.Controls.Add(settingMaxPressureRow);
+
+            // 3) Units
+            settingUnits.Dock = DockStyle.Fill;
+            settingUnits.Margin = new Padding(0, 0, 0, 10);
+            settingUnits.BorderStyle = BorderStyle.FixedSingle;
+
+            settingUnitsRow.Dock = DockStyle.Fill;
+            settingUnitsRow.Margin = new Padding(0);
+            settingUnitsRow.Padding = new Padding(0);
+            settingUnitsRow.ColumnCount = 3;
+            settingUnitsRow.RowCount = 1;
+            settingUnitsRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 4F));
+            settingUnitsRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65F));
+            settingUnitsRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+            settingUnitsRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            stripUnits.Dock = DockStyle.Fill;
+            stripUnits.Margin = new Padding(0);
+
+            lblUnitsLabel.Dock = DockStyle.Fill;
+            lblUnitsLabel.Margin = new Padding(12, 0, 0, 0);
+            lblUnitsLabel.TextAlign = ContentAlignment.MiddleLeft;
+            lblUnitsLabel.Font = new Font("Segoe UI", 10F);
+            lblUnitsLabel.Text = "Units";
+
+            lblUnitsValue.Dock = DockStyle.Fill;
+            lblUnitsValue.Margin = new Padding(0, 0, 12, 0);
+            lblUnitsValue.TextAlign = ContentAlignment.MiddleRight;
+            lblUnitsValue.Font = new Font("Courier New", 10F, FontStyle.Bold);
+            lblUnitsValue.Text = "PSIG";
+
+            settingUnitsRow.Controls.Add(stripUnits, 0, 0);
+            settingUnitsRow.Controls.Add(lblUnitsLabel, 1, 0);
+            settingUnitsRow.Controls.Add(lblUnitsValue, 2, 0);
+            settingUnits.Controls.Add(settingUnitsRow);
+
+            // 4) Connection
+            settingConnection.Dock = DockStyle.Fill;
+            settingConnection.Margin = new Padding(0, 0, 0, 10);
+            settingConnection.BorderStyle = BorderStyle.FixedSingle;
+
+            settingConnectionRow.Dock = DockStyle.Fill;
+            settingConnectionRow.Margin = new Padding(0);
+            settingConnectionRow.Padding = new Padding(0);
+            settingConnectionRow.ColumnCount = 3;
+            settingConnectionRow.RowCount = 1;
+            settingConnectionRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 4F));
+            settingConnectionRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65F));
+            settingConnectionRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+            settingConnectionRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            stripConnection.Dock = DockStyle.Fill;
+            stripConnection.Margin = new Padding(0);
+
+            lblConnectionLabel.Dock = DockStyle.Fill;
+            lblConnectionLabel.Margin = new Padding(12, 0, 0, 0);
+            lblConnectionLabel.TextAlign = ContentAlignment.MiddleLeft;
+            lblConnectionLabel.Font = new Font("Segoe UI", 10F);
+            lblConnectionLabel.Text = "Connection";
+
+            lblConnectionValue.Dock = DockStyle.Fill;
+            lblConnectionValue.Margin = new Padding(0, 0, 12, 0);
+            lblConnectionValue.TextAlign = ContentAlignment.MiddleRight;
+            lblConnectionValue.Font = new Font("Courier New", 10F, FontStyle.Bold);
+            lblConnectionValue.Text = "COM3";
+
+            settingConnectionRow.Controls.Add(stripConnection, 0, 0);
+            settingConnectionRow.Controls.Add(lblConnectionLabel, 1, 0);
+            settingConnectionRow.Controls.Add(lblConnectionValue, 2, 0);
+            settingConnection.Controls.Add(settingConnectionRow);
+
+            // 5) Baud Rate
+            settingBaudRate.Dock = DockStyle.Fill;
+            settingBaudRate.Margin = new Padding(0, 0, 0, 0);
+            settingBaudRate.BorderStyle = BorderStyle.FixedSingle;
+
+            settingBaudRateRow.Dock = DockStyle.Fill;
+            settingBaudRateRow.Margin = new Padding(0);
+            settingBaudRateRow.Padding = new Padding(0);
+            settingBaudRateRow.ColumnCount = 3;
+            settingBaudRateRow.RowCount = 1;
+            settingBaudRateRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 4F));
+            settingBaudRateRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65F));
+            settingBaudRateRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+            settingBaudRateRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            stripBaudRate.Dock = DockStyle.Fill;
+            stripBaudRate.Margin = new Padding(0);
+
+            lblBaudRateLabel.Dock = DockStyle.Fill;
+            lblBaudRateLabel.Margin = new Padding(12, 0, 0, 0);
+            lblBaudRateLabel.TextAlign = ContentAlignment.MiddleLeft;
+            lblBaudRateLabel.Font = new Font("Segoe UI", 10F);
+            lblBaudRateLabel.Text = "Baud Rate";
+
+            lblBaudRateValue.Dock = DockStyle.Fill;
+            lblBaudRateValue.Margin = new Padding(0, 0, 12, 0);
+            lblBaudRateValue.TextAlign = ContentAlignment.MiddleRight;
+            lblBaudRateValue.Font = new Font("Courier New", 10F, FontStyle.Bold);
+            lblBaudRateValue.Text = "19200";
+
+            settingBaudRateRow.Controls.Add(stripBaudRate, 0, 0);
+            settingBaudRateRow.Controls.Add(lblBaudRateLabel, 1, 0);
+            settingBaudRateRow.Controls.Add(lblBaudRateValue, 2, 0);
+            settingBaudRate.Controls.Add(settingBaudRateRow);
+
+            systemSettingsStack.Controls.Add(settingRampSpeed, 0, 0);
+            systemSettingsStack.Controls.Add(settingMaxPressure, 0, 1);
+            systemSettingsStack.Controls.Add(settingUnits, 0, 2);
+            systemSettingsStack.Controls.Add(settingConnection, 0, 3);
+            systemSettingsStack.Controls.Add(settingBaudRate, 0, 4);
+
+            panelSystemSettings.Controls.Add(systemSettingsStack);
             panelSystemSettings.Controls.Add(lblSystemSettingsTitle);
 
-            // Status Info Panel
+            // ---- Status Info panel
             panelStatusInfo.Dock = DockStyle.Fill;
             panelStatusInfo.Margin = new Padding(0);
             panelStatusInfo.Padding = new Padding(16);
             panelStatusInfo.BorderStyle = BorderStyle.FixedSingle;
 
-            lblStatusInfoTitle.Text = "ℹ️ Status Information";
-            lblStatusInfoTitle.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             lblStatusInfoTitle.Dock = DockStyle.Top;
             lblStatusInfoTitle.Height = 26;
-            lblStatusInfoTitle.TextAlign = ContentAlignment.MiddleLeft;
             lblStatusInfoTitle.Margin = new Padding(0, 0, 0, 8);
+            lblStatusInfoTitle.TextAlign = ContentAlignment.MiddleLeft;
+            lblStatusInfoTitle.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblStatusInfoTitle.Text = "ℹ️  Status Information";
 
-            lblStatusInfoText.Text = "• Controller is running\n• Pressure increasing\n• Systems operational\n• Last update: 0.5s ago";
-            lblStatusInfoText.Font = new Font("Segoe UI", 9F);
             lblStatusInfoText.Dock = DockStyle.Fill;
-            lblStatusInfoText.AutoSize = false;
             lblStatusInfoText.TextAlign = ContentAlignment.TopLeft;
+            lblStatusInfoText.Font = new Font("Segoe UI", 9F);
+            lblStatusInfoText.Text =
+                "• Controller is running\r\n" +
+                "• Pressure increasing\r\n" +
+                "• Systems operational\r\n" +
+                "• Last update: 0.5s ago";
 
             panelStatusInfo.Controls.Add(lblStatusInfoText);
             panelStatusInfo.Controls.Add(lblStatusInfoTitle);
 
+            spacerRightGap.Dock = DockStyle.Fill;
+
             rightLayout.Controls.Add(panelSystemSettings, 0, 0);
-            rightLayout.Controls.Add(new Panel(), 0, 1);
+            rightLayout.Controls.Add(spacerRightGap, 0, 1);
             rightLayout.Controls.Add(panelStatusInfo, 0, 2);
+
+            // ====================================================================
+            // Root add rows
+            // ====================================================================
+            rootLayout.Controls.Add(panelStatusBar, 0, 0);
+            rootLayout.Controls.Add(panelToolbar, 0, 1);
+            rootLayout.Controls.Add(layoutContent, 0, 2);
 
             // ====================================================================
             // FORM
             // ====================================================================
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
+
             ClientSize = new Size(1300, 820);
             MinimumSize = new Size(1300, 820);
             MaximumSize = new Size(1300, 820);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
             StartPosition = FormStartPosition.CenterScreen;
+
             Text = "Alicat Controller";
             Name = "AlicatForm";
 
+            // IMPORTANT: order matters for Docking
             Controls.Add(rootLayout);
             Controls.Add(menuMain);
             MainMenuStrip = menuMain;
 
+            // ✅ чтобы View всегда нажимался (никто не перекрывает меню)
+            menuMain.BringToFront();
+
+            // Apply theme defaults
             ApplyLightTheme();
 
-            ((System.ComponentModel.ISupportInitialize)picLogo).EndInit();
-            menuMain.ResumeLayout(false);
-            menuMain.PerformLayout();
+            ((ISupportInitialize)picLogo).EndInit();
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
 
         // ====================================================================
-        // HELPER: CREATE SETTING ITEM
-        // ====================================================================
-        private Panel CreateSettingItem(Panel strip, Label labelCtrl, Label valueCtrl, string labelText, string valueText)
-        {
-            var host = new Panel();
-            host.Dock = DockStyle.Fill;
-            host.Margin = new Padding(0, 0, 0, 10);
-            host.Padding = new Padding(0);
-            host.BorderStyle = BorderStyle.FixedSingle;
-
-            var layout = new TableLayoutPanel();
-            layout.Dock = DockStyle.Fill;
-            layout.Margin = new Padding(0);
-            layout.Padding = new Padding(0);
-            layout.ColumnCount = 3;
-            layout.RowCount = 1;
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 4F));
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65F));
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-
-            strip.Dock = DockStyle.Fill;
-            strip.Margin = new Padding(0);
-
-            labelCtrl.Text = labelText;
-            labelCtrl.Dock = DockStyle.Fill;
-            labelCtrl.TextAlign = ContentAlignment.MiddleLeft;
-            labelCtrl.Margin = new Padding(12, 0, 0, 0);
-            labelCtrl.Font = new Font("Segoe UI", 10F, FontStyle.Regular);
-            labelCtrl.AutoSize = false;
-
-            valueCtrl.Text = valueText;
-            valueCtrl.Dock = DockStyle.Fill;
-            valueCtrl.TextAlign = ContentAlignment.MiddleRight;
-            valueCtrl.Margin = new Padding(0, 0, 12, 0);
-            valueCtrl.Font = new Font("Courier New", 10F, FontStyle.Bold);
-            valueCtrl.AutoSize = false;
-
-            layout.Controls.Add(strip, 0, 0);
-            layout.Controls.Add(labelCtrl, 1, 0);
-            layout.Controls.Add(valueCtrl, 2, 0);
-
-            host.Controls.Add(layout);
-
-            return host;
-        }
-
-        // ====================================================================
-        // THEME METHODS
+        // View -> Light/Dark handlers (сделано здесь, чтобы файл был "готовый")
         // ====================================================================
         private void MenuViewLightTheme_Click(object sender, EventArgs e)
         {
@@ -1035,7 +1182,6 @@ namespace Alicat
 
             btnGoToTarget.BackColor = lightAccentGreen;
             btnGoToTarget.ForeColor = Color.White;
-            btnGoToTarget.FlatAppearance.BorderColor = lightAccentGreen;
 
             sectionPressureControl.BackColor = lightBgSection;
             lblPressureControlTitle.ForeColor = lightTextSecondary;
@@ -1145,7 +1291,6 @@ namespace Alicat
 
             btnGoToTarget.BackColor = darkAccentGreen;
             btnGoToTarget.ForeColor = Color.White;
-            btnGoToTarget.FlatAppearance.BorderColor = darkAccentGreen;
 
             sectionPressureControl.BackColor = darkBgSection;
             lblPressureControlTitle.ForeColor = darkTextSecondary;
