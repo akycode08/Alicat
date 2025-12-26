@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-﻿using System.Drawing;
-=======
 using System.Drawing;
->>>>>>> 8ec243bf00f3ca9098d5d8cc2c1f6bac3a7a352d
 using System.Windows.Forms;
 
 namespace Alicat
@@ -29,6 +25,7 @@ namespace Alicat
         private readonly Color lightAccentGold = Color.FromArgb(255, 193, 7);
         private readonly Color lightAccentGreen = Color.FromArgb(76, 175, 80);
         private readonly Color lightStatusDot = Color.FromArgb(76, 175, 80);
+        private readonly Color lightStatusDotDisconnected = Color.FromArgb(244, 67, 54); // Красный для отключенного состояния
 
         // ====================================================================
         // ЦВЕТОВАЯ ПАЛИТРА (Dark Theme)
@@ -46,6 +43,7 @@ namespace Alicat
         private readonly Color darkAccentGold = Color.FromArgb(240, 200, 0);
         private readonly Color darkAccentGreen = Color.FromArgb(0, 224, 128);
         private readonly Color darkStatusDot = Color.FromArgb(0, 224, 128);
+        private readonly Color darkStatusDotDisconnected = Color.FromArgb(255, 82, 82); // Красный для отключенного состояния (темная тема)
 
         // ====================================================================
         // ОБРАБОТЧИКИ МЕНЮ (View -> Light/Dark Theme)

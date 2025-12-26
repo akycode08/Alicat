@@ -150,7 +150,7 @@ namespace Alicat
             }
             else
             {
-                lblStatusDot.ForeColor = System.Drawing.Color.Gray;
+                lblStatusDot.ForeColor = isDarkTheme ? darkStatusDotDisconnected : lightStatusDotDisconnected;
                 lblConnectionStatus.Text = "Disconnected";
                 lblConnectionStatus.ForeColor = isDarkTheme ? darkTextMuted : lightTextMuted;
 

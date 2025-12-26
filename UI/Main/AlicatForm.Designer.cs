@@ -448,31 +448,32 @@ namespace Alicat
             statusConnPanel.Location = new Point(0, 0);
             statusConnPanel.Margin = new Padding(0);
             statusConnPanel.Name = "statusConnPanel";
-            statusConnPanel.Size = new Size(138, 35);
+            statusConnPanel.Size = new Size(158, 50);
             statusConnPanel.TabIndex = 0;
             statusConnPanel.WrapContents = false;
             // 
             // lblStatusDot
             // 
-            lblStatusDot.AutoSize = true;
-            lblStatusDot.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            lblStatusDot.Location = new Point(0, 14);
-            lblStatusDot.Margin = new Padding(0, 14, 8, 0);
+            lblStatusDot.AutoSize = false;
+            lblStatusDot.Font = new Font("Segoe UI", 24F, FontStyle.Bold);
+            lblStatusDot.Location = new Point(0, 5);
+            lblStatusDot.Margin = new Padding(0, 5, 8, 0);
             lblStatusDot.Name = "lblStatusDot";
-            lblStatusDot.Size = new Size(20, 21);
+            lblStatusDot.Size = new Size(40, 40);
             lblStatusDot.TabIndex = 0;
             lblStatusDot.Text = "●";
+            lblStatusDot.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblConnectionStatus
             // 
             lblConnectionStatus.AutoSize = true;
             lblConnectionStatus.Font = new Font("Segoe UI", 9F);
-            lblConnectionStatus.Location = new Point(28, 16);
-            lblConnectionStatus.Margin = new Padding(0, 16, 0, 0);
+            lblConnectionStatus.Location = new Point(48, 20);
+            lblConnectionStatus.Margin = new Padding(0, 20, 0, 0);
             lblConnectionStatus.Name = "lblConnectionStatus";
             lblConnectionStatus.Size = new Size(110, 15);
             lblConnectionStatus.TabIndex = 1;
-            lblConnectionStatus.Text = "Connected (COM3)";
+            lblConnectionStatus.Text = "Disconnected";
             // 
             // lblBaudRate
             // 
