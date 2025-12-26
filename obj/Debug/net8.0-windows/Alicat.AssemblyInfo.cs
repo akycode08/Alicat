@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Alicat")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a801c6cb222afdd72bf0983aa2e2f0ea74b095b0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e5cb51425d9957c821bfe860fee7ffc93952a824")]
 [assembly: System.Reflection.AssemblyProductAttribute("Alicat")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Alicat")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
