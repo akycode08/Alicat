@@ -401,26 +401,7 @@ namespace Alicat
             // 
             rootLayout.ColumnCount = 1;
             rootLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-<<<<<<< HEAD
-            rootLayout.Controls.Add(panelStatusBar, 0, 0);
-            rootLayout.Controls.Add(panelToolbar, 0, 1);
-            rootLayout.Controls.Add(layoutContent, 0, 2);
-            rootLayout.Dock = DockStyle.Fill;
-            rootLayout.Location = new Point(0, 35);
-            rootLayout.Margin = new Padding(0);
-            rootLayout.Name = "rootLayout";
             rootLayout.RowCount = 3;
-            rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
-            rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45F));
-            rootLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            rootLayout.Size = new Size(1284, 746);
-            rootLayout.TabIndex = 0;
-            // 
-            // panelStatusBar
-            // 
-            panelStatusBar.BackColor = Color.FromArgb(232, 244, 248);
-            panelStatusBar.Controls.Add(statusLayout);
-=======
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));  // status
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45F));  // toolbar
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));  // content
@@ -428,7 +409,6 @@ namespace Alicat
             // ====================================================================
             // STATUS BAR
             // ====================================================================
->>>>>>> 8ec243bf00f3ca9098d5d8cc2c1f6bac3a7a352d
             panelStatusBar.Dock = DockStyle.Fill;
             panelStatusBar.Location = new Point(0, 0);
             panelStatusBar.Margin = new Padding(0);
@@ -536,13 +516,8 @@ namespace Alicat
             panelToolbar.Margin = new Padding(0);
             panelToolbar.Name = "panelToolbar";
             panelToolbar.Padding = new Padding(16, 0, 16, 0);
-<<<<<<< HEAD
             panelToolbar.Size = new Size(1284, 45);
             panelToolbar.TabIndex = 1;
-            // 
-            // toolbarFlow
-            // 
-=======
 
             toolbarFlow.Dock = DockStyle.Fill;
             toolbarFlow.FlowDirection = FlowDirection.LeftToRight;
@@ -610,7 +585,6 @@ namespace Alicat
             btnTerminal.Font = new Font("Segoe UI", 9F);
             btnTerminal.Click += btnTerminal_Click;
 
->>>>>>> 8ec243bf00f3ca9098d5d8cc2c1f6bac3a7a352d
             toolbarFlow.Controls.Add(lblToolbarControl);
             toolbarFlow.Controls.Add(btnControl);
             toolbarFlow.Controls.Add(btnPurge);
@@ -619,36 +593,6 @@ namespace Alicat
             toolbarFlow.Controls.Add(btnGraph);
             toolbarFlow.Controls.Add(btnTable);
             toolbarFlow.Controls.Add(btnTerminal);
-            toolbarFlow.Dock = DockStyle.Fill;
-            toolbarFlow.Location = new Point(16, 0);
-            toolbarFlow.Margin = new Padding(0);
-            toolbarFlow.Name = "toolbarFlow";
-            toolbarFlow.Size = new Size(1252, 45);
-            toolbarFlow.TabIndex = 0;
-            toolbarFlow.WrapContents = false;
-            // 
-            // lblToolbarControl
-            // 
-            lblToolbarControl.AutoSize = true;
-            lblToolbarControl.Font = new Font("Segoe UI", 9F);
-            lblToolbarControl.Location = new Point(0, 13);
-            lblToolbarControl.Margin = new Padding(0, 13, 8, 0);
-            lblToolbarControl.Name = "lblToolbarControl";
-            lblToolbarControl.Size = new Size(50, 15);
-            lblToolbarControl.TabIndex = 0;
-            lblToolbarControl.Text = "Control:";
-            // 
-            // btnPurge
-            // 
-            btnPurge.FlatStyle = FlatStyle.Flat;
-            btnPurge.Font = new Font("Segoe UI", 9F);
-            btnPurge.Location = new Point(58, 0);
-            btnPurge.Margin = new Padding(0, 0, 8, 0);
-            btnPurge.Name = "btnPurge";
-            btnPurge.Size = new Size(100, 45);
-            btnPurge.TabIndex = 2;
-            btnPurge.Text = "Purge";
-            btnPurge.Click += btnPurge_Click;
             // 
             // lblToolbarWindows
             // 
@@ -764,16 +708,8 @@ namespace Alicat
             layoutPressureCards.Margin = new Padding(0);
             layoutPressureCards.Name = "layoutPressureCards";
             layoutPressureCards.RowCount = 1;
-            layoutPressureCards.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-<<<<<<< HEAD
             layoutPressureCards.Size = new Size(840, 240);
             layoutPressureCards.TabIndex = 0;
-            // 
-            // cardCurrent
-            // 
-            cardCurrent.BackColor = Color.FromArgb(250, 250, 250);
-            cardCurrent.BorderStyle = BorderStyle.FixedSingle;
-=======
 
             spacerLeftGap1.Dock = DockStyle.Fill;
 
@@ -782,6 +718,7 @@ namespace Alicat
             cardCurrent.Margin = new Padding(0);
             cardCurrent.Padding = new Padding(0, 0, 0, 20);
             cardCurrent.BorderStyle = BorderStyle.FixedSingle;
+            cardCurrent.Name = "cardCurrent";
 
             lblCurrentTitle.Dock = DockStyle.Top;
             lblCurrentTitle.Height = 30;
@@ -807,17 +744,10 @@ namespace Alicat
             lblCurrentRate.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             lblCurrentRate.Text = "→ 0.0 /s";
 
->>>>>>> 8ec243bf00f3ca9098d5d8cc2c1f6bac3a7a352d
             cardCurrent.Controls.Add(lblCurrentRate);
             cardCurrent.Controls.Add(lblCurrentUnit);
             cardCurrent.Controls.Add(lblCurrentValue);
             cardCurrent.Controls.Add(lblCurrentTitle);
-<<<<<<< HEAD
-            cardCurrent.Dock = DockStyle.Fill;
-            cardCurrent.Location = new Point(0, 0);
-            cardCurrent.Margin = new Padding(0);
-            cardCurrent.Name = "cardCurrent";
-            cardCurrent.Padding = new Padding(0, 0, 0, 20);
             cardCurrent.Size = new Size(410, 240);
             cardCurrent.TabIndex = 0;
             // 
@@ -872,13 +802,6 @@ namespace Alicat
             spacerLeftGap1.Name = "spacerLeftGap1";
             spacerLeftGap1.Size = new Size(14, 234);
             spacerLeftGap1.TabIndex = 1;
-            // 
-            // cardTarget
-            // 
-            cardTarget.BackColor = Color.FromArgb(250, 250, 250);
-            cardTarget.BorderStyle = BorderStyle.FixedSingle;
-=======
-
             // Target card
             cardTarget.Dock = DockStyle.Fill;
             cardTarget.Margin = new Padding(0);
@@ -909,17 +832,11 @@ namespace Alicat
             lblTargetStatus.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             lblTargetStatus.Text = "At target";
 
->>>>>>> 8ec243bf00f3ca9098d5d8cc2c1f6bac3a7a352d
             cardTarget.Controls.Add(lblTargetStatus);
             cardTarget.Controls.Add(lblTargetUnit);
             cardTarget.Controls.Add(lblTargetValue);
             cardTarget.Controls.Add(lblTargetTitle);
-<<<<<<< HEAD
-            cardTarget.Dock = DockStyle.Fill;
-            cardTarget.Location = new Point(430, 0);
-            cardTarget.Margin = new Padding(0);
             cardTarget.Name = "cardTarget";
-            cardTarget.Padding = new Padding(0, 0, 0, 20);
             cardTarget.Size = new Size(410, 240);
             cardTarget.TabIndex = 2;
             // 
@@ -974,13 +891,6 @@ namespace Alicat
             spacerLeftGap2.Name = "spacerLeftGap2";
             spacerLeftGap2.Size = new Size(834, 14);
             spacerLeftGap2.TabIndex = 1;
-            // 
-            // sectionSetTarget
-            // 
-            sectionSetTarget.BackColor = Color.FromArgb(250, 250, 250);
-            sectionSetTarget.BorderStyle = BorderStyle.FixedSingle;
-=======
-
             layoutPressureCards.Controls.Add(cardCurrent, 0, 0);
             layoutPressureCards.Controls.Add(spacerLeftGap1, 1, 0);
             layoutPressureCards.Controls.Add(cardTarget, 2, 0);
@@ -1030,12 +940,8 @@ namespace Alicat
             setTargetRow.Controls.Add(new Panel(), 2, 0);
             setTargetRow.Controls.Add(btnGoToTarget, 3, 0);
 
->>>>>>> 8ec243bf00f3ca9098d5d8cc2c1f6bac3a7a352d
             sectionSetTarget.Controls.Add(setTargetRow);
             sectionSetTarget.Controls.Add(lblSetTargetTitle);
-            sectionSetTarget.Dock = DockStyle.Fill;
-            sectionSetTarget.Location = new Point(0, 260);
-            sectionSetTarget.Margin = new Padding(0);
             sectionSetTarget.Name = "sectionSetTarget";
             sectionSetTarget.Padding = new Padding(18, 0, 18, 30);
             sectionSetTarget.Size = new Size(840, 116);
@@ -1708,22 +1614,12 @@ namespace Alicat
             Controls.Add(menuMain);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MainMenuStrip = menuMain;
-<<<<<<< HEAD
             MaximizeBox = false;
             MaximumSize = new Size(1300, 820);
             MinimumSize = new Size(1300, 820);
             Name = "AlicatForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Alicat Controller";
-            menuMain.ResumeLayout(false);
-            menuMain.PerformLayout();
-            rootLayout.ResumeLayout(false);
-            panelStatusBar.ResumeLayout(false);
-            statusLayout.ResumeLayout(false);
-            statusLayout.PerformLayout();
-            statusConnPanel.ResumeLayout(false);
-            statusConnPanel.PerformLayout();
-=======
 
             // ✅ чтобы View всегда нажимался (никто не перекрывает меню)
             menuMain.BringToFront();
@@ -1747,8 +1643,15 @@ namespace Alicat
             panelSystemSettings.BackColor = Color.FromArgb(250, 250, 250);
             panelStatusInfo.BackColor = Color.FromArgb(227, 242, 253);
 
->>>>>>> 8ec243bf00f3ca9098d5d8cc2c1f6bac3a7a352d
             ((ISupportInitialize)picLogo).EndInit();
+            menuMain.ResumeLayout(false);
+            menuMain.PerformLayout();
+            rootLayout.ResumeLayout(false);
+            panelStatusBar.ResumeLayout(false);
+            statusLayout.ResumeLayout(false);
+            statusLayout.PerformLayout();
+            statusConnPanel.ResumeLayout(false);
+            statusConnPanel.PerformLayout();
             panelToolbar.ResumeLayout(false);
             toolbarFlow.ResumeLayout(false);
             toolbarFlow.PerformLayout();
