@@ -83,10 +83,8 @@ namespace Alicat
 
             // Начальные значения UI
             UI_SetPressureUnits(_unit);
-            UI_SetRampSpeedUnits("PSIG/s");
             UI_SetSetPoint(_setPoint, _unit);
             RefreshCurrent();
-            UpdateIncrementButtons();
 
             // Polling timer
             _pollTimer.Tick += (_, __) => _serial?.Send(AlicatCommands.ReadAls);
@@ -113,7 +111,7 @@ namespace Alicat
             UpdateIncrementButtons();
 
             // Update max pressure display
-            lblMaxPressureValue.Text = $"{_maxPressure:F0} PSIG";
+            lblMaxPressureValue.Text = $"{_maxPressure:F0} {_unit}";
         }
 
         // ====================================================================
@@ -299,8 +297,8 @@ namespace Alicat
 
         private void UpdateIncrementButtons()
         {
-            btnIncrease.Text = $"▲ Increase (+{_currentIncrement:F1} PSIG)";
-            btnDecrease.Text = $"▼ Decrease (-{_currentIncrement:F1} PSIG)";
+            btnIncrease.Text = $"▲ Increase (+{_currentIncrement:F1} {_unit})";
+            btnDecrease.Text = $"▼ Decrease (-{_currentIncrement:F1} {_unit})";
         }
 
         // ====================================================================
