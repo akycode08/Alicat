@@ -133,13 +133,66 @@ namespace Alicat
             for (int i = 3; i < parts.Length; i++)
             {
                 var p = parts[i].Trim().ToUpperInvariant();
-                if (p is "PSIG" or "PSI" or "KPA" or "BAR")
+                
+                // Поддерживаемые единицы измерения давления из таблицы Alicat
+                // 0: Unit not specified (пустая единица)
+                // 1: Unknown unit ("---")
+                // 2: Pa
+                // 3: hPa
+                // 4: kPa
+                // 5: MPa
+                // 6: mbar
+                // 7: bar
+                // 8: g/cm²
+                // 9: kg/cm
+                // 10: PSI
+                // 11: PSF
+                // 12: mTorr
+                // 13: torr
+                
+                if (p is "PA" or "HPA" or "KPA" or "MPA" or 
+                    "MBAR" or "BAR" or 
+                    "G/CM²" or "G/CM2" or "GCM²" or "GCM2" or
+                    "KG/CM" or "KGCM" or
+                    "PSIG" or "PSI" or "PSF" or
+                    "MTORR" or "TORR" or
+                    "---" or "" or string.Empty)
                 {
-                    unit = p;
+                    // Нормализуем единицы к стандартному виду
+                    unit = NormalizeUnit(p);
                     break;
                 }
             }
             return true;
+        }
+
+        /// <summary>
+        /// Нормализует единицу измерения к стандартному виду для отображения.
+        /// </summary>
+        private static string NormalizeUnit(string unit)
+        {
+            if (string.IsNullOrWhiteSpace(unit) || unit == "---" || unit == "")
+                return "PSIG"; // Default unit
+
+            var upper = unit.ToUpperInvariant();
+            
+            return upper switch
+            {
+                "PA" => "Pa",
+                "HPA" => "hPa",
+                "KPA" => "kPa",
+                "MPA" => "MPa",
+                "MBAR" => "mbar",
+                "BAR" => "bar",
+                "G/CM²" or "G/CM2" or "GCM²" or "GCM2" => "g/cm²",
+                "KG/CM" or "KGCM" => "kg/cm",
+                "PSIG" => "PSIG",
+                "PSI" => "PSI",
+                "PSF" => "PSF",
+                "MTORR" => "mTorr",
+                "TORR" => "torr",
+                _ => unit // Возвращаем как есть, если не распознали
+            };
         }
 
         private static bool TryParseAsr(string line, out double ramp, out string units)
@@ -174,7 +227,11 @@ namespace Alicat
             if (string.IsNullOrWhiteSpace(foundUnits))
                 return false;
 
-            units = foundUnits;
+            // Извлекаем единицу без "/s", нормализуем и добавляем "/s" обратно
+            var unitWithoutSlash = foundUnits.Substring(0, foundUnits.Length - 2).Trim();
+            var normalizedUnit = NormalizeUnit(unitWithoutSlash);
+            units = $"{normalizedUnit}/s";
+            
             return true;
         }
 

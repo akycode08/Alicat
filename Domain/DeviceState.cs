@@ -44,9 +44,50 @@ namespace Alicat.Domain
             for (int i = 3; i < parts.Length; i++)
             {
                 var p = parts[i].Trim().ToUpperInvariant();
-                if (p is "PSIG" or "PSI" or "KPA" or "BAR") { unit = p; break; }
+                
+                // Поддерживаемые единицы измерения давления из таблицы Alicat
+                if (p is "PA" or "HPA" or "KPA" or "MPA" or 
+                    "MBAR" or "BAR" or 
+                    "G/CM²" or "G/CM2" or "GCM²" or "GCM2" or
+                    "KG/CM" or "KGCM" or
+                    "PSIG" or "PSI" or "PSF" or
+                    "MTORR" or "TORR" or
+                    "---" or "" or string.Empty)
+                {
+                    unit = NormalizeUnit(p);
+                    break;
+                }
             }
             return true;
+        }
+
+        /// <summary>
+        /// Нормализует единицу измерения к стандартному виду для отображения.
+        /// </summary>
+        private static string NormalizeUnit(string unit)
+        {
+            if (string.IsNullOrWhiteSpace(unit) || unit == "---" || unit == "")
+                return "PSIG"; // Default unit
+
+            var upper = unit.ToUpperInvariant();
+            
+            return upper switch
+            {
+                "PA" => "Pa",
+                "HPA" => "hPa",
+                "KPA" => "kPa",
+                "MPA" => "MPa",
+                "MBAR" => "mbar",
+                "BAR" => "bar",
+                "G/CM²" or "G/CM2" or "GCM²" or "GCM2" => "g/cm²",
+                "KG/CM" or "KGCM" => "kg/cm",
+                "PSIG" => "PSIG",
+                "PSI" => "PSI",
+                "PSF" => "PSF",
+                "MTORR" => "mTorr",
+                "TORR" => "torr",
+                _ => unit // Возвращаем как есть, если не распознали
+            };
         }
     }
 }
