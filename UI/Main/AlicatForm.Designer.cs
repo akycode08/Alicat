@@ -153,6 +153,7 @@ namespace Alicat
         private Panel spacerContentCol;
         private Panel spacerLeftGap1;
         private Panel spacerLeftGap2;
+        private Panel spacerLeftGap3;
         private Panel spacerRightGap;
 
         // =========================
@@ -255,6 +256,7 @@ namespace Alicat
             spacerContentCol = new Panel();
             spacerLeftGap1 = new Panel();
             spacerLeftGap2 = new Panel();
+            spacerLeftGap3 = new Panel();
             spacerRightGap = new Panel();
 
             // Left
@@ -820,11 +822,12 @@ namespace Alicat
 
             // Add to left stack
             spacerLeftGap2.Dock = DockStyle.Fill;
+            spacerLeftGap3.Dock = DockStyle.Fill;
 
             leftLayout.Controls.Add(layoutPressureCards, 0, 0);
             leftLayout.Controls.Add(spacerLeftGap2, 0, 1);
             leftLayout.Controls.Add(sectionSetTarget, 0, 2);
-            leftLayout.Controls.Add(new Panel(), 0, 3);
+            leftLayout.Controls.Add(spacerLeftGap3, 0, 3);
             leftLayout.Controls.Add(sectionPressureControl, 0, 4);
 
             // ====================================================================
