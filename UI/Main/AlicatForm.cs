@@ -178,40 +178,6 @@ namespace Alicat
             return true;
         }
 
-        /// <summary>
-        /// Пытается распознать ответ на команду ADCU (изменение единиц измерения).
-        /// Устройство может ответить подтверждением или просто эхом команды.
-        /// Также проверяет, есть ли в строке единицы измерения (PSIG, PSI, BAR, KPA).
-        /// </summary>
-        private static bool TryParseAdcuResponse(string line, out string? unit)
-        {
-            unit = null;
-            if (string.IsNullOrWhiteSpace(line))
-                return false;
-
-            var parts = line.Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-            
-            // Ищем единицы измерения в строке
-            foreach (var part in parts)
-            {
-                var p = part.Trim().ToUpperInvariant();
-                if (p is "PSIG" or "PSI" or "KPA" or "BAR")
-                {
-                    unit = p;
-                    return true;
-                }
-            }
-
-            // Если строка содержит ADCU или похоже на ответ на команду изменения единиц
-            var upperLine = line.ToUpperInvariant();
-            if (upperLine.Contains("ADCU") || upperLine.Contains("UNIT"))
-            {
-                // Попробуем найти единицы в строке
-                return false; // Не нашли единицы, но это может быть ответ на ADCU
-            }
-
-            return false;
-        }
 
         // ====================================================================
         // VALIDATION
