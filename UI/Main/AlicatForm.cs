@@ -92,6 +92,9 @@ namespace Alicat
             _pollTimer.Tick += (_, __) => _serial?.Send(AlicatCommands.ReadAls);
 
             ApplyOptionsToUi();
+
+            // Применяем тему после инициализации (цвета и стили из AlicatForm.Theme.cs)
+            ApplyLightTheme();
         }
 
         // ====================================================================
