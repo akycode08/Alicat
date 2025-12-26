@@ -69,49 +69,19 @@ namespace Alicat
                 return;
             }
 
-            // 2) Пробуем распознать ответ ADCU (изменение единиц)
-            // Формат ответа может быть разным, но обычно устройство отвечает на ADCU
-            // и затем следующий ALS уже содержит новые единицы
-            // Но если в ответе есть единицы, обновим их сразу
-            if (TryParseAdcuResponse(line, out var newUnit))
-            {
-                if (!string.IsNullOrWhiteSpace(newUnit))
-                {
-                    _unit = newUnit;
-                    BeginInvoke(new Action(() =>
-                    {
-                        UI_SetPressureUnits(_unit);
-                    }));
-                }
-                // После ADCU обычно нужно запросить ALS для получения актуальных данных
-                // Но это произойдет автоматически через polling timer
-                return;
-            }
-
-            // 3) Если это не ASR и не ADCU — пробуем ALS
+            // 2) Если это не ASR — пробуем ALS
             if (!TryParseAls(line, out var cur, out var sp, out var unit))
                 return;
 
             _current = cur;
             if (!_isExhaust) _setPoint = sp;
-            
-            // Обновляем единицы, если они изменились
-            bool unitsChanged = !string.IsNullOrWhiteSpace(unit) && unit != _unit;
-            if (unitsChanged)
-            {
-                _unit = unit!;
-            }
+            if (!string.IsNullOrWhiteSpace(unit)) _unit = unit!;
 
             BeginInvoke(new Action(() =>
             {
-                // Если единицы изменились, обновляем их во всех местах UI
-                if (unitsChanged)
-                {
-                    UI_SetPressureUnits(_unit);
-                }
-                
                 UI_SetTrendStatus(_lastCurrent, _current, _isExhaust);
                 RefreshCurrent();
+                UI_SetPressureUnits(_unit);
                 UI_SetSetPoint(_isExhaust ? 0.0 : _setPoint, _unit);
 
                 ValidateTargetAgainstMax();
