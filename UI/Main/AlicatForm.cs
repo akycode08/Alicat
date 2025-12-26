@@ -156,7 +156,7 @@ namespace Alicat
                     "KG/CM" or "KGCM" or
                     "PSIG" or "PSI" or "PSF" or
                     "MTORR" or "TORR" or
-                    "---" or "" or string.Empty)
+                    "---" or "")
                 {
                     // Нормализуем единицы к стандартному виду
                     unit = NormalizeUnit(p);

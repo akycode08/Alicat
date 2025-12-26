@@ -52,7 +52,7 @@ namespace Alicat.Domain
                     "KG/CM" or "KGCM" or
                     "PSIG" or "PSI" or "PSF" or
                     "MTORR" or "TORR" or
-                    "---" or "" or string.Empty)
+                    "---" or "")
                 {
                     unit = NormalizeUnit(p);
                     break;
