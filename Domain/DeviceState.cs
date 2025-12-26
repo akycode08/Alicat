@@ -44,25 +44,21 @@ namespace Alicat.Domain
             for (int i = 3; i < parts.Length; i++)
             {
                 var p = parts[i].Trim().ToUpperInvariant();
-
-
-                // Поддерживаемые единицы измерения давления из таблицы Alicat
-                // Устройство возвращает единицы с "G" в конце (barG, kPaG, PSIG и т.д.)
-                // Проверяем единицы с "G" в конце и без
-                if (p is "PA" or "PAG" or "HPA" or "HPAG" or "KPA" or "KPAG" or "MPA" or "MPAG" or
-
                 
                 // Поддерживаемые единицы измерения давления из таблицы Alicat
                 // Устройство возвращает единицы с "G" в конце (barG, kPaG, PSIG и т.д.)
-                // Проверяем единицы с "G" в конце и без
-                if (p is "PA" or "PAG" or "HPA" or "HPAG" or "KPA" or "KPAG" or "MPA" or "MPAG" or 
-                    "MBAR" or "MBARG" or "BAR" or "BARG" or 
-
-                    "G/CM²" or "G/CM2" or "GCM²" or "GCM2" or "G/CM²G" or "G/CM2G" or "GCM²G" or "GCM2G" or
-                    "KG/CM" or "KGCM" or "KG/CMG" or "KGCMG" or
-                    "PSIG" or "PSI" or "PSFG" or "PSF" or
-                    "MTORR" or "MTORRG" or "TORR" or "TORRG" or
-                    "---" or "")
+                
+                // Проверяем известные единицы (избегаем символа ² в pattern matching)
+                bool isKnownUnit = p == "PA" || p == "PAG" || p == "HPA" || p == "HPAG" || 
+                                   p == "KPA" || p == "KPAG" || p == "MPA" || p == "MPAG" || 
+                                   p == "MBAR" || p == "MBARG" || p == "BAR" || p == "BARG" || 
+                                   p == "KG/CM" || p == "KGCM" || p == "KG/CMG" || p == "KGCMG" ||
+                                   p == "PSIG" || p == "PSI" || p == "PSFG" || p == "PSF" ||
+                                   p == "MTORR" || p == "MTORRG" || p == "TORR" || p == "TORRG" ||
+                                   p == "---" || p == "" ||
+                                   p.StartsWith("G/CM") || p.StartsWith("GCM");
+                
+                if (isKnownUnit)
                 {
                     unit = NormalizeUnit(p);
                     break;
@@ -87,16 +83,7 @@ namespace Alicat.Domain
             {
                 upper = upper.Substring(0, upper.Length - 1);
             }
-
-
-            // Обработка вариантов g/cm²
-            if (upper == "G/CM²" || upper == "G/CM2" || upper == "GCM²" || upper == "GCM2")
-                return "g/cm²";
-
-            // Обработка вариантов kg/cm
-            if (upper == "KG/CM" || upper == "KGCM")
-                return "kg/cm";
-
+            
             // Обработка вариантов g/cm²
             if (upper == "G/CM²" || upper == "G/CM2" || upper == "GCM²" || upper == "GCM2")
                 return "g/cm²";

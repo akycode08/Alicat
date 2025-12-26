@@ -158,20 +158,17 @@ namespace Alicat
                 // 13: torr / torrG
 
 
-                // Проверяем единицы с "G" в конце и без
-                if (p is "PA" or "PAG" or "HPA" or "HPAG" or "KPA" or "KPAG" or "MPA" or "MPAG" or
-                    "MBAR" or "MBARG" or "BAR" or "BARG" or
-
+                // Проверяем известные единицы (избегаем символа ² в pattern matching)
+                bool isKnownUnit = p == "PA" || p == "PAG" || p == "HPA" || p == "HPAG" || 
+                                   p == "KPA" || p == "KPAG" || p == "MPA" || p == "MPAG" || 
+                                   p == "MBAR" || p == "MBARG" || p == "BAR" || p == "BARG" || 
+                                   p == "KG/CM" || p == "KGCM" || p == "KG/CMG" || p == "KGCMG" ||
+                                   p == "PSIG" || p == "PSI" || p == "PSFG" || p == "PSF" ||
+                                   p == "MTORR" || p == "MTORRG" || p == "TORR" || p == "TORRG" ||
+                                   p == "---" || p == "" ||
+                                   p.StartsWith("G/CM") || p.StartsWith("GCM");
                 
-                // Проверяем единицы с "G" в конце и без
-                if (p is "PA" or "PAG" or "HPA" or "HPAG" or "KPA" or "KPAG" or "MPA" or "MPAG" or 
-                    "MBAR" or "MBARG" or "BAR" or "BARG" or 
-
-                    "G/CM²" or "G/CM2" or "GCM²" or "GCM2" or "G/CM²G" or "G/CM2G" or "GCM²G" or "GCM2G" or
-                    "KG/CM" or "KGCM" or "KG/CMG" or "KGCMG" or
-                    "PSIG" or "PSI" or "PSFG" or "PSF" or
-                    "MTORR" or "MTORRG" or "TORR" or "TORRG" or
-                    "---" or "")
+                if (isKnownUnit)
                 {
                     // Нормализуем единицы к стандартному виду (убираем "G" в конце)
                     unit = NormalizeUnit(p);
