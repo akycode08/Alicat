@@ -315,7 +315,10 @@ namespace Alicat
                 _terminalForm.CommandSent += TerminalForm_CommandSent;
             }
 
-            _terminalForm.Show(this);
+            if (!_terminalForm.Visible)
+            {
+                _terminalForm.Show(this);
+            }
             _terminalForm.Focus();
         }
 
