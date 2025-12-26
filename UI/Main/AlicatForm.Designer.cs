@@ -737,29 +737,30 @@ namespace Alicat
             sectionPressureControl.BorderStyle = BorderStyle.FixedSingle;
 
             lblPressureControlTitle.Dock = DockStyle.Top;
-            lblPressureControlTitle.Height = 28;
+            lblPressureControlTitle.Height = 30;
             lblPressureControlTitle.TextAlign = ContentAlignment.MiddleLeft;
             lblPressureControlTitle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             lblPressureControlTitle.Text = "Pressure Control";
 
+            lblIncrementLabel.Dock = DockStyle.Top;
+            lblIncrementLabel.Height = 20;
+            lblIncrementLabel.Margin = new Padding(0, 0, 0, 0);
+            lblIncrementLabel.TextAlign = ContentAlignment.MiddleLeft;
+            lblIncrementLabel.Font = new Font("Segoe UI", 10F);
+            lblIncrementLabel.Text = "Increment:";
+
             incrementRow.Dock = DockStyle.Top;
-            incrementRow.Height = 52;
-            incrementRow.Margin = new Padding(0, 16, 0, 0);
+            incrementRow.Height = 40;
+            incrementRow.Margin = new Padding(0, 0, 0, 0);
             incrementRow.Padding = new Padding(0);
-            incrementRow.ColumnCount = 6;
+            incrementRow.ColumnCount = 5;
             incrementRow.RowCount = 1;
 
-            incrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90F));  // label
             incrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 46F));  // minus
             incrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 110F)); // value
             incrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 46F));  // plus
             incrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70F));  // unit
             incrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));  // filler
-
-            lblIncrementLabel.Dock = DockStyle.Fill;
-            lblIncrementLabel.TextAlign = ContentAlignment.MiddleLeft;
-            lblIncrementLabel.Font = new Font("Segoe UI", 10F);
-            lblIncrementLabel.Text = "Increment:";
 
             btnIncrementMinus.Dock = DockStyle.Fill;
             btnIncrementMinus.FlatStyle = FlatStyle.Flat;
@@ -784,31 +785,30 @@ namespace Alicat
             lblIncrementUnit.Text = "PSIG";
             lblIncrementUnit.Margin = new Padding(8, 0, 0, 0);
 
-            incrementRow.Controls.Add(lblIncrementLabel, 0, 0);
-            incrementRow.Controls.Add(btnIncrementMinus, 1, 0);
-            incrementRow.Controls.Add(txtIncrement, 2, 0);
-            incrementRow.Controls.Add(btnIncrementPlus, 3, 0);
-            incrementRow.Controls.Add(lblIncrementUnit, 4, 0);
-            incrementRow.Controls.Add(new Panel(), 5, 0);
+            incrementRow.Controls.Add(btnIncrementMinus, 0, 0);
+            incrementRow.Controls.Add(txtIncrement, 1, 0);
+            incrementRow.Controls.Add(btnIncrementPlus, 2, 0);
+            incrementRow.Controls.Add(lblIncrementUnit, 3, 0);
+            incrementRow.Controls.Add(new Panel(), 4, 0);
 
             lblAdjustPressureLabel.Dock = DockStyle.Top;
-            lblAdjustPressureLabel.Height = 26;
-            lblAdjustPressureLabel.Margin = new Padding(0, 16, 0, 0);
+            lblAdjustPressureLabel.Height = 25;
+            lblAdjustPressureLabel.Margin = new Padding(0, 0, 0, 0);
             lblAdjustPressureLabel.TextAlign = ContentAlignment.MiddleLeft;
             lblAdjustPressureLabel.Font = new Font("Segoe UI", 10F);
             lblAdjustPressureLabel.Text = "Adjust Pressure:";
 
             btnIncrease.Dock = DockStyle.Top;
-            btnIncrease.Height = 55;
-            btnIncrease.Margin = new Padding(0, 10, 0, 10);
+            btnIncrease.Height = 50;
+            btnIncrease.Margin = new Padding(0, 0, 0, 10);
             btnIncrease.FlatStyle = FlatStyle.Flat;
             btnIncrease.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             btnIncrease.Text = "▲  Increase (+5.0 PSIG)";
             btnIncrease.Click += btnIncrease_Click;
 
             btnDecrease.Dock = DockStyle.Top;
-            btnDecrease.Height = 55;
-            btnDecrease.Margin = new Padding(0);
+            btnDecrease.Height = 50;
+            btnDecrease.Margin = new Padding(0, 0, 0, 0);
             btnDecrease.FlatStyle = FlatStyle.Flat;
             btnDecrease.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             btnDecrease.Text = "▼  Decrease (-5.0 PSIG)";
@@ -818,6 +818,7 @@ namespace Alicat
             sectionPressureControl.Controls.Add(btnIncrease);
             sectionPressureControl.Controls.Add(lblAdjustPressureLabel);
             sectionPressureControl.Controls.Add(incrementRow);
+            sectionPressureControl.Controls.Add(lblIncrementLabel);
             sectionPressureControl.Controls.Add(lblPressureControlTitle);
 
             // Add to left stack
