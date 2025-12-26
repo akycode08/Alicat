@@ -160,15 +160,15 @@ namespace Alicat
 
 
                 // Проверяем известные единицы (избегаем символа ² в pattern matching)
-                bool isKnownUnit = p == "PA" || p == "PAG" || p == "HPA" || p == "HPAG" || 
-                                   p == "KPA" || p == "KPAG" || p == "MPA" || p == "MPAG" || 
-                                   p == "MBAR" || p == "MBARG" || p == "BAR" || p == "BARG" || 
+                bool isKnownUnit = p == "PA" || p == "PAG" || p == "HPA" || p == "HPAG" ||
+                                   p == "KPA" || p == "KPAG" || p == "MPA" || p == "MPAG" ||
+                                   p == "MBAR" || p == "MBARG" || p == "BAR" || p == "BARG" ||
                                    p == "KG/CM" || p == "KGCM" || p == "KG/CMG" || p == "KGCMG" ||
                                    p == "PSIG" || p == "PSI" || p == "PSFG" || p == "PSF" ||
                                    p == "MTORR" || p == "MTORRG" || p == "TORR" || p == "TORRG" ||
                                    p == "---" || p == "" ||
                                    p.StartsWith("G/CM") || p.StartsWith("GCM");
-                
+
                 if (isKnownUnit)
                 {
                     // Нормализуем единицы к стандартному виду (убираем "G" в конце)
@@ -205,15 +205,15 @@ namespace Alicat
             if (upper == "KG/CM" || upper == "KGCM")
                 return "kg/cm";
 
-            
+
             // Обработка вариантов g/cm²
             if (upper == "G/CM²" || upper == "G/CM2" || upper == "GCM²" || upper == "GCM2")
                 return "g/cm²";
-            
+
             // Обработка вариантов kg/cm
             if (upper == "KG/CM" || upper == "KGCM")
                 return "kg/cm";
-            
+
 
             return upper switch
             {
