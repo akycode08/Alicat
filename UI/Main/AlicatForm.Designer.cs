@@ -733,7 +733,7 @@ namespace Alicat
             // ---- Pressure Control section
             sectionPressureControl.Dock = DockStyle.Fill;
             sectionPressureControl.Margin = new Padding(0);
-            sectionPressureControl.Padding = new Padding(18);
+            sectionPressureControl.Padding = new Padding(18, 15, 18, 15);
             sectionPressureControl.BorderStyle = BorderStyle.FixedSingle;
 
             lblPressureControlTitle.Dock = DockStyle.Top;
@@ -808,7 +808,7 @@ namespace Alicat
 
             btnDecrease.Dock = DockStyle.Top;
             btnDecrease.Height = 50;
-            btnDecrease.Margin = new Padding(0, 0, 0, 0);
+            btnDecrease.Margin = new Padding(0, 0, 0, 15);
             btnDecrease.FlatStyle = FlatStyle.Flat;
             btnDecrease.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             btnDecrease.Text = "▼  Decrease (-5.0 PSIG)";
