@@ -149,6 +149,30 @@ namespace Alicat
         }
 
         // ====================================================================
+        // PAUSE / CONTINUE
+        // ====================================================================
+
+        private void btnPause_Click(object? sender, EventArgs e)
+        {
+            _isPaused = !_isPaused;
+
+            if (_isPaused)
+            {
+                // Останавливаем polling timer
+                _pollTimer.Stop();
+                btnPause.Text = "Continue";
+                UI_AppendStatusInfo("Process paused - polling stopped");
+            }
+            else
+            {
+                // Возобновляем polling timer
+                _pollTimer.Start();
+                btnPause.Text = "Pause";
+                UI_AppendStatusInfo("Process resumed - polling started");
+            }
+        }
+
+        // ====================================================================
         // PURGE
         // ====================================================================
 

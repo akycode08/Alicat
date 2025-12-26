@@ -29,6 +29,7 @@ namespace Alicat
         private string _unit = "PSIG";
 
         private bool _isExhaust = false;
+        private bool _isPaused = false;
         private double? _lastCurrent = null;
         private double? _lastLoggedPressure = null;
 
@@ -71,6 +72,7 @@ namespace Alicat
 
             // Управление давлением
             btnGoToTarget.Click += btnGoTarget_Click;
+            btnPause.Click += btnPause_Click;
             btnPurge.Click += btnPurge_Click;
             btnIncrease.Click += btnIncrease_Click;
             btnDecrease.Click += btnDecrease_Click;
@@ -87,7 +89,13 @@ namespace Alicat
             RefreshCurrent();
 
             // Polling timer
-            _pollTimer.Tick += (_, __) => _serial?.Send(AlicatCommands.ReadAls);
+            _pollTimer.Tick += (_, __) =>
+            {
+                if (!_isPaused && _serial != null)
+                {
+                    _serial.Send(AlicatCommands.ReadAls);
+                }
+            };
 
             ApplyOptionsToUi();
 

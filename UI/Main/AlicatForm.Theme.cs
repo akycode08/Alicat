@@ -164,6 +164,8 @@ namespace Alicat
             lblStatusInfoTitle.ForeColor = Color.FromArgb(21, 101, 192);
             lblStatusInfoText.ForeColor = lightTextSecondary;
 
+            btnPause.BackColor = lightBgWindow;
+            btnPause.ForeColor = lightTextPrimary;
             btnPurge.BackColor = lightBgWindow;
             btnPurge.ForeColor = lightTextPrimary;
             btnGraph.BackColor = lightBgWindow;
@@ -276,6 +278,8 @@ namespace Alicat
             lblStatusInfoTitle.ForeColor = Color.FromArgb(0, 168, 224);
             lblStatusInfoText.ForeColor = darkTextSecondary;
 
+            btnPause.BackColor = darkBgWindow;
+            btnPause.ForeColor = darkTextPrimary;
             btnPurge.BackColor = darkBgWindow;
             btnPurge.ForeColor = darkTextPrimary;
             btnGraph.BackColor = darkBgWindow;

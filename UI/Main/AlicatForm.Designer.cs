@@ -54,6 +54,7 @@ namespace Alicat
         private Panel panelToolbar;
         private FlowLayoutPanel toolbarFlow;
         private Label lblToolbarControl;
+        private Button btnPause;
         private Button btnPurge;
         private Label lblToolbarWindows;
         private Button btnGraph;
@@ -195,6 +196,7 @@ namespace Alicat
             panelToolbar = new Panel();
             toolbarFlow = new FlowLayoutPanel();
             lblToolbarControl = new Label();
+            btnPause = new Button();
             btnPurge = new Button();
             lblToolbarWindows = new Label();
             btnGraph = new Button();
@@ -528,6 +530,7 @@ namespace Alicat
             // toolbarFlow
             // 
             toolbarFlow.Controls.Add(lblToolbarControl);
+            toolbarFlow.Controls.Add(btnPause);
             toolbarFlow.Controls.Add(btnPurge);
             toolbarFlow.Controls.Add(lblToolbarWindows);
             toolbarFlow.Controls.Add(btnGraph);
@@ -552,11 +555,23 @@ namespace Alicat
             lblToolbarControl.TabIndex = 0;
             lblToolbarControl.Text = "Control:";
             // 
+            // btnPause
+            // 
+            btnPause.FlatStyle = FlatStyle.Flat;
+            btnPause.Font = new Font("Segoe UI", 9F);
+            btnPause.Location = new Point(58, 0);
+            btnPause.Margin = new Padding(0, 0, 8, 0);
+            btnPause.Name = "btnPause";
+            btnPause.Size = new Size(100, 45);
+            btnPause.TabIndex = 1;
+            btnPause.Text = "Pause";
+            btnPause.Click += btnPause_Click;
+            // 
             // btnPurge
             // 
             btnPurge.FlatStyle = FlatStyle.Flat;
             btnPurge.Font = new Font("Segoe UI", 9F);
-            btnPurge.Location = new Point(58, 0);
+            btnPurge.Location = new Point(166, 0);
             btnPurge.Margin = new Padding(0, 0, 8, 0);
             btnPurge.Name = "btnPurge";
             btnPurge.Size = new Size(100, 45);
@@ -1554,4 +1569,4 @@ namespace Alicat
 
         #endregion
     }
-}
+} 
