@@ -405,6 +405,12 @@ namespace Alicat
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));  // status
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45F));  // toolbar
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));  // content
+            rootLayout.Dock = DockStyle.Fill;
+            rootLayout.Location = new Point(0, 35);
+            rootLayout.Margin = new Padding(0);
+            rootLayout.Name = "rootLayout";
+            rootLayout.Size = new Size(1284, 746);
+            rootLayout.TabIndex = 0;
 
             // ====================================================================
             // STATUS BAR
@@ -439,6 +445,9 @@ namespace Alicat
             statusLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             statusLayout.Size = new Size(1252, 50);
             statusLayout.TabIndex = 0;
+
+            panelStatusBar.Controls.Add(statusLayout);
+
             // 
             // statusConnPanel
             // 
@@ -594,6 +603,9 @@ namespace Alicat
             toolbarFlow.Controls.Add(btnGraph);
             toolbarFlow.Controls.Add(btnTable);
             toolbarFlow.Controls.Add(btnTerminal);
+
+            panelToolbar.Controls.Add(toolbarFlow);
+
             // 
             // lblToolbarWindows
             // 
@@ -1643,6 +1655,13 @@ namespace Alicat
             sectionPressureControl.BackColor = Color.FromArgb(250, 250, 250);
             panelSystemSettings.BackColor = Color.FromArgb(250, 250, 250);
             panelStatusInfo.BackColor = Color.FromArgb(227, 242, 253);
+
+            // ====================================================================
+            // ADD ELEMENTS TO ROOT LAYOUT
+            // ====================================================================
+            rootLayout.Controls.Add(panelStatusBar, 0, 0);
+            rootLayout.Controls.Add(panelToolbar, 0, 1);
+            rootLayout.Controls.Add(layoutContent, 0, 2);
 
             ((ISupportInitialize)picLogo).EndInit();
             menuMain.ResumeLayout(false);
