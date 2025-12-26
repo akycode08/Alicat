@@ -708,7 +708,7 @@ namespace Alicat
 
             txtTargetInput.Dock = DockStyle.Fill;
             txtTargetInput.Font = new Font("Courier New", 12F);
-            txtTargetInput.Text = "100.0";
+            txtTargetInput.Text = "";
 
             lblTargetInputUnit.Dock = DockStyle.Fill;
             lblTargetInputUnit.TextAlign = ContentAlignment.MiddleLeft;
