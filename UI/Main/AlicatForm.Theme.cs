@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿using System.Drawing;
+=======
+using System.Drawing;
+>>>>>>> 8ec243bf00f3ca9098d5d8cc2c1f6bac3a7a352d
 using System.Windows.Forms;
 
 namespace Alicat
@@ -307,3 +311,7 @@ namespace Alicat
         }
     }
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 8ec243bf00f3ca9098d5d8cc2c1f6bac3a7a352d
