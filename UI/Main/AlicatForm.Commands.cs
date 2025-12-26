@@ -154,21 +154,66 @@ namespace Alicat
 
         private void btnPause_Click(object? sender, EventArgs e)
         {
+            if (_serial == null)
+            {
+                MessageBox.Show("Device is not connected.", "Pause",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             _isPaused = !_isPaused;
 
             if (_isPaused)
             {
+                // Сохраняем текущую уставку
+                _pausedSetPoint = _setPoint;
+                
+                // Останавливаем рампу: устанавливаем уставку равную текущему значению
+                // Это останавливает процесс рампы на устройстве
+                try
+                {
+                    _serial.Send($"AS{_current:F2}");
+                    _setPoint = _current;
+                    UI_SetSetPoint(_current, _unit);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to pause: {ex.Message}", "Error",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    _isPaused = false;
+                    return;
+                }
+                
                 // Останавливаем polling timer
                 _pollTimer.Stop();
                 btnPause.Text = "Continue";
-                UI_AppendStatusInfo("Process paused - polling stopped");
+                UI_AppendStatusInfo($"Process paused - ramp stopped at {_current:F1} {_unit}");
             }
             else
             {
+                // Возобновляем: восстанавливаем исходную уставку
+                if (_pausedSetPoint.HasValue)
+                {
+                    try
+                    {
+                        _serial.Send($"AS{_pausedSetPoint.Value:F2}");
+                        _setPoint = _pausedSetPoint.Value;
+                        UI_SetSetPoint(_setPoint, _unit);
+                        _pausedSetPoint = null;
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Failed to resume: {ex.Message}", "Error",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        _isPaused = true;
+                        return;
+                    }
+                }
+                
                 // Возобновляем polling timer
                 _pollTimer.Start();
                 btnPause.Text = "Pause";
-                UI_AppendStatusInfo("Process resumed - polling started");
+                UI_AppendStatusInfo($"Process resumed - target restored to {_setPoint:F1} {_unit}");
             }
         }
 
