@@ -19,8 +19,16 @@ namespace Alicat
             _serial?.Dispose();
             _serial = new SerialClient(opened);
             _serial.LineReceived += Serial_LineReceived;
-            _serial.Connected += (_, __) => BeginInvoke(new Action(() => _pollTimer.Start()));
-            _serial.Disconnected += (_, __) => BeginInvoke(new Action(() => _pollTimer.Stop()));
+            _serial.Connected += (_, __) => BeginInvoke(new Action(() =>
+            {
+                _pollTimer.Start();
+                UI_UpdateConnectionStatus(true, opened.PortName);
+            }));
+            _serial.Disconnected += (_, __) => BeginInvoke(new Action(() =>
+            {
+                _pollTimer.Stop();
+                UI_UpdateConnectionStatus(false);
+            }));
 
             _serial.Attach();
             _ramp = new RampController(_serial);
@@ -30,6 +38,9 @@ namespace Alicat
             {
                 _dataStore.StartSession();
             }
+
+            // Обновляем статус после подключения (Attach вызывает Connected событие, но обновим явно)
+            UI_UpdateConnectionStatus(true, opened.PortName);
 
         }
 

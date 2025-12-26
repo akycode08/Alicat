@@ -274,8 +274,6 @@ namespace Alicat
             lblStatusInfoText = new Label();
             lblStatusInfoTitle = new Label();
             menuMain.SuspendLayout();
-            rootLayout.SuspendLayout();
-            panelStatusBar.SuspendLayout();
             statusLayout.SuspendLayout();
             statusConnPanel.SuspendLayout();
             ((ISupportInitialize)picLogo).BeginInit();
@@ -401,34 +399,18 @@ namespace Alicat
             // 
             rootLayout.ColumnCount = 1;
             rootLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-<<<<<<< HEAD
-            rootLayout.Controls.Add(panelStatusBar, 0, 0);
-            rootLayout.Controls.Add(panelToolbar, 0, 1);
-            rootLayout.Controls.Add(layoutContent, 0, 2);
-            rootLayout.Dock = DockStyle.Fill;
-            rootLayout.Location = new Point(0, 35);
-            rootLayout.Margin = new Padding(0);
+            rootLayout.Location = new Point(0, 0);
             rootLayout.Name = "rootLayout";
             rootLayout.RowCount = 3;
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45F));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            rootLayout.Size = new Size(1284, 746);
+            rootLayout.Size = new Size(200, 100);
             rootLayout.TabIndex = 0;
             // 
             // panelStatusBar
             // 
             panelStatusBar.BackColor = Color.FromArgb(232, 244, 248);
-            panelStatusBar.Controls.Add(statusLayout);
-=======
-            rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));  // status
-            rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45F));  // toolbar
-            rootLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));  // content
-
-            // ====================================================================
-            // STATUS BAR
-            // ====================================================================
->>>>>>> 8ec243bf00f3ca9098d5d8cc2c1f6bac3a7a352d
             panelStatusBar.Dock = DockStyle.Fill;
             panelStatusBar.Location = new Point(0, 0);
             panelStatusBar.Margin = new Padding(0);
@@ -468,37 +450,37 @@ namespace Alicat
             statusConnPanel.Location = new Point(0, 0);
             statusConnPanel.Margin = new Padding(0);
             statusConnPanel.Name = "statusConnPanel";
-            statusConnPanel.Size = new Size(138, 35);
+            statusConnPanel.Size = new Size(127, 45);
             statusConnPanel.TabIndex = 0;
             statusConnPanel.WrapContents = false;
             // 
             // lblStatusDot
             // 
-            lblStatusDot.AutoSize = true;
-            lblStatusDot.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            lblStatusDot.Location = new Point(0, 14);
-            lblStatusDot.Margin = new Padding(0, 14, 8, 0);
+            lblStatusDot.Font = new Font("Segoe UI", 24F, FontStyle.Bold);
+            lblStatusDot.Location = new Point(0, 5);
+            lblStatusDot.Margin = new Padding(0, 5, 8, 0);
             lblStatusDot.Name = "lblStatusDot";
-            lblStatusDot.Size = new Size(20, 21);
+            lblStatusDot.Size = new Size(40, 40);
             lblStatusDot.TabIndex = 0;
             lblStatusDot.Text = "●";
+            lblStatusDot.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblConnectionStatus
             // 
             lblConnectionStatus.AutoSize = true;
             lblConnectionStatus.Font = new Font("Segoe UI", 9F);
-            lblConnectionStatus.Location = new Point(28, 16);
-            lblConnectionStatus.Margin = new Padding(0, 16, 0, 0);
+            lblConnectionStatus.Location = new Point(48, 20);
+            lblConnectionStatus.Margin = new Padding(0, 20, 0, 0);
             lblConnectionStatus.Name = "lblConnectionStatus";
-            lblConnectionStatus.Size = new Size(110, 15);
+            lblConnectionStatus.Size = new Size(79, 15);
             lblConnectionStatus.TabIndex = 1;
-            lblConnectionStatus.Text = "Connected (COM3)";
+            lblConnectionStatus.Text = "Disconnected";
             // 
             // lblBaudRate
             // 
             lblBaudRate.AutoSize = true;
             lblBaudRate.Font = new Font("Segoe UI", 9F);
-            lblBaudRate.Location = new Point(158, 16);
+            lblBaudRate.Location = new Point(147, 16);
             lblBaudRate.Margin = new Padding(0, 16, 0, 0);
             lblBaudRate.Name = "lblBaudRate";
             lblBaudRate.Size = new Size(70, 15);
@@ -509,7 +491,7 @@ namespace Alicat
             // 
             lblLastUpdate.AutoSize = true;
             lblLastUpdate.Font = new Font("Segoe UI", 9F);
-            lblLastUpdate.Location = new Point(248, 16);
+            lblLastUpdate.Location = new Point(237, 16);
             lblLastUpdate.Margin = new Padding(0, 16, 0, 0);
             lblLastUpdate.Name = "lblLastUpdate";
             lblLastUpdate.Size = new Size(117, 15);
@@ -536,81 +518,11 @@ namespace Alicat
             panelToolbar.Margin = new Padding(0);
             panelToolbar.Name = "panelToolbar";
             panelToolbar.Padding = new Padding(16, 0, 16, 0);
-<<<<<<< HEAD
             panelToolbar.Size = new Size(1284, 45);
             panelToolbar.TabIndex = 1;
             // 
             // toolbarFlow
             // 
-=======
-
-            toolbarFlow.Dock = DockStyle.Fill;
-            toolbarFlow.FlowDirection = FlowDirection.LeftToRight;
-            toolbarFlow.WrapContents = false;
-            toolbarFlow.Margin = new Padding(0);
-            toolbarFlow.Padding = new Padding(0);
-            toolbarFlow.Height = 45;
-
-            lblToolbarControl.AutoSize = true;
-            lblToolbarControl.Text = "Control:";
-            lblToolbarControl.Font = new Font("Segoe UI", 9F);
-            lblToolbarControl.Margin = new Padding(0, 13, 8, 0);
-
-            btnControl.Text = "Control";
-            btnControl.Width = 100;
-            btnControl.Height = 45;
-            btnControl.Margin = new Padding(0, 0, 0, 0);
-            btnControl.Padding = new Padding(0);
-            btnControl.FlatStyle = FlatStyle.Flat;
-            btnControl.Font = new Font("Segoe UI", 9F);
-
-            btnPurge.Text = "Purge";
-            btnPurge.Width = 100;
-            btnPurge.Height = 45;
-            btnPurge.Margin = new Padding(0, 0, 8, 0);
-            btnPurge.Padding = new Padding(0);
-            btnPurge.FlatStyle = FlatStyle.Flat;
-            btnPurge.Font = new Font("Segoe UI", 9F);
-            btnPurge.Click += btnPurge_Click;
-
-            indicatorOrange.Width = 12;
-            indicatorOrange.Height = 12;
-            indicatorOrange.Margin = new Padding(0, 16, 16, 0);
-            indicatorOrange.BackColor = Color.FromArgb(255, 165, 0);
-
-            lblToolbarWindows.AutoSize = true;
-            lblToolbarWindows.Text = "Windows:";
-            lblToolbarWindows.Font = new Font("Segoe UI", 9F);
-            lblToolbarWindows.Margin = new Padding(0, 13, 10, 0);
-
-            btnGraph.Text = "Graph";
-            btnGraph.Width = 80;
-            btnGraph.Height = 45;
-            btnGraph.Margin = new Padding(0, 0, 6, 0);
-            btnGraph.Padding = new Padding(0);
-            btnGraph.FlatStyle = FlatStyle.Flat;
-            btnGraph.Font = new Font("Segoe UI", 9F);
-            btnGraph.Click += btnGraph_Click;
-
-            btnTable.Text = "Table";
-            btnTable.Width = 80;
-            btnTable.Height = 45;
-            btnTable.Margin = new Padding(0, 0, 6, 0);
-            btnTable.Padding = new Padding(0);
-            btnTable.FlatStyle = FlatStyle.Flat;
-            btnTable.Font = new Font("Segoe UI", 9F);
-            btnTable.Click += btnTable_Click;
-
-            btnTerminal.Text = "Terminal";
-            btnTerminal.Width = 80;
-            btnTerminal.Height = 45;
-            btnTerminal.Margin = new Padding(0);
-            btnTerminal.Padding = new Padding(0);
-            btnTerminal.FlatStyle = FlatStyle.Flat;
-            btnTerminal.Font = new Font("Segoe UI", 9F);
-            btnTerminal.Click += btnTerminal_Click;
-
->>>>>>> 8ec243bf00f3ca9098d5d8cc2c1f6bac3a7a352d
             toolbarFlow.Controls.Add(lblToolbarControl);
             toolbarFlow.Controls.Add(btnControl);
             toolbarFlow.Controls.Add(btnPurge);
@@ -638,11 +550,22 @@ namespace Alicat
             lblToolbarControl.TabIndex = 0;
             lblToolbarControl.Text = "Control:";
             // 
+            // btnControl
+            // 
+            btnControl.FlatStyle = FlatStyle.Flat;
+            btnControl.Font = new Font("Segoe UI", 9F);
+            btnControl.Location = new Point(58, 0);
+            btnControl.Margin = new Padding(0);
+            btnControl.Name = "btnControl";
+            btnControl.Size = new Size(100, 45);
+            btnControl.TabIndex = 1;
+            btnControl.Text = "Control";
+            // 
             // btnPurge
             // 
             btnPurge.FlatStyle = FlatStyle.Flat;
             btnPurge.Font = new Font("Segoe UI", 9F);
-            btnPurge.Location = new Point(58, 0);
+            btnPurge.Location = new Point(158, 0);
             btnPurge.Margin = new Padding(0, 0, 8, 0);
             btnPurge.Name = "btnPurge";
             btnPurge.Size = new Size(100, 45);
@@ -650,11 +573,20 @@ namespace Alicat
             btnPurge.Text = "Purge";
             btnPurge.Click += btnPurge_Click;
             // 
+            // indicatorOrange
+            // 
+            indicatorOrange.BackColor = Color.FromArgb(255, 165, 0);
+            indicatorOrange.Location = new Point(266, 16);
+            indicatorOrange.Margin = new Padding(0, 16, 16, 0);
+            indicatorOrange.Name = "indicatorOrange";
+            indicatorOrange.Size = new Size(12, 12);
+            indicatorOrange.TabIndex = 3;
+            // 
             // lblToolbarWindows
             // 
             lblToolbarWindows.AutoSize = true;
             lblToolbarWindows.Font = new Font("Segoe UI", 9F);
-            lblToolbarWindows.Location = new Point(166, 13);
+            lblToolbarWindows.Location = new Point(294, 13);
             lblToolbarWindows.Margin = new Padding(0, 13, 10, 0);
             lblToolbarWindows.Name = "lblToolbarWindows";
             lblToolbarWindows.Size = new Size(59, 15);
@@ -665,7 +597,7 @@ namespace Alicat
             // 
             btnGraph.FlatStyle = FlatStyle.Flat;
             btnGraph.Font = new Font("Segoe UI", 9F);
-            btnGraph.Location = new Point(235, 0);
+            btnGraph.Location = new Point(363, 0);
             btnGraph.Margin = new Padding(0, 0, 6, 0);
             btnGraph.Name = "btnGraph";
             btnGraph.Size = new Size(80, 45);
@@ -677,7 +609,7 @@ namespace Alicat
             // 
             btnTable.FlatStyle = FlatStyle.Flat;
             btnTable.Font = new Font("Segoe UI", 9F);
-            btnTable.Location = new Point(321, 0);
+            btnTable.Location = new Point(449, 0);
             btnTable.Margin = new Padding(0, 0, 6, 0);
             btnTable.Name = "btnTable";
             btnTable.Size = new Size(80, 45);
@@ -689,7 +621,7 @@ namespace Alicat
             // 
             btnTerminal.FlatStyle = FlatStyle.Flat;
             btnTerminal.Font = new Font("Segoe UI", 9F);
-            btnTerminal.Location = new Point(407, 0);
+            btnTerminal.Location = new Point(535, 0);
             btnTerminal.Margin = new Padding(0);
             btnTerminal.Name = "btnTerminal";
             btnTerminal.Size = new Size(80, 45);
@@ -764,8 +696,6 @@ namespace Alicat
             layoutPressureCards.Margin = new Padding(0);
             layoutPressureCards.Name = "layoutPressureCards";
             layoutPressureCards.RowCount = 1;
-            layoutPressureCards.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-<<<<<<< HEAD
             layoutPressureCards.Size = new Size(840, 240);
             layoutPressureCards.TabIndex = 0;
             // 
@@ -773,46 +703,10 @@ namespace Alicat
             // 
             cardCurrent.BackColor = Color.FromArgb(250, 250, 250);
             cardCurrent.BorderStyle = BorderStyle.FixedSingle;
-=======
-
-            spacerLeftGap1.Dock = DockStyle.Fill;
-
-            // Current card
-            cardCurrent.Dock = DockStyle.Fill;
-            cardCurrent.Margin = new Padding(0);
-            cardCurrent.Padding = new Padding(0, 0, 0, 20);
-            cardCurrent.BorderStyle = BorderStyle.FixedSingle;
-
-            lblCurrentTitle.Dock = DockStyle.Top;
-            lblCurrentTitle.Height = 30;
-            lblCurrentTitle.TextAlign = ContentAlignment.MiddleCenter;
-            lblCurrentTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            lblCurrentTitle.Text = "CURRENT PRESSURE";
-
-            lblCurrentValue.Dock = DockStyle.Top;
-            lblCurrentValue.Height = 90;
-            lblCurrentValue.TextAlign = ContentAlignment.MiddleCenter;
-            lblCurrentValue.Font = new Font("Segoe UI", 60F, FontStyle.Bold);
-            lblCurrentValue.Text = "0.0";
-
-            lblCurrentUnit.Dock = DockStyle.Top;
-            lblCurrentUnit.Height = 35;
-            lblCurrentUnit.TextAlign = ContentAlignment.MiddleCenter;
-            lblCurrentUnit.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
-            lblCurrentUnit.Text = "PSIG";
-
-            lblCurrentRate.Dock = DockStyle.Top;
-            lblCurrentRate.Height = 25;
-            lblCurrentRate.TextAlign = ContentAlignment.MiddleCenter;
-            lblCurrentRate.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            lblCurrentRate.Text = "→ 0.0 /s";
-
->>>>>>> 8ec243bf00f3ca9098d5d8cc2c1f6bac3a7a352d
             cardCurrent.Controls.Add(lblCurrentRate);
             cardCurrent.Controls.Add(lblCurrentUnit);
             cardCurrent.Controls.Add(lblCurrentValue);
             cardCurrent.Controls.Add(lblCurrentTitle);
-<<<<<<< HEAD
             cardCurrent.Dock = DockStyle.Fill;
             cardCurrent.Location = new Point(0, 0);
             cardCurrent.Margin = new Padding(0);
@@ -877,44 +771,10 @@ namespace Alicat
             // 
             cardTarget.BackColor = Color.FromArgb(250, 250, 250);
             cardTarget.BorderStyle = BorderStyle.FixedSingle;
-=======
-
-            // Target card
-            cardTarget.Dock = DockStyle.Fill;
-            cardTarget.Margin = new Padding(0);
-            cardTarget.Padding = new Padding(0, 0, 0, 20);
-            cardTarget.BorderStyle = BorderStyle.FixedSingle;
-
-            lblTargetTitle.Dock = DockStyle.Top;
-            lblTargetTitle.Height = 30;
-            lblTargetTitle.TextAlign = ContentAlignment.MiddleCenter;
-            lblTargetTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            lblTargetTitle.Text = "TARGET PRESSURE";
-
-            lblTargetValue.Dock = DockStyle.Top;
-            lblTargetValue.Height = 90;
-            lblTargetValue.TextAlign = ContentAlignment.MiddleCenter;
-            lblTargetValue.Font = new Font("Segoe UI", 60F, FontStyle.Bold);
-            lblTargetValue.Text = "0.0";
-
-            lblTargetUnit.Dock = DockStyle.Top;
-            lblTargetUnit.Height = 35;
-            lblTargetUnit.TextAlign = ContentAlignment.MiddleCenter;
-            lblTargetUnit.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
-            lblTargetUnit.Text = "PSIG";
-
-            lblTargetStatus.Dock = DockStyle.Top;
-            lblTargetStatus.Height = 25;
-            lblTargetStatus.TextAlign = ContentAlignment.MiddleCenter;
-            lblTargetStatus.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            lblTargetStatus.Text = "At target";
-
->>>>>>> 8ec243bf00f3ca9098d5d8cc2c1f6bac3a7a352d
             cardTarget.Controls.Add(lblTargetStatus);
             cardTarget.Controls.Add(lblTargetUnit);
             cardTarget.Controls.Add(lblTargetValue);
             cardTarget.Controls.Add(lblTargetTitle);
-<<<<<<< HEAD
             cardTarget.Dock = DockStyle.Fill;
             cardTarget.Location = new Point(430, 0);
             cardTarget.Margin = new Padding(0);
@@ -979,58 +839,6 @@ namespace Alicat
             // 
             sectionSetTarget.BackColor = Color.FromArgb(250, 250, 250);
             sectionSetTarget.BorderStyle = BorderStyle.FixedSingle;
-=======
-
-            layoutPressureCards.Controls.Add(cardCurrent, 0, 0);
-            layoutPressureCards.Controls.Add(spacerLeftGap1, 1, 0);
-            layoutPressureCards.Controls.Add(cardTarget, 2, 0);
-
-            // ---- Set Target section
-            sectionSetTarget.Dock = DockStyle.Fill;
-            sectionSetTarget.Margin = new Padding(0);
-            sectionSetTarget.Padding = new Padding(18, 0, 18, 30);
-            sectionSetTarget.BorderStyle = BorderStyle.FixedSingle;
-
-            lblSetTargetTitle.Dock = DockStyle.Top;
-            lblSetTargetTitle.Height = 25;
-            lblSetTargetTitle.TextAlign = ContentAlignment.MiddleLeft;
-            lblSetTargetTitle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            lblSetTargetTitle.Text = "Set Target Pressure";
-
-            setTargetRow.Dock = DockStyle.Top;
-            setTargetRow.Height = 50;
-            setTargetRow.Margin = new Padding(0, 0, 0, 0);
-            setTargetRow.Padding = new Padding(0);
-            setTargetRow.ColumnCount = 4;
-            setTargetRow.RowCount = 1;
-            setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F)); // input
-            setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70F)); // unit
-            setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 15F)); // gap
-            setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 170F)); // button
-            setTargetRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-
-            txtTargetInput.Dock = DockStyle.Fill;
-            txtTargetInput.Font = new Font("Courier New", 12F);
-            txtTargetInput.Text = "";
-
-            lblTargetInputUnit.Dock = DockStyle.Fill;
-            lblTargetInputUnit.TextAlign = ContentAlignment.MiddleLeft;
-            lblTargetInputUnit.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            lblTargetInputUnit.Text = "PSIG";
-            lblTargetInputUnit.Margin = new Padding(10, 0, 0, 0);
-
-            btnGoToTarget.Dock = DockStyle.Fill;
-            btnGoToTarget.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            btnGoToTarget.Text = "🎯  Go to Target";
-            btnGoToTarget.FlatStyle = FlatStyle.Flat;
-            btnGoToTarget.Click += btnGoTarget_Click;
-
-            setTargetRow.Controls.Add(txtTargetInput, 0, 0);
-            setTargetRow.Controls.Add(lblTargetInputUnit, 1, 0);
-            setTargetRow.Controls.Add(new Panel(), 2, 0);
-            setTargetRow.Controls.Add(btnGoToTarget, 3, 0);
-
->>>>>>> 8ec243bf00f3ca9098d5d8cc2c1f6bac3a7a352d
             sectionSetTarget.Controls.Add(setTargetRow);
             sectionSetTarget.Controls.Add(lblSetTargetTitle);
             sectionSetTarget.Dock = DockStyle.Fill;
@@ -1048,6 +856,10 @@ namespace Alicat
             setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70F));
             setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 15F));
             setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 170F));
+            setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70F));
+            setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 15F));
+            setTargetRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 170F));
             setTargetRow.Controls.Add(txtTargetInput, 0, 0);
             setTargetRow.Controls.Add(lblTargetInputUnit, 1, 0);
             setTargetRow.Controls.Add(btnGoToTarget, 3, 0);
@@ -1056,6 +868,7 @@ namespace Alicat
             setTargetRow.Margin = new Padding(0);
             setTargetRow.Name = "setTargetRow";
             setTargetRow.RowCount = 1;
+            setTargetRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             setTargetRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             setTargetRow.Size = new Size(802, 50);
             setTargetRow.TabIndex = 0;
@@ -1708,7 +1521,6 @@ namespace Alicat
             Controls.Add(menuMain);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MainMenuStrip = menuMain;
-<<<<<<< HEAD
             MaximizeBox = false;
             MaximumSize = new Size(1300, 820);
             MinimumSize = new Size(1300, 820);
@@ -1717,37 +1529,10 @@ namespace Alicat
             Text = "Alicat Controller";
             menuMain.ResumeLayout(false);
             menuMain.PerformLayout();
-            rootLayout.ResumeLayout(false);
-            panelStatusBar.ResumeLayout(false);
             statusLayout.ResumeLayout(false);
             statusLayout.PerformLayout();
             statusConnPanel.ResumeLayout(false);
             statusConnPanel.PerformLayout();
-=======
-
-            // ✅ чтобы View всегда нажимался (никто не перекрывает меню)
-            menuMain.BringToFront();
-
-            // ====================================================================
-            // БАЗОВЫЕ ЦВЕТА ДЛЯ DESIGN VIEW (чтобы видеть в Visual Studio Designer)
-            // ====================================================================
-            // Эти цвета будут видны в Design View, но в runtime будут заменены
-            // методами ApplyLightTheme() / ApplyDarkTheme() из AlicatForm.Theme.cs
-            BackColor = Color.FromArgb(240, 240, 240);
-            menuMain.BackColor = Color.FromArgb(245, 245, 245);
-            panelStatusBar.BackColor = Color.FromArgb(232, 244, 248);
-            panelToolbar.BackColor = Color.White;
-            layoutContent.BackColor = Color.White;
-            panelLeft.BackColor = Color.White;
-            panelRight.BackColor = Color.White;
-            cardCurrent.BackColor = Color.FromArgb(250, 250, 250);
-            cardTarget.BackColor = Color.FromArgb(250, 250, 250);
-            sectionSetTarget.BackColor = Color.FromArgb(250, 250, 250);
-            sectionPressureControl.BackColor = Color.FromArgb(250, 250, 250);
-            panelSystemSettings.BackColor = Color.FromArgb(250, 250, 250);
-            panelStatusInfo.BackColor = Color.FromArgb(227, 242, 253);
-
->>>>>>> 8ec243bf00f3ca9098d5d8cc2c1f6bac3a7a352d
             ((ISupportInitialize)picLogo).EndInit();
             panelToolbar.ResumeLayout(false);
             toolbarFlow.ResumeLayout(false);
