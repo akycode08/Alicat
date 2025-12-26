@@ -45,11 +45,19 @@ namespace Alicat.Domain
             {
                 var p = parts[i].Trim().ToUpperInvariant();
 
+
                 // Поддерживаемые единицы измерения давления из таблицы Alicat
                 // Устройство возвращает единицы с "G" в конце (barG, kPaG, PSIG и т.д.)
                 // Проверяем единицы с "G" в конце и без
                 if (p is "PA" or "PAG" or "HPA" or "HPAG" or "KPA" or "KPAG" or "MPA" or "MPAG" or
-                    "MBAR" or "MBARG" or "BAR" or "BARG" or
+
+                
+                // Поддерживаемые единицы измерения давления из таблицы Alicat
+                // Устройство возвращает единицы с "G" в конце (barG, kPaG, PSIG и т.д.)
+                // Проверяем единицы с "G" в конце и без
+                if (p is "PA" or "PAG" or "HPA" or "HPAG" or "KPA" or "KPAG" or "MPA" or "MPAG" or 
+                    "MBAR" or "MBARG" or "BAR" or "BARG" or 
+
                     "G/CM²" or "G/CM2" or "GCM²" or "GCM2" or "G/CM²G" or "G/CM2G" or "GCM²G" or "GCM2G" or
                     "KG/CM" or "KGCM" or "KG/CMG" or "KGCMG" or
                     "PSIG" or "PSI" or "PSFG" or "PSF" or
@@ -80,6 +88,7 @@ namespace Alicat.Domain
                 upper = upper.Substring(0, upper.Length - 1);
             }
 
+
             // Обработка вариантов g/cm²
             if (upper == "G/CM²" || upper == "G/CM2" || upper == "GCM²" || upper == "GCM2")
                 return "g/cm²";
@@ -87,6 +96,15 @@ namespace Alicat.Domain
             // Обработка вариантов kg/cm
             if (upper == "KG/CM" || upper == "KGCM")
                 return "kg/cm";
+
+            // Обработка вариантов g/cm²
+            if (upper == "G/CM²" || upper == "G/CM2" || upper == "GCM²" || upper == "GCM2")
+                return "g/cm²";
+            
+            // Обработка вариантов kg/cm
+            if (upper == "KG/CM" || upper == "KGCM")
+                return "kg/cm";
+            
 
             return upper switch
             {

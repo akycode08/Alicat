@@ -29,6 +29,7 @@ namespace Alicat
         private string _unit = "PSIG";
 
         private bool _isExhaust = false;
+        private bool _isPaused = false;
         private double? _lastCurrent = null;
         private double? _lastLoggedPressure = null;
 
@@ -71,6 +72,7 @@ namespace Alicat
 
             // Управление давлением
             btnGoToTarget.Click += btnGoTarget_Click;
+            btnPause.Click += btnPause_Click;
             btnPurge.Click += btnPurge_Click;
             btnIncrease.Click += btnIncrease_Click;
             btnDecrease.Click += btnDecrease_Click;
@@ -87,7 +89,13 @@ namespace Alicat
             RefreshCurrent();
 
             // Polling timer
-            _pollTimer.Tick += (_, __) => _serial?.Send(AlicatCommands.ReadAls);
+            _pollTimer.Tick += (_, __) =>
+            {
+                if (!_isPaused && _serial != null)
+                {
+                    _serial.Send(AlicatCommands.ReadAls);
+                }
+            };
 
             ApplyOptionsToUi();
 
@@ -149,9 +157,16 @@ namespace Alicat
                 // 12: mTorr / mTorrG
                 // 13: torr / torrG
 
+
                 // Проверяем единицы с "G" в конце и без
                 if (p is "PA" or "PAG" or "HPA" or "HPAG" or "KPA" or "KPAG" or "MPA" or "MPAG" or
                     "MBAR" or "MBARG" or "BAR" or "BARG" or
+
+                
+                // Проверяем единицы с "G" в конце и без
+                if (p is "PA" or "PAG" or "HPA" or "HPAG" or "KPA" or "KPAG" or "MPA" or "MPAG" or 
+                    "MBAR" or "MBARG" or "BAR" or "BARG" or 
+
                     "G/CM²" or "G/CM2" or "GCM²" or "GCM2" or "G/CM²G" or "G/CM2G" or "GCM²G" or "GCM2G" or
                     "KG/CM" or "KGCM" or "KG/CMG" or "KGCMG" or
                     "PSIG" or "PSI" or "PSFG" or "PSF" or
@@ -183,6 +198,7 @@ namespace Alicat
                 upper = upper.Substring(0, upper.Length - 1);
             }
 
+
             // Обработка вариантов g/cm²
             if (upper == "G/CM²" || upper == "G/CM2" || upper == "GCM²" || upper == "GCM2")
                 return "g/cm²";
@@ -190,6 +206,16 @@ namespace Alicat
             // Обработка вариантов kg/cm
             if (upper == "KG/CM" || upper == "KGCM")
                 return "kg/cm";
+
+            
+            // Обработка вариантов g/cm²
+            if (upper == "G/CM²" || upper == "G/CM2" || upper == "GCM²" || upper == "GCM2")
+                return "g/cm²";
+            
+            // Обработка вариантов kg/cm
+            if (upper == "KG/CM" || upper == "KGCM")
+                return "kg/cm";
+            
 
             return upper switch
             {
