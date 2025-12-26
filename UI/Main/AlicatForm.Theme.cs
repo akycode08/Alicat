@@ -172,17 +172,6 @@ namespace Alicat
             btnTable.ForeColor = lightTextPrimary;
             btnTerminal.BackColor = lightBgWindow;
             btnTerminal.ForeColor = lightTextPrimary;
-
-            if (btnControl != null)
-            {
-                btnControl.BackColor = lightBgWindow;
-                btnControl.ForeColor = lightTextPrimary;
-            }
-
-            if (indicatorOrange != null)
-            {
-                indicatorOrange.BackColor = Color.FromArgb(255, 165, 0);
-            }
         }
 
         // ====================================================================
@@ -295,17 +284,6 @@ namespace Alicat
             btnTable.ForeColor = darkTextPrimary;
             btnTerminal.BackColor = darkBgWindow;
             btnTerminal.ForeColor = darkTextPrimary;
-
-            if (btnControl != null)
-            {
-                btnControl.BackColor = darkBgWindow;
-                btnControl.ForeColor = darkTextPrimary;
-            }
-
-            if (indicatorOrange != null)
-            {
-                indicatorOrange.BackColor = Color.FromArgb(255, 165, 0);
-            }
         }
     }
 }
