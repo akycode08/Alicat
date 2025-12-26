@@ -176,6 +176,14 @@ namespace Alicat
 
             var upper = unit.ToUpperInvariant();
             
+            // Обработка вариантов g/cm²
+            if (upper == "G/CM²" || upper == "G/CM2" || upper == "GCM²" || upper == "GCM2")
+                return "g/cm²";
+            
+            // Обработка вариантов kg/cm
+            if (upper == "KG/CM" || upper == "KGCM")
+                return "kg/cm";
+            
             return upper switch
             {
                 "PA" => "Pa",
@@ -184,8 +192,6 @@ namespace Alicat
                 "MPA" => "MPa",
                 "MBAR" => "mbar",
                 "BAR" => "bar",
-                "G/CM²" or "G/CM2" or "GCM²" or "GCM2" => "g/cm²",
-                "KG/CM" or "KGCM" => "kg/cm",
                 "PSIG" => "PSIG",
                 "PSI" => "PSI",
                 "PSF" => "PSF",
