@@ -6,30 +6,30 @@ using Alicat.Services.Controllers;
 namespace Alicat
 {
     public partial class AlicatForm : Form
+    {
+        private void btnCommunication_Click(object? sender, EventArgs e)
         {
-            private void btnCommunication_Click(object? sender, EventArgs e)
+            using var dlg = new FormConnect { StartPosition = FormStartPosition.CenterParent };
+            dlg.ShowDialog(this);
+
+            // ✅ БЕЗ рефлексии — берём напрямую
+            var opened = dlg.OpenPort;
+            if (opened is null) return;
+
+            _serial?.Dispose();
+            _serial = new SerialClient(opened);
+            _serial.LineReceived += Serial_LineReceived;
+            _serial.Connected += (_, __) => BeginInvoke(new Action(() => _pollTimer.Start()));
+            _serial.Disconnected += (_, __) => BeginInvoke(new Action(() => _pollTimer.Stop()));
+
+            _serial.Attach();
+            _ramp = new RampController(_serial);
+            _serial.Send("ASR");
+
+            if (!_dataStore.IsRunning)
             {
-                using var dlg = new FormConnect { StartPosition = FormStartPosition.CenterParent };
-                dlg.ShowDialog(this);
-
-                // ✅ БЕЗ рефлексии — берём напрямую
-                var opened = dlg.OpenPort;
-                if (opened is null) return;
-
-                _serial?.Dispose();
-                _serial = new SerialClient(opened);
-                _serial.LineReceived += Serial_LineReceived;
-                _serial.Connected += (_, __) => BeginInvoke(new Action(() => _pollTimer.Start()));
-                _serial.Disconnected += (_, __) => BeginInvoke(new Action(() => _pollTimer.Stop()));
-
-                _serial.Attach();
-                _ramp = new RampController(_serial);
-                _serial.Send("ASR");
-
-                if (!_dataStore.IsRunning)
-                {
-                    _dataStore.StartSession();
-                }
+                _dataStore.StartSession();
+            }
 
         }
 
@@ -130,12 +130,12 @@ namespace Alicat
 
 
         protected override void OnFormClosing(FormClosingEventArgs e)
-            {
-                base.OnFormClosing(e);
-                _pollTimer.Stop();
-                _dataStore.EndSession();
-                _serial?.Dispose();
-            }
+        {
+            base.OnFormClosing(e);
+            _pollTimer.Stop();
+            _dataStore.EndSession();
+            _serial?.Dispose();
+        }
 
     }
 }

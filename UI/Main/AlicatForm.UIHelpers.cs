@@ -1,188 +1,205 @@
 ﻿using System;
 using System.Globalization;
-using System.Windows.Forms;
-using System.Drawing;
-using Alicat.UI.Features.Graph.Views;
-using Alicat.UI.Features.Table.Views;
-using Alicat.UI.Features.Statistics.Views;
-using Alicat.UI.Features.Terminal.Views;
-using Alicat.UI.Features.Terminal.Views;
-
 
 namespace Alicat
 {
-    public partial class AlicatForm : Form
-        {
-        private void btnGraph_Click(object? sender, EventArgs e)
-        {
-            // если окна ещё нет или оно было закрыто — создаём новое
-            if (_graphForm == null || _graphForm.IsDisposed)
-            {
-                _graphForm = new GraphForm(_dataStore);
-                _graphForm.Show(this); // делаем AlicatForm владельцем
-            }
-            else
-            {
-                // если уже открыто — просто выводим на передний план
-                if (_graphForm.WindowState == FormWindowState.Minimized)
-                    _graphForm.WindowState = FormWindowState.Normal;
+    /// <summary>
+    /// Partial class AlicatForm: UI Helper methods.
+    /// Методы для обновления элементов интерфейса.
+    /// </summary>
+    public partial class AlicatForm
+    {
+        // ====================================================================
+        // CURRENT PRESSURE
+        // ====================================================================
 
-                _graphForm.Focus();
-            }
+        /// <summary>
+        /// Обновляет отображение текущего давления в карточке Current Pressure.
+        /// </summary>
+        private void RefreshCurrent()
+        {
+            lblCurrentValue.Text = _current.ToString("F1", CultureInfo.InvariantCulture);
         }
 
-        private void btnTable_Click(object? sender, EventArgs e)
-        {
-            if (_tableForm == null || _tableForm.IsDisposed)
-            {
-                _tableForm = new TableForm(_dataStore);
-                _tableForm.StartPosition = FormStartPosition.CenterParent;
-                _tableForm.Show(this);   // не ShowDialog, окно живёт, пока не закроешь
-            }
-            else
-            {
-                if (_tableForm.WindowState == FormWindowState.Minimized)
-                    _tableForm.WindowState = FormWindowState.Normal;
+        // ====================================================================
+        // UNITS
+        // ====================================================================
 
-                _tableForm.Focus();
-            }
+        /// <summary>
+        /// Устанавливает единицы измерения давления во всех местах UI.
+        /// </summary>
+        public void UI_SetPressureUnits(string units)
+        {
+            string displayUnits = string.IsNullOrWhiteSpace(units) ? "PSIG" : units.Trim();
+
+            // System Settings panel
+            lblUnitsValue.Text = displayUnits;
+
+            // Current card
+            lblCurrentUnit.Text = displayUnits;
+
+            // Target card
+            lblTargetUnit.Text = displayUnits;
+
+            // Set Target input
+            lblTargetInputUnit.Text = displayUnits;
+
+            // Increment control
+            lblIncrementUnit.Text = displayUnits;
         }
 
-        private void btnStatistic_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Устанавливает единицы скорости рампы.
+        /// </summary>
+        public void UI_SetRampSpeedUnits(string units)
         {
-            var form = new StatisticsForm();
-            form.Show(this);
+            lblRampSpeedValue.Text = string.IsNullOrWhiteSpace(units) ? "—" : units.Trim();
         }
 
-        private void btnTerminal_Click(object? sender, EventArgs e)
-        {
-            if (_terminalForm == null || _terminalForm.IsDisposed)
-            {
-                _terminalForm = new TerminalForm();
-                _terminalForm.CommandSent += TerminalForm_CommandSent;
-            }
+        // ====================================================================
+        // SET POINT (TARGET)
+        // ====================================================================
 
-            _terminalForm.Show(this);
-            _terminalForm.Focus();
+        /// <summary>
+        /// Устанавливает значение SetPoint в карточке Target Pressure.
+        /// </summary>
+        public void UI_SetSetPoint(double sp, string? units = null)
+        {
+            lblTargetValue.Text = sp.ToString("F1", CultureInfo.InvariantCulture);
         }
 
-        private void TerminalForm_CommandSent(string cmd)
+        // ====================================================================
+        // TREND STATUS
+        // ====================================================================
+
+        /// <summary>
+        /// Обновляет статус тренда (растет/падает/стабильно) и статус достижения цели.
+        /// </summary>
+        private void UI_SetTrendStatus(double? prev, double now, bool isExhaust)
         {
-            if (_serial == null)
+            if (isExhaust)
             {
-                _terminalForm?.AppendLog("!! Serial not connected");
+                lblCurrentRate.Text = "↓ Exhaust";
+                lblCurrentRate.ForeColor = System.Drawing.Color.Red;
+
+                lblTargetStatus.Text = "Purging";
+                lblTargetStatus.ForeColor = System.Drawing.Color.Red;
                 return;
             }
 
-            try
-            {
-                _serial.Send(cmd);   // если метод называется иначе – подправь
-            }
-            catch (Exception ex)
-            {
-                _terminalForm?.AppendLog("!! Error: " + ex.Message);
-            }
-        }
+            const double EPS = 0.05;
 
-        private void menuFileNewSession_Click(object? sender, EventArgs e)
-        {
-            using var folderDialog = new FolderBrowserDialog();
-            folderDialog.Description = "Select folder for session data";
-
-            if (folderDialog.ShowDialog() != DialogResult.OK)
+            if (prev is null)
+            {
+                lblCurrentRate.Text = "→ 0.0 /s";
+                lblCurrentRate.ForeColor = isDarkTheme ? darkAccentGreen : lightAccentGreen;
                 return;
+            }
 
-            // Генерируем имя файла по дате/времени
-            string fileName = $"session_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.csv";
-            string fullPath = System.IO.Path.Combine(folderDialog.SelectedPath, fileName);
+            double delta = now - prev.Value;
+            double rate = delta / 0.5; // Assuming 500ms poll interval
 
-            // Запускаем сессию с записью в файл
-            _dataStore.StartSession(fullPath);
+            if (delta > EPS)
+            {
+                lblCurrentRate.Text = $"↗ +{Math.Abs(rate):F1} /s";
+                lblCurrentRate.ForeColor = System.Drawing.Color.OrangeRed;
+            }
+            else if (delta < -EPS)
+            {
+                lblCurrentRate.Text = $"↘ -{Math.Abs(rate):F1} /s";
+                lblCurrentRate.ForeColor = System.Drawing.Color.RoyalBlue;
+            }
+            else
+            {
+                lblCurrentRate.Text = "→ 0.0 /s";
+                lblCurrentRate.ForeColor = isDarkTheme ? darkAccentGreen : lightAccentGreen;
+            }
 
-            MessageBox.Show(
-                $"Session started!\n\nSaving to:\n{fullPath}",
-                "New Session",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information
-            );
+            // Update target status
+            double diff = Math.Abs(now - _setPoint);
+            if (diff < 0.5)
+            {
+                lblTargetStatus.Text = "At target";
+                lblTargetStatus.ForeColor = isDarkTheme ? darkAccentGreen : lightAccentGreen;
+            }
+            else
+            {
+                lblTargetStatus.Text = $"→ {diff:F1} {_unit}";
+                lblTargetStatus.ForeColor = isDarkTheme ? darkTextMuted : lightTextMuted;
+            }
         }
 
+        // ====================================================================
+        // CONNECTION STATUS
+        // ====================================================================
 
-
-
-        private void ValidateTargetAgainstMax()
-                {
-                    var text = txtTarget.Text?.Trim();
-                    bool parsed = double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double targetVal);
-                    bool over = parsed && targetVal > _maxPressure;
-
-                    txtTarget.BackColor = over ? System.Drawing.Color.MistyRose : System.Drawing.SystemColors.Window;
-                    btnGoTarget.Enabled = chkConfirmGo.Checked && parsed;
-                }
-
-            private void ValidateIncrementAgainstMax()
-                {
-                    double inc = (double)nudIncrement.Value;
-                    bool over = inc > _maxIncrementLimit;
-
-                    nudIncrement.BackColor = over ? System.Drawing.Color.MistyRose : System.Drawing.SystemColors.Window;
-                    btnGoPlus.Enabled = !over;
-                    btnGoMinus.Enabled = !over;
-            }
-
-            private static string TrimZeros(double v, int maxDecimals = 2) =>
-                v.ToString("0." + new string('#', maxDecimals), CultureInfo.InvariantCulture);
-
-            private void RefreshCurrent() => lblCurrentBig.Text = $"{_current:0.0} {_unit}";
-
-            public void UI_SetPressureUnits(string units) =>
-                boxPressureUnits.Text = string.IsNullOrWhiteSpace(units) ? "—" : units.Trim();
-
-            public void UI_SetRampSpeedUnits(string units) =>
-                boxRampSpeedUnits.Text = string.IsNullOrWhiteSpace(units) ? "—" : units.Trim();
-
-            public void UI_SetSetPoint(double sp, string? units = null)
+        /// <summary>
+        /// Обновляет статус подключения в Status Bar.
+        /// </summary>
+        public void UI_UpdateConnectionStatus(bool connected, string? portName = null)
+        {
+            if (connected)
             {
-                var u = string.IsNullOrWhiteSpace(units) ? _unit : units!;
-                boxSetPoint.Text = $"{TrimZeros(sp)} {u}";
-            }
+                lblStatusDot.ForeColor = isDarkTheme ? darkStatusDot : lightStatusDot;
+                lblConnectionStatus.Text = portName != null
+                    ? $"Connected ({portName})"
+                    : "Connected (COM3)";
+                lblConnectionStatus.ForeColor = isDarkTheme ? darkTextSecondary : lightTextSecondary;
 
-            public void UI_SetTimeToSetPoint(TimeSpan? t)
+                lblConnectionValue.Text = portName ?? "COM3";
+            }
+            else
             {
-                if (t == null) { boxTimeToSetPoint.Text = "—"; return; }
-                var secs = Math.Max(0, t.Value.TotalSeconds);
-                boxTimeToSetPoint.Text = $"{TrimZeros(secs, 1)} s";
+                lblStatusDot.ForeColor = System.Drawing.Color.Gray;
+                lblConnectionStatus.Text = "Disconnected";
+                lblConnectionStatus.ForeColor = isDarkTheme ? darkTextMuted : lightTextMuted;
+
+                lblConnectionValue.Text = "—";
             }
-
-            public void UI_Status_Up(bool on) => icoUp.ForeColor = on ? System.Drawing.Color.OrangeRed : System.Drawing.Color.Gray;
-            public void UI_Status_Mid(bool on) => icoMid.ForeColor = on ? System.Drawing.Color.LimeGreen : System.Drawing.Color.Gray;
-            public void UI_Status_Down(bool on) => icoDown.ForeColor = on ? System.Drawing.Color.RoyalBlue : System.Drawing.Color.Gray;
-
-            private void UI_SetTrendStatus(double? prev, double now, bool isExhaust)
-            {
-                if (isExhaust)
-                {
-                    UI_Status_Up(false);
-                    UI_Status_Mid(false);
-                    UI_Status_Down(true);
-                    return;
-                }
-
-                const double EPS = 0.05;
-
-                if (prev is null)
-                {
-                    UI_Status_Up(false);
-                    UI_Status_Mid(true);
-                    UI_Status_Down(false);
-                    return;
-                }
-
-                double delta = now - prev.Value;
-                if (delta > EPS) { UI_Status_Up(true); UI_Status_Mid(false); UI_Status_Down(false); }
-                else if (delta < -EPS) { UI_Status_Up(false); UI_Status_Mid(false); UI_Status_Down(true); }
-                else { UI_Status_Up(false); UI_Status_Mid(true); UI_Status_Down(false); }
-            }
-
         }
+
+        /// <summary>
+        /// Обновляет baud rate в Status Bar и System Settings.
+        /// </summary>
+        public void UI_UpdateBaudRate(int baudRate)
+        {
+            lblBaudRate.Text = $"Baud: {baudRate}";
+            lblBaudRateValue.Text = baudRate.ToString();
+        }
+
+        /// <summary>
+        /// Обновляет "Last update" в Status Bar.
+        /// </summary>
+        public void UI_UpdateLastUpdate(string text)
+        {
+            lblLastUpdate.Text = text;
+        }
+
+        // ====================================================================
+        // STATUS INFORMATION (Right Panel)
+        // ====================================================================
+
+        /// <summary>
+        /// Обновляет текст в панели Status Information.
+        /// </summary>
+        public void UI_UpdateStatusInfo(string text)
+        {
+            lblStatusInfoText.Text = text;
+        }
+
+        /// <summary>
+        /// Добавляет строку в Status Information (сохраняя предыдущие).
+        /// </summary>
+        public void UI_AppendStatusInfo(string line)
+        {
+            var current = lblStatusInfoText.Text;
+            var lines = current.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+
+            // Keep last 3 lines + new one
+            var keep = lines.Length > 3 ? lines[^3..] : lines;
+            var newText = string.Join("\n", keep) + "\n• " + line;
+
+            lblStatusInfoText.Text = newText.TrimStart('\n', '\r');
+        }
+    }
 }

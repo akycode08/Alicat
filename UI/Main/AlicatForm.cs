@@ -1,15 +1,13 @@
 ﻿using Alicat.Domain;
 using Alicat.Services.Controllers;
 using Alicat.Services.Protocol;
-using Alicat.Services.Serial;           // SerialClient
+using Alicat.Services.Serial;
 using Alicat.UI.Features.Terminal.Views;
 using Alicat.UI.Features.Graph.Views;
 using Alicat.UI.Features.Table.Views;
 using System;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO.Ports;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Alicat.Services.Data;
@@ -17,23 +15,29 @@ using Timer = System.Windows.Forms.Timer;
 
 namespace Alicat
 {
+    /// <summary>
+    /// Главная форма приложения Alicat Controller.
+    /// Partial class: основная логика, поля, конструктор.
+    /// </summary>
     public partial class AlicatForm : Form
     {
+        // ====================================================================
+        // ПОЛЯ
+        // ====================================================================
         private double _current = 0.0;
         private double _setPoint = 0.0;
         private string _unit = "PSIG";
 
         private bool _isExhaust = false;
         private double? _lastCurrent = null;
-
         private double? _lastLoggedPressure = null;
 
-        // ✅ теперь форма хранит ссылку на SerialClient, а не сама работает с SerialPort
         private SerialClient? _serial;
         private readonly Timer _pollTimer = new() { Interval = 500 };
 
         private double _maxPressure = 200.0;
         private double _maxIncrementLimit = 20.0;
+        private double _currentIncrement = 5.0;
 
         private readonly DeviceState _state = new();
         private RampController? _ramp;
@@ -44,67 +48,71 @@ namespace Alicat
         private GraphForm? _graphForm;
         private TableForm? _tableForm;
 
-
+        // ====================================================================
+        // КОНСТРУКТОР
+        // ====================================================================
         public AlicatForm()
         {
             InitializeComponent();
 
-            // меню
+            // ✅ Create logo AFTER InitializeComponent (not in Designer!)
+            CreateLogo();
+
+            // Меню
             menuSettingsOptions.Click += btnOptions_Click;
             menuSettingsCommunication.Click += btnCommunication_Click;
             menuFileNewSession.Click += menuFileNewSession_Click;
             menuFileTestMode.Click += menuFileTestMode_Click;
 
-            // навигация
+            // Навигация
             btnGraph.Click += btnGraph_Click;
             btnTable.Click += btnTable_Click;
-            btnStatistics.Click += btnStatistic_Click;
             btnTerminal.Click += btnTerminal_Click;
 
-            // управление давлением
-            btnGoTarget.Click += btnGoTarget_Click;
+            // Управление давлением
+            btnGoToTarget.Click += btnGoTarget_Click;
             btnPurge.Click += btnPurge_Click;
-            btnGoPlus.Click += btnGoPlus_Click;
-            btnGoMinus.Click += btnGoMinus_Click;
+            btnIncrease.Click += btnIncrease_Click;
+            btnDecrease.Click += btnDecrease_Click;
+            btnIncrementMinus.Click += btnIncrementMinus_Click;
+            btnIncrementPlus.Click += btnIncrementPlus_Click;
 
-            // валидация
-            txtTarget.TextChanged += (_, __) => ValidateTargetAgainstMax();
-            chkConfirmGo.CheckedChanged += (_, __) => ValidateTargetAgainstMax();
-            nudIncrement.ValueChanged += (_, __) => ValidateIncrementAgainstMax();
+            // Валидация
+            txtTargetInput.TextChanged += (_, __) => ValidateTargetAgainstMax();
+            txtIncrement.TextChanged += (_, __) => UpdateIncrementFromText();
 
-            // начальные значения UI
+            // Начальные значения UI
             UI_SetPressureUnits(_unit);
             UI_SetRampSpeedUnits("PSIG/s");
             UI_SetSetPoint(_setPoint, _unit);
-            UI_SetTimeToSetPoint(null);
-            UI_Status_Up(false);
-            UI_Status_Mid(false);
-            UI_Status_Down(false);
-
             RefreshCurrent();
+            UpdateIncrementButtons();
 
-            // ❌ было: _serial?.RequestAls();
-            // ✅ стало: форма сама не знает команд, она просит SerialClient отправить строку из AlicatCommands
+            // Polling timer
             _pollTimer.Tick += (_, __) => _serial?.Send(AlicatCommands.ReadAls);
 
             ApplyOptionsToUi();
         }
 
+        // ====================================================================
+        // OPTIONS
+        // ====================================================================
         private void ApplyOptionsToUi()
         {
             _maxPressure = FormOptions.AppOptions.Current.MaxPressure ?? 200.0;
             _maxIncrementLimit = FormOptions.AppOptions.Current.MaxIncrement ?? 20.0;
 
-            nudIncrement.DecimalPlaces = 1;
-            nudIncrement.Increment = 0.1M;
-
-            if (nudIncrement.Minimum <= 0) nudIncrement.Minimum = 0.1M;
-            if (nudIncrement.Maximum < 100000M) nudIncrement.Maximum = 100000M;
-
             ValidateTargetAgainstMax();
             ValidateIncrementAgainstMax();
+            UpdateIncrementButtons();
+
+            // Update max pressure display
+            lblMaxPressureValue.Text = $"{_maxPressure:F0} PSIG";
         }
 
+        // ====================================================================
+        // PARSERS (используются в Communication.cs)
+        // ====================================================================
         private static bool TryParseAls(string line, out double cur, out double sp, out string? unit)
         {
             cur = 0; sp = 0; unit = null;
@@ -128,11 +136,6 @@ namespace Alicat
             return true;
         }
 
-        /// <summary>
-        /// Парсер ответа ASR, например:
-        /// "A 6.000001 10 4 PSIG/s"
-        /// Возвращает true ТОЛЬКО если нашли единицы с "/s".
-        /// </summary>
         private static bool TryParseAsr(string line, out double ramp, out string units)
         {
             ramp = 0;
@@ -169,6 +172,110 @@ namespace Alicat
             return true;
         }
 
-        // 👉 если ниже файла у тебя есть другие методы AlicatForm — оставь их без изменений
+        // ====================================================================
+        // VALIDATION
+        // ====================================================================
+
+        /// <summary>
+        /// Валидация целевого значения давления против максимального.
+        /// </summary>
+        private void ValidateTargetAgainstMax()
+        {
+            var text = txtTargetInput.Text?.Trim();
+            bool parsed = double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double targetVal);
+            bool over = parsed && targetVal > _maxPressure;
+
+            if (isDarkTheme)
+            {
+                txtTargetInput.BackColor = over ? System.Drawing.Color.FromArgb(60, 20, 20) : darkBgWindow;
+            }
+            else
+            {
+                txtTargetInput.BackColor = over ? System.Drawing.Color.MistyRose : lightBgWindow;
+            }
+        }
+
+        /// <summary>
+        /// Валидация increment против максимального лимита.
+        /// Вызывается из Communication.cs при получении данных.
+        /// </summary>
+        private void ValidateIncrementAgainstMax()
+        {
+            bool overLimit = _currentIncrement > _maxIncrementLimit;
+
+            if (isDarkTheme)
+            {
+                txtIncrement.BackColor = overLimit ? System.Drawing.Color.FromArgb(60, 20, 20) : darkBgWindow;
+            }
+            else
+            {
+                txtIncrement.BackColor = overLimit ? System.Drawing.Color.MistyRose : lightBgWindow;
+            }
+
+            // Опционально: можно отключать кнопки, если превышен лимит
+            // btnIncrease.Enabled = !overLimit;
+            // btnDecrease.Enabled = !overLimit;
+        }
+
+        private void UpdateIncrementFromText()
+        {
+            if (double.TryParse(txtIncrement.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out double val))
+            {
+                _currentIncrement = Math.Clamp(val, 0.1, _maxIncrementLimit);
+                UpdateIncrementButtons();
+                ValidateIncrementAgainstMax();
+            }
+        }
+
+        private void UpdateIncrementButtons()
+        {
+            btnIncrease.Text = $"▲ Increase (+{_currentIncrement:F1} PSIG)";
+            btnDecrease.Text = $"▼ Decrease (-{_currentIncrement:F1} PSIG)";
+        }
+
+        // ====================================================================
+        // UTILITY
+        // ====================================================================
+        private static string TrimZeros(double v, int maxDecimals = 2) =>
+            v.ToString("0." + new string('#', maxDecimals), CultureInfo.InvariantCulture);
+
+        // ====================================================================
+        // LOGO CREATION (called from InitializeComponent in Designer)
+        // ====================================================================
+        private void CreateLogo()
+        {
+            var logoBitmap = new System.Drawing.Bitmap(180, 45);
+            using (var g = System.Drawing.Graphics.FromImage(logoBitmap))
+            {
+                g.Clear(System.Drawing.Color.FromArgb(0, 102, 170)); // DAC Blue
+
+                using (var font = new System.Drawing.Font("Arial", 14, System.Drawing.FontStyle.Bold))
+                using (var brush = new System.Drawing.SolidBrush(System.Drawing.Color.White))
+                {
+                    g.DrawString("DAC Tools", font, brush, new System.Drawing.PointF(50, 8));
+                }
+
+                using (var font = new System.Drawing.Font("Arial", 7))
+                using (var brush = new System.Drawing.SolidBrush(System.Drawing.Color.White))
+                {
+                    g.DrawString("Custom Equipment for High-Pressure Research", font, brush, new System.Drawing.PointF(50, 28));
+                }
+
+                // Simple gear icon
+                g.DrawEllipse(System.Drawing.Pens.White, 15, 12, 20, 20);
+                g.DrawLine(System.Drawing.Pens.White, 25, 12, 25, 32);
+                g.DrawLine(System.Drawing.Pens.White, 15, 22, 35, 22);
+            }
+
+            if (picLogo != null)
+            {
+                picLogo.Image = logoBitmap;
+            }
+        }
+
+        private void btnGoToTarget_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

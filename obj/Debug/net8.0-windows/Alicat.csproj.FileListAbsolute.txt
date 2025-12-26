@@ -4,6 +4,8 @@ C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\Alicat.runt
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\Alicat.dll
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\Alicat.pdb
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\System.IO.Ports.dll
+C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\WinForms.DataVisualization.Utilities.dll
+C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\WinForms.DataVisualization.dll
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\runtimes\android-arm\native\libSystem.IO.Ports.Native.so
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\runtimes\android-arm64\native\libSystem.IO.Ports.Native.so
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\runtimes\android-x64\native\libSystem.IO.Ports.Native.so
@@ -23,7 +25,13 @@ C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\runtimes\os
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\runtimes\unix\lib\net8.0\System.IO.Ports.dll
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\System.IO.Ports.dll
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.csproj.AssemblyReference.cache
+C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.Properties.Resources.resources
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.FormConnect.resources
+C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.UI.Features.Graph.Views.GraphForm.resources
+C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.UI.Features.Statistics.Views.StatisticsForm.resources
+C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.UI.Features.Table.addComment.resources
+C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.UI.Features.Table.Views.TableForm.resources
+C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.UI.Features.Terminal.Views.TerminalForm.resources
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.AlicatForm.resources
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.FormOptions.resources
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.csproj.GenerateResource.cache
@@ -38,11 +46,3 @@ C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\refint\Alic
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.pdb
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.genruntimeconfig.cache
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\ref\Alicat.dll
-C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.UI.Features.Graph.Views.GraphForm.resources
-C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.UI.Features.Statistics.Views.StatisticsForm.resources
-C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.UI.Features.Table.Views.TableForm.resources
-C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.UI.Features.Terminal.Views.TerminalForm.resources
-C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\WinForms.DataVisualization.Utilities.dll
-C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\WinForms.DataVisualization.dll
-C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.UI.Features.Table.addComment.resources
-C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.Properties.Resources.resources

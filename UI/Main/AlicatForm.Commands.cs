@@ -1,41 +1,45 @@
 ﻿using System;
 using System.Globalization;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-
-using Alicat.Services.Controllers;
 using Alicat.Services.Protocol;
-using Alicat.Services.Serial;
 using Alicat.UI.Features.Graph.Views;
+using Alicat.UI.Features.Table.Views;
+using Alicat.UI.Features.Terminal.Views;
+using System.Threading.Tasks;
 
 namespace Alicat
 {
-    public partial class AlicatForm : Form
+    /// <summary>
+    /// Partial class AlicatForm: Command handlers.
+    /// Обработчики событий кнопок и команд (БЕЗ методов из Communication.cs и Testing.cs).
+    /// </summary>
+    public partial class AlicatForm
     {
-        private void btnOptions_Click(object? sender, EventArgs e)
+        // ====================================================================
+        // INCREMENT CONTROL
+        // ====================================================================
+
+        private void btnIncrementMinus_Click(object? sender, EventArgs e)
         {
-            using var dlg = new FormOptions();
-            dlg.StartPosition = FormStartPosition.CenterParent;
-            dlg.ShowDialog(this);
-
-            ApplyOptionsToUi();
-
-            var ramp = FormOptions.AppOptions.Current.PressureRamp;
-            _ramp?.TryApply(ramp);   // SR без конвертаций
-
-            // Если задан Ramp — шлём SR (без конвертаций)
-            if (_serial != null && ramp is double r)
-            {
-                _serial.Send($"SR {r.ToString("G", CultureInfo.InvariantCulture)}");
-                // при желании потом перенесём это в AlicatCommands.SetRamp(...)
-            }
+            _currentIncrement = Math.Max(0.1, _currentIncrement - 0.1);
+            txtIncrement.Text = _currentIncrement.ToString("F1", CultureInfo.InvariantCulture);
+            UpdateIncrementButtons();
         }
 
-        // ================= GO ± =================
-        private void btnGoPlus_Click(object? sender, EventArgs e)
+        private void btnIncrementPlus_Click(object? sender, EventArgs e)
         {
-            var inc = (double)nudIncrement.Value;
-            var next = _setPoint + inc;
+            _currentIncrement = Math.Min(_maxIncrementLimit, _currentIncrement + 0.1);
+            txtIncrement.Text = _currentIncrement.ToString("F1", CultureInfo.InvariantCulture);
+            UpdateIncrementButtons();
+        }
+
+        // ====================================================================
+        // INCREASE / DECREASE PRESSURE
+        // ====================================================================
+
+        private void btnIncrease_Click(object? sender, EventArgs e)
+        {
+            var next = _setPoint + _currentIncrement;
 
             if (next > _maxPressure)
             {
@@ -52,12 +56,16 @@ namespace Alicat
             ValidateTargetAgainstMax();
         }
 
-        private void btnGoMinus_Click(object? sender, EventArgs e)
+        private void btnDecrease_Click(object? sender, EventArgs e)
         {
-            var inc = (double)nudIncrement.Value;
-            SendSetPoint(_setPoint - inc);
+            var next = Math.Max(0, _setPoint - _currentIncrement);
+            SendSetPoint(next);
             ValidateTargetAgainstMax();
         }
+
+        // ====================================================================
+        // GO TO TARGET
+        // ====================================================================
 
         private void btnGoTarget_Click(object? sender, EventArgs e)
         {
@@ -68,7 +76,7 @@ namespace Alicat
                 return;
             }
 
-            string raw = txtTarget.Text?.Trim() ?? string.Empty;
+            string raw = txtTargetInput.Text?.Trim() ?? string.Empty;
             if (raw.Length == 0)
             {
                 MessageBox.Show("Enter target value.", "Validation",
@@ -104,13 +112,11 @@ namespace Alicat
 
             string unit = string.IsNullOrWhiteSpace(_unit) ? "PSIG" : _unit;
             string displayVal = targetValue.ToString("F1", CultureInfo.InvariantCulture);
-            if (!chkConfirmGo.Checked)
-            {
-                var ask = MessageBox.Show(
-                    $"Do you want to change the target value to {displayVal} {unit}?",
-                    "Confirm action", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (ask != DialogResult.Yes) return;
-            }
+
+            var ask = MessageBox.Show(
+                $"Do you want to change the target value to {displayVal} {unit}?",
+                "Confirm action", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (ask != DialogResult.Yes) return;
 
             try
             {
@@ -125,13 +131,11 @@ namespace Alicat
 
                 _setPoint = targetValue;
                 UI_SetSetPoint(_setPoint, _unit);
-
-                // ❌ было: _serial.RequestAls();
-                // ✅ стало: отправляем ALS через AlicatCommands
                 _serial.Send(AlicatCommands.ReadAls);
 
-                chkConfirmGo.Checked = false;
-                txtTarget.Clear();
+                txtTargetInput.Clear();
+
+                UI_AppendStatusInfo($"Target set to {displayVal} {unit}");
             }
             catch (Exception ex)
             {
@@ -144,24 +148,23 @@ namespace Alicat
             }
         }
 
-        // ================= PURGE =================
+        // ====================================================================
+        // PURGE
+        // ====================================================================
+
         private async void btnPurge_Click(object? sender, EventArgs e)
         {
             if (_serial is null)
             {
-                MessageBox.Show("Нет соединения с прибором.", "Purge",
+                MessageBox.Show("No connection to device.", "Purge",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            if (!chkConfirmPurge.Checked)
-            {
-                var ask = MessageBox.Show("Сразу открыть выхлоп и удерживать?",
-                                          "Confirm purge",
-                                          MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (ask != DialogResult.Yes) return;
-            }
-            chkConfirmPurge.Checked = false;
+            var ask = MessageBox.Show("Open exhaust and hold?",
+                                      "Confirm purge",
+                                      MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (ask != DialogResult.Yes) return;
 
             try
             {
@@ -169,31 +172,31 @@ namespace Alicat
                 _isExhaust = true;
 
                 UI_SetTrendStatus(_lastCurrent, _current, isExhaust: true);
-                UI_Status_Up(false);
-                UI_Status_Mid(false);
-                UI_Status_Down(true);
+                UI_AppendStatusInfo("Purge started");
 
                 _setPoint = 0.0;
                 UI_SetSetPoint(_setPoint, _unit);
 
-                await Task.Delay(400);   // короткая пауза
+                await Task.Delay(400);
                 _serial.Send("AC");
-
-                // ❌ было: _serial.RequestAls();
-                // ✅ стало:
                 _serial.Send(AlicatCommands.ReadAls);
+
+                UI_AppendStatusInfo("Purge complete");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка Purge: {ex.Message}", "Ошибка",
+                MessageBox.Show($"Purge error: {ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
                 ValidateTargetAgainstMax();
-                ValidateIncrementAgainstMax();
             }
         }
+
+        // ====================================================================
+        // SEND SET POINT
+        // ====================================================================
 
         private void SendSetPoint(double sp)
         {
@@ -210,10 +213,128 @@ namespace Alicat
             }
 
             _serial.Send($"AS {sp.ToString("F2", CultureInfo.InvariantCulture)}");
-
-            // ❌ было: _serial.RequestAls();
-            // ✅ стало:
             _serial.Send(AlicatCommands.ReadAls);
+        }
+
+        // ====================================================================
+        // MENU: OPTIONS
+        // ====================================================================
+
+        private void btnOptions_Click(object? sender, EventArgs e)
+        {
+            using var dlg = new FormOptions();
+            dlg.StartPosition = FormStartPosition.CenterParent;
+            dlg.ShowDialog(this);
+
+            ApplyOptionsToUi();
+
+            var ramp = FormOptions.AppOptions.Current.PressureRamp;
+            _ramp?.TryApply(ramp);
+
+            if (_serial != null && ramp is double r)
+            {
+                _serial.Send($"SR {r.ToString("G", CultureInfo.InvariantCulture)}");
+            }
+        }
+
+        // ====================================================================
+        // MENU: NEW SESSION
+        // ====================================================================
+
+        private void menuFileNewSession_Click(object? sender, EventArgs e)
+        {
+            using var folderDialog = new FolderBrowserDialog();
+            folderDialog.Description = "Select folder for session data";
+
+            if (folderDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            string fileName = $"session_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.csv";
+            string fullPath = System.IO.Path.Combine(folderDialog.SelectedPath, fileName);
+
+            _dataStore.StartSession(fullPath);
+
+            MessageBox.Show(
+                $"Session started!\n\nSaving to:\n{fullPath}",
+                "New Session",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information
+            );
+
+            UI_AppendStatusInfo("New session started");
+        }
+
+        // ====================================================================
+        // NAVIGATION: GRAPH
+        // ====================================================================
+
+        private void btnGraph_Click(object? sender, EventArgs e)
+        {
+            if (_graphForm == null || _graphForm.IsDisposed)
+            {
+                _graphForm = new GraphForm(_dataStore);
+                _graphForm.Show(this);
+            }
+            else
+            {
+                if (_graphForm.WindowState == FormWindowState.Minimized)
+                    _graphForm.WindowState = FormWindowState.Normal;
+                _graphForm.Focus();
+            }
+        }
+
+        // ====================================================================
+        // NAVIGATION: TABLE
+        // ====================================================================
+
+        private void btnTable_Click(object? sender, EventArgs e)
+        {
+            if (_tableForm == null || _tableForm.IsDisposed)
+            {
+                _tableForm = new TableForm(_dataStore);
+                _tableForm.StartPosition = FormStartPosition.CenterParent;
+                _tableForm.Show(this);
+            }
+            else
+            {
+                if (_tableForm.WindowState == FormWindowState.Minimized)
+                    _tableForm.WindowState = FormWindowState.Normal;
+                _tableForm.Focus();
+            }
+        }
+
+        // ====================================================================
+        // NAVIGATION: TERMINAL
+        // ====================================================================
+
+        private void btnTerminal_Click(object? sender, EventArgs e)
+        {
+            if (_terminalForm == null || _terminalForm.IsDisposed)
+            {
+                _terminalForm = new TerminalForm();
+                _terminalForm.CommandSent += TerminalForm_CommandSent;
+            }
+
+            _terminalForm.Show(this);
+            _terminalForm.Focus();
+        }
+
+        private void TerminalForm_CommandSent(string cmd)
+        {
+            if (_serial == null)
+            {
+                _terminalForm?.AppendLog("!! Serial not connected");
+                return;
+            }
+
+            try
+            {
+                _serial.Send(cmd);
+            }
+            catch (Exception ex)
+            {
+                _terminalForm?.AppendLog("!! Error: " + ex.Message);
+            }
         }
     }
 }
