@@ -1,10 +1,11 @@
 ﻿using System;
 using System.IO.Ports;
 using System.Text;
+using Alicat.Business.Interfaces;
 
 namespace Alicat.Services.Serial
 {
-    public sealed class SerialClient : IDisposable
+    public sealed class SerialClient : ISerialClient, IDisposable
     {
         private readonly SerialPort _port;
         private bool _attached;

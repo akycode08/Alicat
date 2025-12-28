@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using Alicat.Presentation.Presenters;
 
 namespace Alicat
 {
@@ -18,7 +19,9 @@ namespace Alicat
         /// </summary>
         private void RefreshCurrent()
         {
-            lblCurrentValue.Text = _current.ToString("F1", CultureInfo.InvariantCulture);
+            // Используем свойство из IMainView, если доступно, иначе используем локальное поле
+            double currentValue = ((IMainView)this).Current;
+            lblCurrentValue.Text = currentValue.ToString("F1", CultureInfo.InvariantCulture);
         }
 
         // ====================================================================
@@ -94,7 +97,7 @@ namespace Alicat
         /// <summary>
         /// Обновляет статус тренда (растет/падает/стабильно) и статус достижения цели.
         /// </summary>
-        private void UI_SetTrendStatus(double? prev, double now, bool isExhaust)
+        private void UI_SetTrendStatus(double? prev, double now, bool isExhaust, double rampSpeed)
         {
             if (isExhaust)
             {
@@ -144,9 +147,15 @@ namespace Alicat
             else
             {
                 // Calculate ETA: (Target - Current) / Ramp Speed
+<<<<<<< HEAD
                 if (_rampSpeed > 0.001) // Avoid division by zero
                 {
                     double eta = diff / _rampSpeed;
+=======
+                if (rampSpeed > 0.001) // Avoid division by zero
+                {
+                    double eta = diff / rampSpeed;
+>>>>>>> 834f4d0e8dc77cbbb28a2a2752711ca27dbf3e92
                     lblTargetStatus.Text = $"ETA: {eta:F1} s";
                 }
                 else

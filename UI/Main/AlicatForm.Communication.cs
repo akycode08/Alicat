@@ -80,7 +80,7 @@ namespace Alicat
 
             BeginInvoke(new Action(() =>
             {
-                UI_SetTrendStatus(_lastCurrent, _current, _isExhaust);
+                UI_SetTrendStatus(_lastCurrent, _current, _isExhaust, _rampSpeed);
                 RefreshCurrent();
                 UI_SetPressureUnits(_unit);
                 UI_SetSetPoint(_isExhaust ? 0.0 : _setPoint, _unit);
