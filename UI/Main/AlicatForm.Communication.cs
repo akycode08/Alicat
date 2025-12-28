@@ -141,13 +141,7 @@ namespace Alicat
         }
 
 
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            base.OnFormClosing(e);
-            _pollTimer.Stop();
-            DataStore.EndSession();
-            _serial?.Dispose();
-        }
+        // OnFormClosing moved to AlicatForm.Presenter.cs to avoid duplication
 
     }
 }

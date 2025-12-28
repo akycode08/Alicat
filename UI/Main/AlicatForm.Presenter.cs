@@ -2,6 +2,9 @@ using System;
 using System.Windows.Forms;
 using Alicat.Presentation.Presenters;
 using Alicat.Services.Data;
+using Alicat.UI.Features.Terminal.Views;
+using Alicat.UI.Features.Graph.Views;
+using Alicat.UI.Features.Table.Views;
 
 namespace Alicat
 {
@@ -196,7 +199,18 @@ namespace Alicat
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            // Stop polling timer
+            _pollTimer?.Stop();
+            
+            // End data store session
+            DataStore.EndSession();
+            
+            // Dispose serial connection
+            _serial?.Dispose();
+            
+            // Dispose presenter
             _presenter?.Dispose();
+            
             base.OnFormClosing(e);
         }
     }
