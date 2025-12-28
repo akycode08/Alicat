@@ -9,6 +9,7 @@ using Alicat.Domain;
 using Alicat.Services.Controllers;
 using Alicat.Services.Data;
 using Alicat.Services.Protocol;
+using Alicat.Services.Serial;
 using Alicat.UI.Features.Graph.Views;
 using Alicat.UI.Features.Table.Views;
 using Alicat.UI.Features.Terminal.Views;
@@ -600,7 +601,10 @@ namespace Alicat.Presentation.Presenters
         {
             if (_graphForm == null || _graphForm.IsDisposed)
             {
-                _graphForm = new GraphForm(_dataStore);
+                // Convert IDataStore to SessionDataStore (it's actually SessionDataStore instance)
+                var sessionDataStore = _dataStore as SessionDataStore 
+                    ?? throw new InvalidOperationException("DataStore must be SessionDataStore instance");
+                _graphForm = new GraphForm(sessionDataStore);
                 _graphForm.Show(parentForm);
             }
             else
@@ -615,7 +619,10 @@ namespace Alicat.Presentation.Presenters
         {
             if (_tableForm == null || _tableForm.IsDisposed)
             {
-                _tableForm = new TableForm(_dataStore);
+                // Convert IDataStore to SessionDataStore (it's actually SessionDataStore instance)
+                var sessionDataStore = _dataStore as SessionDataStore 
+                    ?? throw new InvalidOperationException("DataStore must be SessionDataStore instance");
+                _tableForm = new TableForm(sessionDataStore);
                 _tableForm.StartPosition = FormStartPosition.CenterParent;
                 _tableForm.Show(parentForm);
             }
