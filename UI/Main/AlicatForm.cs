@@ -88,10 +88,11 @@ namespace Alicat
             UI_SetSetPoint(_setPoint, _unit);
             RefreshCurrent();
 
-            // Polling timer
+            // Polling timer - работает всегда, даже при паузе
+            // Pause останавливает только рампу, но не мониторинг
             _pollTimer.Tick += (_, __) =>
             {
-                if (!_isPaused && _serial != null)
+                if (_serial != null)
                 {
                     _serial.Send(AlicatCommands.ReadAls);
                 }

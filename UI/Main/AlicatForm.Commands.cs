@@ -169,17 +169,18 @@ namespace Alicat
 
             // Останавливаем рампу: устанавливаем уставку равную текущему значению
             // Это останавливает процесс рампы на устройстве
+            // ВАЖНО: Polling продолжает работать для обновления UI
             try
             {
                 _serial.Send($"AS{_current:F2}");
                 _setPoint = _current;
                 UI_SetSetPoint(_current, _unit);
                 
-                // Останавливаем polling timer
-                _pollTimer.Stop();
+                // НЕ останавливаем polling timer - он должен продолжать работать
+                // чтобы приложение получало обновления от устройства
                 _isPaused = true;
                 btnPause.Enabled = false; // Отключаем кнопку после паузы
-                UI_AppendStatusInfo($"Process paused - ramp stopped at {_current:F2} {_unit}");
+                UI_AppendStatusInfo($"Ramp paused - setpoint set to current ({_current:F2} {_unit}). Polling continues.");
             }
             catch (Exception ex)
             {
