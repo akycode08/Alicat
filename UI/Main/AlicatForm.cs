@@ -27,6 +27,7 @@ namespace Alicat
         private double _current = 0.0;
         private double _setPoint = 0.0;
         private string _unit = "PSIG";
+        private double _rampSpeed = 0.0; // Current ramp speed value
 
         private bool _isExhaust = false;
         private bool _isPaused = false;

@@ -56,8 +56,15 @@ namespace Alicat
             // Update max pressure with new units
             lblMaxPressureValue.Text = $"{_maxPressure:F0} {displayUnits}";
 
-            // Update ramp speed with new units
-            UI_SetRampSpeedUnits($"{displayUnits}/s");
+            // Update ramp speed with new units (preserve value if available)
+            if (_rampSpeed > 0.001)
+            {
+                UI_SetRampSpeedUnits($"{TrimZeros(_rampSpeed)} {displayUnits}/s");
+            }
+            else
+            {
+                UI_SetRampSpeedUnits($"{displayUnits}/s");
+            }
         }
 
         /// <summary>
@@ -103,7 +110,7 @@ namespace Alicat
 
             if (prev is null)
             {
-                lblCurrentRate.Text = "→ 0.0 /s";
+                lblCurrentRate.Text = $"→ 0.0 {_unit}/s";
                 lblCurrentRate.ForeColor = isDarkTheme ? darkAccentGreen : lightAccentGreen;
                 return;
             }
@@ -113,21 +120,21 @@ namespace Alicat
 
             if (delta > EPS)
             {
-                lblCurrentRate.Text = $"↗ +{Math.Abs(rate):F1} /s";
+                lblCurrentRate.Text = $"↗ +{Math.Abs(rate):F1} {_unit}/s";
                 lblCurrentRate.ForeColor = System.Drawing.Color.OrangeRed;
             }
             else if (delta < -EPS)
             {
-                lblCurrentRate.Text = $"↘ -{Math.Abs(rate):F1} /s";
+                lblCurrentRate.Text = $"↘ -{Math.Abs(rate):F1} {_unit}/s";
                 lblCurrentRate.ForeColor = System.Drawing.Color.RoyalBlue;
             }
             else
             {
-                lblCurrentRate.Text = "→ 0.0 /s";
+                lblCurrentRate.Text = $"→ 0.0 {_unit}/s";
                 lblCurrentRate.ForeColor = isDarkTheme ? darkAccentGreen : lightAccentGreen;
             }
 
-            // Update target status
+            // Update target status with ETA
             double diff = Math.Abs(now - _setPoint);
             if (diff < 0.5)
             {
@@ -136,7 +143,16 @@ namespace Alicat
             }
             else
             {
-                lblTargetStatus.Text = $"→ {diff:F1} {_unit}";
+                // Calculate ETA: (Target - Current) / Ramp Speed
+                if (_rampSpeed > 0.001) // Avoid division by zero
+                {
+                    double eta = diff / _rampSpeed;
+                    lblTargetStatus.Text = $"ETA: {eta:F1} s";
+                }
+                else
+                {
+                    lblTargetStatus.Text = $"→ {diff:F1} {_unit}";
+                }
                 lblTargetStatus.ForeColor = isDarkTheme ? darkTextMuted : lightTextMuted;
             }
         }

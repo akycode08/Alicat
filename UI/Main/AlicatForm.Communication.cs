@@ -60,6 +60,7 @@ namespace Alicat
             // 1) Сначала пробуем распознать ответ ASR (Ramp Speed)
             if (TryParseAsr(line, out var ramp, out var rampUnits))
             {
+                _rampSpeed = ramp; // Сохраняем значение скорости рампы
                 BeginInvoke(new Action(() =>
                 {
                     UI_SetRampSpeedUnits($"{TrimZeros(ramp)} {rampUnits}");
