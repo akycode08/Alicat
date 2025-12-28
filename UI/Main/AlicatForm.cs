@@ -85,7 +85,7 @@ namespace Alicat
 
             // Валидация
             txtTargetInput.TextChanged += (_, __) => ValidateTargetAgainstMax();
-<<<<<<< HEAD
+
             txtIncrement.TextChanged += (_, __) => UpdateIncrementFromText();
 
             // Начальные значения UI
@@ -104,9 +104,9 @@ namespace Alicat
             };
 
             ApplyOptionsToUi();
-=======
+
             txtIncrement.TextChanged += txtIncrement_TextChanged_Presenter;
->>>>>>> 834f4d0e8dc77cbbb28a2a2752711ca27dbf3e92
+
 
             // Применяем тему после инициализации (цвета и стили из AlicatForm.Theme.cs)
             ApplyLightTheme();

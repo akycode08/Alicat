@@ -170,11 +170,6 @@ namespace Alicat
                 _serial.Send($"AS{_current:F2}");
                 _setPoint = _current;
                 UI_SetSetPoint(_current, _unit);
-<<<<<<< HEAD
-
-=======
-                
->>>>>>> 834f4d0e8dc77cbbb28a2a2752711ca27dbf3e92
                 // НЕ останавливаем polling timer - он должен продолжать работать
                 // чтобы приложение получало обновления от устройства
                 _isPaused = true;
