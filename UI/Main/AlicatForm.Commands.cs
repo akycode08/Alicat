@@ -207,7 +207,7 @@ namespace Alicat
                 _serial.Send("AE");
                 _isExhaust = true;
 
-                UI_SetTrendStatus(_lastCurrent, _current, isExhaust: true);
+                UI_SetTrendStatus(_lastCurrent, _current, isExhaust: true, _rampSpeed);
                 UI_AppendStatusInfo("Purge started");
 
                 _setPoint = 0.0;

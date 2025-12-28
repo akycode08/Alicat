@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Globalization;
+using Alicat.Business.Interfaces;
 using Alicat.Services.Protocol;
-using Alicat.Services.Serial;
 
 namespace Alicat.Services.Controllers
 {
-    public sealed class RampController
+    public sealed class RampController : IRampController
     {
-        private readonly SerialClient _serial;
+        private readonly ISerialClient _serial;
 
-        public RampController(SerialClient serial) => _serial = serial;
+        public RampController(ISerialClient serial) => _serial = serial;
 
         /// <summary>
         /// Устанавливает скорость рампа SR без каких-либо конвертаций.

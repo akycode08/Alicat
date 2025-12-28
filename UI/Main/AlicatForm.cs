@@ -60,52 +60,35 @@ namespace Alicat
             // ✅ Create logo AFTER InitializeComponent (not in Designer!)
             CreateLogo();
 
+            // Инициализируем Presenter
+            InitializePresenter();
+
             // Меню
-            menuSettingsOptions.Click += btnOptions_Click;
-            menuSettingsCommunication.Click += btnCommunication_Click;
-            menuFileNewSession.Click += menuFileNewSession_Click;
+            menuSettingsOptions.Click += btnOptions_Click_Presenter;
+            menuSettingsCommunication.Click += btnCommunication_Click_Presenter;
+            menuFileNewSession.Click += menuFileNewSession_Click_Presenter;
             menuFileTestMode.Click += menuFileTestMode_Click;
 
             // Навигация
-            btnGraph.Click += btnGraph_Click;
-            btnTable.Click += btnTable_Click;
-            btnTerminal.Click += btnTerminal_Click;
+            btnGraph.Click += btnGraph_Click_Presenter;
+            btnTable.Click += btnTable_Click_Presenter;
+            btnTerminal.Click += btnTerminal_Click_Presenter;
 
             // Управление давлением
-            btnGoToTarget.Click += btnGoTarget_Click;
-            btnPause.Click += btnPause_Click;
-            btnPurge.Click += btnPurge_Click;
-            btnIncrease.Click += btnIncrease_Click;
-            btnDecrease.Click += btnDecrease_Click;
-            btnIncrementMinus.Click += btnIncrementMinus_Click;
-            btnIncrementPlus.Click += btnIncrementPlus_Click;
+            btnGoToTarget.Click += btnGoTarget_Click_Presenter;
+            btnPause.Click += btnPause_Click_Presenter;
+            btnPurge.Click += btnPurge_Click_Presenter;
+            btnIncrease.Click += btnIncrease_Click_Presenter;
+            btnDecrease.Click += btnDecrease_Click_Presenter;
+            btnIncrementMinus.Click += btnIncrementMinus_Click_Presenter;
+            btnIncrementPlus.Click += btnIncrementPlus_Click_Presenter;
 
             // Валидация
             txtTargetInput.TextChanged += (_, __) => ValidateTargetAgainstMax();
-            txtIncrement.TextChanged += (_, __) => UpdateIncrementFromText();
-
-            // Начальные значения UI
-            UI_SetPressureUnits(_unit);
-            UI_SetSetPoint(_setPoint, _unit);
-            RefreshCurrent();
-
-            // Polling timer - работает всегда, даже при паузе
-            // Pause останавливает только рампу, но не мониторинг
-            _pollTimer.Tick += (_, __) =>
-            {
-                if (_serial != null)
-                {
-                    _serial.Send(AlicatCommands.ReadAls);
-                }
-            };
-
-            ApplyOptionsToUi();
+            txtIncrement.TextChanged += txtIncrement_TextChanged_Presenter;
 
             // Применяем тему после инициализации (цвета и стили из AlicatForm.Theme.cs)
             ApplyLightTheme();
-
-            // Инициализируем статус подключения (по умолчанию отключен)
-            UI_UpdateConnectionStatus(false);
         }
 
         // ====================================================================

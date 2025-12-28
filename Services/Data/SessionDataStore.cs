@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using Alicat.Business.Interfaces;
 
 namespace Alicat.Services.Data
 {
@@ -10,7 +11,7 @@ namespace Alicat.Services.Data
     /// Центральное хранилище данных сессии.
     /// Хранит в RAM всегда, а в CSV пишет ТОЛЬКО когда значения меняются (порог 0.3).
     /// </summary>
-    public sealed class SessionDataStore : IDisposable
+    public sealed class SessionDataStore : IDataStore, IDisposable
     {
         private readonly List<DataPoint> _points = new();
         private DateTime _sessionStart;
