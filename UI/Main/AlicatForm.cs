@@ -30,7 +30,6 @@ namespace Alicat
 
         private bool _isExhaust = false;
         private bool _isPaused = false;
-        private double? _pausedSetPoint = null; // Сохраняем уставку при паузе
         private double? _lastCurrent = null;
         private double? _lastLoggedPressure = null;
 

@@ -161,75 +161,26 @@ namespace Alicat
                 return;
             }
 
-            _isPaused = !_isPaused;
-
-            if (_isPaused)
+            // Останавливаем рампу: устанавливаем уставку равную текущему значению
+            // Это останавливает процесс рампы на устройстве
+            // ВАЖНО: Polling продолжает работать для обновления UI
+            // Кнопку можно использовать несколько раз - каждый раз останавливает рампу на текущем значении
+            try
             {
-                // Сохраняем текущую уставку ПЕРЕД изменением (только если еще не сохранена)
-                if (!_pausedSetPoint.HasValue)
-                {
-                    _pausedSetPoint = _setPoint;
-                }
+                _serial.Send($"AS{_current:F2}");
+                _setPoint = _current;
+                UI_SetSetPoint(_current, _unit);
 
-                // Останавливаем рампу: устанавливаем уставку равную текущему значению
-                // Это останавливает процесс рампы на устройстве
-                try
-                {
-                    _serial.Send($"AS{_current:F2}");
-                    _setPoint = _current;
-                    UI_SetSetPoint(_current, _unit);
-
-                    // Останавливаем polling timer
-                    _pollTimer.Stop();
-                    btnPause.Text = "Continue";
-                    UI_AppendStatusInfo($"Process paused - ramp stopped at {_current:F2} {_unit} (target was {_pausedSetPoint.Value:F2} {_unit})");
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Failed to pause: {ex.Message}", "Error",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    _isPaused = false;
-                    _pausedSetPoint = null;
-                    return;
-                }
+                // НЕ останавливаем polling timer - он должен продолжать работать
+                // чтобы приложение получало обновления от устройства
+                _isPaused = true;
+                // Кнопка остается активной - можно использовать несколько раз
+                UI_AppendStatusInfo($"Ramp paused - setpoint set to current ({_current:F2} {_unit}). Polling continues.");
             }
-            else
+            catch (Exception ex)
             {
-                // Возобновляем: восстанавливаем исходную уставку
-                if (_pausedSetPoint.HasValue)
-                {
-                    try
-                    {
-                        double targetSetPoint = _pausedSetPoint.Value;
-                        _serial.Send($"AS{targetSetPoint:F2}");
-                        _setPoint = targetSetPoint;
-                        UI_SetSetPoint(_setPoint, _unit);
-
-                        // Отправляем команду для чтения, чтобы обновить состояние
-                        _serial.Send(AlicatCommands.ReadAls);
-
-                        _pausedSetPoint = null;
-
-                        // Возобновляем polling timer
-                        _pollTimer.Start();
-                        btnPause.Text = "Pause";
-                        UI_AppendStatusInfo($"Process resumed - target restored to {targetSetPoint:F2} {_unit}");
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"Failed to resume: {ex.Message}", "Error",
-                            MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        _isPaused = true;
-                        return;
-                    }
-                }
-                else
-                {
-                    // Если уставка не была сохранена, просто возобновляем polling
-                    _pollTimer.Start();
-                    btnPause.Text = "Pause";
-                    UI_AppendStatusInfo("Process resumed - polling started");
-                }
+                MessageBox.Show($"Failed to pause: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
