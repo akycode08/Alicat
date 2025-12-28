@@ -27,6 +27,7 @@ namespace Alicat
         private double _current = 0.0;
         private double _setPoint = 0.0;
         private string _unit = "PSIG";
+        private double _rampSpeed = 0.0; // Current ramp speed value
 
         private bool _isExhaust = false;
         private bool _isPaused = false;
@@ -88,10 +89,11 @@ namespace Alicat
             UI_SetSetPoint(_setPoint, _unit);
             RefreshCurrent();
 
-            // Polling timer
+            // Polling timer - работает всегда, даже при паузе
+            // Pause останавливает только рампу, но не мониторинг
             _pollTimer.Tick += (_, __) =>
             {
-                if (!_isPaused && _serial != null)
+                if (_serial != null)
                 {
                     _serial.Send(AlicatCommands.ReadAls);
                 }
