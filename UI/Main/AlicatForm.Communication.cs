@@ -9,12 +9,29 @@ namespace Alicat
     {
         private void btnCommunication_Click(object? sender, EventArgs e)
         {
+            // Сохраняем состояние подключения до открытия диалога
+            bool wasConnected = _serial != null;
+            
             using var dlg = new FormConnect { StartPosition = FormStartPosition.CenterParent };
             dlg.ShowDialog(this);
 
             // ✅ БЕЗ рефлексии — берём напрямую
             var opened = dlg.OpenPort;
-            if (opened is null) return;
+            
+            // Если порт не открыт, но до этого было подключение - отключаем
+            if (opened is null)
+            {
+                if (wasConnected)
+                {
+                    // Пользователь отключил устройство через диалог
+                    _serial?.Dispose();
+                    _serial = null;
+                    _ramp = null;
+                    _pollTimer.Stop();
+                    UI_UpdateConnectionStatus(false);
+                }
+                return;
+            }
 
             _serial?.Dispose();
             _serial = new SerialClient(opened);
@@ -101,45 +118,12 @@ namespace Alicat
                     _graphForm.AddSample(_current, targetForGraph);
                 }
 
-                if (_tableForm != null && !_tableForm.IsDisposed)
-                {
-                    if (ShouldLog(_current))
-                    {
-                        var spForLog = _isExhaust ? 0.0 : _setPoint;
-                        _tableForm.AddRecordFromDevice(_current, spForLog, _unit);
-                    }
-                }
+                // TableForm получает данные через события DataStore.OnNewPoint
+                // Не нужно вызывать AddRecordFromDevice напрямую
 
 
             }));
         }
-
-
-        private bool ShouldLog(double currentPressure)
-        {
-            if (_tableForm == null || _tableForm.IsDisposed)
-                return false;
-
-            double threshold = _tableForm.Threshold;
-
-            // первая запись всегда
-            if (_lastLoggedPressure == null)
-            {
-                _lastLoggedPressure = currentPressure;
-                return true;
-            }
-
-            double delta = Math.Abs(currentPressure - _lastLoggedPressure.Value);
-
-            if (delta >= threshold)
-            {
-                _lastLoggedPressure = currentPressure;
-                return true;
-            }
-
-            return false;
-        }
-
 
         // OnFormClosing moved to AlicatForm.Presenter.cs to avoid duplication
 

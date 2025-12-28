@@ -194,6 +194,74 @@ namespace Alicat
         }
 
         // ====================================================================
+        // Device Menu Handlers
+        // ====================================================================
+
+        private void menuDeviceDisconnect_Click(object? sender, EventArgs e)
+        {
+            _presenter?.DisconnectDevice();
+        }
+
+        private async void menuDeviceEmergencyStop_Click(object? sender, EventArgs e)
+        {
+            if (_presenter != null)
+                await _presenter.EmergencyStop();
+        }
+
+        // ====================================================================
+        // File Menu Handlers
+        // ====================================================================
+
+        private void menuFileExit_Click(object? sender, EventArgs e)
+        {
+            var result = MessageBox.Show(
+                "Are you sure you want to exit?\n\nAny unsaved data will be lost.",
+                "Exit Application",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (result == DialogResult.Yes)
+            {
+                Application.Exit();
+            }
+        }
+
+        // ====================================================================
+        // Help Menu Handlers
+        // ====================================================================
+
+        private void menuHelpAboutDACTools_Click(object? sender, EventArgs e)
+        {
+            string message = "DAC Tools\n\n" +
+                           "Custom Equipment for High-Pressure Research\n\n" +
+                           "Professional tools for Diamond Anvil Cell (DAC) experiments\n" +
+                           "and high-pressure research applications.\n\n" +
+                           "© 2025 DAC Tools";
+
+            MessageBox.Show(message, "About DACTools",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void menuHelpAboutAlicat_Click(object? sender, EventArgs e)
+        {
+            string version = "1.2.0";
+            string message = "Alicat Controller\n\n" +
+                           $"Version {version}\n\n" +
+                           "Professional Windows application for controlling\n" +
+                           "Alicat Pressure Controllers via RS-232.\n\n" +
+                           "Features:\n" +
+                           "• Real-time pressure monitoring\n" +
+                           "• Precise digital pressure control\n" +
+                           "• Live graphing and data logging\n" +
+                           "• Terminal for RS-232 debugging\n\n" +
+                           "© 2025 DAC Tools\n" +
+                           "Built with .NET 8.0";
+
+            MessageBox.Show(message, "About Alicat Controller",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        // ====================================================================
         // Cleanup
         // ====================================================================
 

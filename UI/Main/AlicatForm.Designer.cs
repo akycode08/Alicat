@@ -27,13 +27,23 @@ namespace Alicat
         private ToolStripMenuItem menuFile;
         private ToolStripMenuItem menuFileNewSession;
         private ToolStripMenuItem menuFileTestMode;
+        private ToolStripSeparator menuFileSeparator1;
+        private ToolStripMenuItem menuFileExit;
         private ToolStripMenuItem menuSettings;
-        private ToolStripMenuItem menuSettingsOptions;
-        private ToolStripMenuItem menuSettingsCommunication;
+        private ToolStripMenuItem menuSettingsPreferences;
+        private ToolStripMenuItem menuDevice;
+        private ToolStripMenuItem menuDeviceConnect;
+        private ToolStripMenuItem menuDeviceDisconnect;
+        private ToolStripSeparator menuDeviceSeparator1;
+        private ToolStripMenuItem menuDeviceEmergencyStop;
         private ToolStripMenuItem menuView;
+        private ToolStripMenuItem menuViewTheme;
         private ToolStripMenuItem menuViewLightTheme;
         private ToolStripMenuItem menuViewDarkTheme;
         private ToolStripMenuItem menuHelp;
+        private ToolStripMenuItem menuHelpAboutDACTools;
+        private ToolStripSeparator menuHelpSeparator1;
+        private ToolStripMenuItem menuHelpAboutAlicat;
         private ToolStripLabel toolStripVersion;
 
         // =========================
@@ -176,13 +186,23 @@ namespace Alicat
             menuFile = new ToolStripMenuItem();
             menuFileNewSession = new ToolStripMenuItem();
             menuFileTestMode = new ToolStripMenuItem();
+            menuFileSeparator1 = new ToolStripSeparator();
+            menuFileExit = new ToolStripMenuItem();
             menuSettings = new ToolStripMenuItem();
-            menuSettingsOptions = new ToolStripMenuItem();
-            menuSettingsCommunication = new ToolStripMenuItem();
+            menuSettingsPreferences = new ToolStripMenuItem();
+            menuDevice = new ToolStripMenuItem();
+            menuDeviceConnect = new ToolStripMenuItem();
+            menuDeviceDisconnect = new ToolStripMenuItem();
+            menuDeviceSeparator1 = new ToolStripSeparator();
+            menuDeviceEmergencyStop = new ToolStripMenuItem();
             menuView = new ToolStripMenuItem();
+            menuViewTheme = new ToolStripMenuItem();
             menuViewLightTheme = new ToolStripMenuItem();
             menuViewDarkTheme = new ToolStripMenuItem();
             menuHelp = new ToolStripMenuItem();
+            menuHelpAboutDACTools = new ToolStripMenuItem();
+            menuHelpSeparator1 = new ToolStripSeparator();
+            menuHelpAboutAlicat = new ToolStripMenuItem();
             toolStripVersion = new ToolStripLabel();
             rootLayout = new TableLayoutPanel();
             panelStatusBar = new Panel();
@@ -310,7 +330,7 @@ namespace Alicat
             // 
             menuMain.AutoSize = false;
             menuMain.BackColor = Color.FromArgb(245, 245, 245);
-            menuMain.Items.AddRange(new ToolStripItem[] { menuFile, menuSettings, menuView, menuHelp, toolStripVersion });
+            menuMain.Items.AddRange(new ToolStripItem[] { menuFile, menuSettings, menuDevice, menuView, menuHelp, toolStripVersion });
             menuMain.Location = new Point(0, 0);
             menuMain.Name = "menuMain";
             menuMain.Padding = new Padding(8, 6, 8, 6);
@@ -319,7 +339,7 @@ namespace Alicat
             // 
             // menuFile
             // 
-            menuFile.DropDownItems.AddRange(new ToolStripItem[] { menuFileNewSession, menuFileTestMode });
+            menuFile.DropDownItems.AddRange(new ToolStripItem[] { menuFileNewSession, menuFileSeparator1, menuFileExit });
             menuFile.Name = "menuFile";
             menuFile.Size = new Size(37, 23);
             menuFile.Text = "File";
@@ -336,34 +356,84 @@ namespace Alicat
             menuFileTestMode.Name = "menuFileTestMode";
             menuFileTestMode.Size = new Size(156, 22);
             menuFileTestMode.Text = "Start Test Mode";
+            menuFileTestMode.Visible = false; // Скрыто - только для разработки
+            // 
+            // menuFileSeparator1
+            // 
+            menuFileSeparator1.Name = "menuFileSeparator1";
+            menuFileSeparator1.Size = new Size(153, 6);
+            // 
+            // menuFileExit
+            // 
+            menuFileExit.Name = "menuFileExit";
+            menuFileExit.Size = new Size(156, 22);
+            menuFileExit.Text = "Exit";
+            menuFileExit.ShortcutKeys = Keys.Alt | Keys.F4;
+            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // menuSettings
             // 
-            menuSettings.DropDownItems.AddRange(new ToolStripItem[] { menuSettingsOptions, menuSettingsCommunication });
+            menuSettings.DropDownItems.AddRange(new ToolStripItem[] { menuSettingsPreferences });
             menuSettings.Name = "menuSettings";
             menuSettings.Size = new Size(61, 23);
             menuSettings.Text = "Settings";
             // 
-            // menuSettingsOptions
+            // menuSettingsPreferences
             // 
-            menuSettingsOptions.Name = "menuSettingsOptions";
-            menuSettingsOptions.Size = new Size(161, 22);
-            menuSettingsOptions.Text = "Options";
-            menuSettingsOptions.Click += btnOptions_Click;
+            menuSettingsPreferences.Name = "menuSettingsPreferences";
+            menuSettingsPreferences.Size = new Size(180, 22);
+            menuSettingsPreferences.Text = "Preferences...";
+            menuSettingsPreferences.ShortcutKeys = Keys.Control | Keys.Oemcomma;
+            // Click event handler is set in constructor (AlicatForm.cs)
             // 
-            // menuSettingsCommunication
+            // menuDevice
             // 
-            menuSettingsCommunication.Name = "menuSettingsCommunication";
-            menuSettingsCommunication.Size = new Size(161, 22);
-            menuSettingsCommunication.Text = "Communication";
-            menuSettingsCommunication.Click += btnCommunication_Click;
+            menuDevice.DropDownItems.AddRange(new ToolStripItem[] { menuDeviceConnect, menuDeviceDisconnect, menuDeviceSeparator1, menuDeviceEmergencyStop });
+            menuDevice.Name = "menuDevice";
+            menuDevice.Size = new Size(54, 23);
+            menuDevice.Text = "Device";
+            // 
+            // menuDeviceConnect
+            // 
+            menuDeviceConnect.Name = "menuDeviceConnect";
+            menuDeviceConnect.Size = new Size(180, 22);
+            menuDeviceConnect.Text = "Connect...";
+            menuDeviceConnect.ShortcutKeys = Keys.Control | Keys.K;
+            // Click event handler is set in constructor (AlicatForm.cs)
+            // 
+            // menuDeviceDisconnect
+            // 
+            menuDeviceDisconnect.Name = "menuDeviceDisconnect";
+            menuDeviceDisconnect.Size = new Size(180, 22);
+            menuDeviceDisconnect.Text = "Disconnect";
+            // Click event handler is set in constructor (AlicatForm.cs)
+            // 
+            // menuDeviceSeparator1
+            // 
+            menuDeviceSeparator1.Name = "menuDeviceSeparator1";
+            menuDeviceSeparator1.Size = new Size(177, 6);
+            // 
+            // menuDeviceEmergencyStop
+            // 
+            menuDeviceEmergencyStop.Name = "menuDeviceEmergencyStop";
+            menuDeviceEmergencyStop.Size = new Size(180, 22);
+            menuDeviceEmergencyStop.Text = "Emergency Stop";
+            menuDeviceEmergencyStop.ShortcutKeys = Keys.Control | Keys.Shift | Keys.E;
+            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // menuView
             // 
-            menuView.DropDownItems.AddRange(new ToolStripItem[] { menuViewLightTheme, menuViewDarkTheme });
+            menuView.DropDownItems.AddRange(new ToolStripItem[] { menuViewTheme });
             menuView.Name = "menuView";
             menuView.Size = new Size(44, 23);
             menuView.Text = "View";
+            // 
+            // menuViewTheme
+            // 
+            menuViewTheme.DropDownItems.AddRange(new ToolStripItem[] { menuViewLightTheme, menuViewDarkTheme });
+            menuViewTheme.Name = "menuViewTheme";
+            menuViewTheme.Size = new Size(180, 22);
+            menuViewTheme.Text = "Theme";
             // 
             // menuViewLightTheme
             // 
@@ -383,9 +453,29 @@ namespace Alicat
             // 
             // menuHelp
             // 
+            menuHelp.DropDownItems.AddRange(new ToolStripItem[] { menuHelpAboutDACTools, menuHelpSeparator1, menuHelpAboutAlicat });
             menuHelp.Name = "menuHelp";
             menuHelp.Size = new Size(44, 23);
             menuHelp.Text = "Help";
+            // 
+            // menuHelpAboutDACTools
+            // 
+            menuHelpAboutDACTools.Name = "menuHelpAboutDACTools";
+            menuHelpAboutDACTools.Size = new Size(180, 22);
+            menuHelpAboutDACTools.Text = "About DACTools...";
+            // Click event handler is set in constructor (AlicatForm.cs)
+            // 
+            // menuHelpSeparator1
+            // 
+            menuHelpSeparator1.Name = "menuHelpSeparator1";
+            menuHelpSeparator1.Size = new Size(177, 6);
+            // 
+            // menuHelpAboutAlicat
+            // 
+            menuHelpAboutAlicat.Name = "menuHelpAboutAlicat";
+            menuHelpAboutAlicat.Size = new Size(180, 22);
+            menuHelpAboutAlicat.Text = "About Alicat Controller...";
+            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // toolStripVersion
             // 
@@ -600,7 +690,7 @@ namespace Alicat
             btnGraph.Size = new Size(80, 45);
             btnGraph.TabIndex = 5;
             btnGraph.Text = "Graph";
-            btnGraph.Click += btnGraph_Click;
+            // Click event handler is set in constructor (AlicatForm.cs) to avoid double subscription
             // 
             // btnTable
             // 
@@ -612,7 +702,7 @@ namespace Alicat
             btnTable.Size = new Size(80, 45);
             btnTable.TabIndex = 6;
             btnTable.Text = "Table";
-            btnTable.Click += btnTable_Click;
+            // Click event handler is set in constructor (AlicatForm.cs) to avoid double subscription
             // 
             // btnTerminal
             // 
@@ -624,7 +714,7 @@ namespace Alicat
             btnTerminal.Size = new Size(80, 45);
             btnTerminal.TabIndex = 7;
             btnTerminal.Text = "Terminal";
-            btnTerminal.Click += btnTerminal_Click;
+            // Click event handler is set in constructor (AlicatForm.cs) to avoid double subscription
             // 
             // layoutContent
             // 
@@ -902,7 +992,7 @@ namespace Alicat
             btnGoToTarget.Size = new Size(164, 44);
             btnGoToTarget.TabIndex = 3;
             btnGoToTarget.Text = "🎯  Go to Target";
-            btnGoToTarget.Click += btnGoTarget_Click;
+            // Click event handler is set in constructor (AlicatForm.cs) to avoid double subscription
             // 
             // lblSetTargetTitle
             // 

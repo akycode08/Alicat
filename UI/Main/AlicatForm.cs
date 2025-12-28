@@ -33,7 +33,6 @@ namespace Alicat
         private bool _isExhaust = false;
         private bool _isPaused = false;
         private double? _lastCurrent = null;
-        private double? _lastLoggedPressure = null;
 
         private SerialClient? _serial;
         private readonly Timer _pollTimer = new() { Interval = 500 };
@@ -66,10 +65,15 @@ namespace Alicat
             InitializePresenter();
 
             // Меню
-            menuSettingsOptions.Click += btnOptions_Click_Presenter;
-            menuSettingsCommunication.Click += btnCommunication_Click_Presenter;
+            menuSettingsPreferences.Click += btnOptions_Click_Presenter;
+            menuDeviceConnect.Click += btnCommunication_Click_Presenter;
+            menuDeviceDisconnect.Click += menuDeviceDisconnect_Click;
+            menuDeviceEmergencyStop.Click += menuDeviceEmergencyStop_Click;
             menuFileNewSession.Click += menuFileNewSession_Click_Presenter;
             menuFileTestMode.Click += menuFileTestMode_Click;
+            menuFileExit.Click += menuFileExit_Click;
+            menuHelpAboutDACTools.Click += menuHelpAboutDACTools_Click;
+            menuHelpAboutAlicat.Click += menuHelpAboutAlicat_Click;
 
             // Навигация
             btnGraph.Click += btnGraph_Click_Presenter;
@@ -112,6 +116,10 @@ namespace Alicat
 
             // Применяем тему после инициализации (цвета и стили из AlicatForm.Theme.cs)
             ApplyLightTheme();
+            
+            // Устанавливаем правильный статус подключения ПОСЛЕ применения темы
+            // (чтобы тема не перезаписала цвет индикатора)
+            UI_UpdateConnectionStatus(false);
         }
 
         // ====================================================================

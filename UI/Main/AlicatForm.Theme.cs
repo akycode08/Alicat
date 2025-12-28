@@ -75,7 +75,7 @@ namespace Alicat
             menuMain.ForeColor = lightTextPrimary;
 
             panelStatusBar.BackColor = lightBgStatus;
-            lblStatusDot.ForeColor = lightStatusDot;
+            // lblStatusDot.ForeColor устанавливается через UI_UpdateConnectionStatus, не здесь
             lblConnectionStatus.ForeColor = lightTextSecondary;
             lblBaudRate.ForeColor = lightTextSecondary;
             lblLastUpdate.ForeColor = lightTextSecondary;
@@ -189,7 +189,7 @@ namespace Alicat
             menuMain.ForeColor = darkTextPrimary;
 
             panelStatusBar.BackColor = darkBgStatus;
-            lblStatusDot.ForeColor = darkStatusDot;
+            // lblStatusDot.ForeColor устанавливается через UI_UpdateConnectionStatus, не здесь
             lblConnectionStatus.ForeColor = darkTextSecondary;
             lblBaudRate.ForeColor = darkTextSecondary;
             lblLastUpdate.ForeColor = darkTextSecondary;

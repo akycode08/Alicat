@@ -19,6 +19,15 @@ namespace Alicat
         public FormConnect()
         {
             InitializeComponent();
+            
+            // Устанавливаем DialogResult при закрытии через X
+            this.FormClosing += (sender, e) =>
+            {
+                if (this.DialogResult == DialogResult.None)
+                {
+                    this.DialogResult = DialogResult.Cancel;
+                }
+            };
         }
 
         private void FormConnect_Load(object? sender, EventArgs e)
@@ -68,9 +77,9 @@ namespace Alicat
                 string resp = PingAlicat(_port);
 
                 if (string.IsNullOrWhiteSpace(resp) || !resp.StartsWith("A"))
-                    MessageBox.Show("Порт открыт, но прибор ответил не так, как ожидалось.", "Внимание");
+                    MessageBox.Show("Port opened, but device response was unexpected.", "Warning");
                 else
-                    MessageBox.Show($"Успешно подключено.\r\nОтвет: {resp}", "OK");
+                    MessageBox.Show($"Successfully connected.\r\nResponse: {resp}", "OK");
             }
             catch (TimeoutException)
             {
@@ -78,12 +87,12 @@ namespace Alicat
             }
             catch (UnauthorizedAccessException)
             {
-                MessageBox.Show("COM-порт занят другой программой. Закройте терминал/драйвер и попробуйте снова.", "Порт занят");
+                MessageBox.Show("COM port is busy. Close terminal/driver and try again.", "Port Busy");
                 TryClosePort();
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Ошибка");
+                MessageBox.Show(ex.Message, "Error");
                 TryClosePort();
             }
             finally
@@ -98,7 +107,7 @@ namespace Alicat
         {
             bool wasOpen = _port?.IsOpen == true;
             TryClosePort();
-            MessageBox.Show(wasOpen ? "Соединение разорвано." : "Порт уже был закрыт.", wasOpen ? "Disconnected" : "Info");
+            MessageBox.Show(wasOpen ? "Connection closed." : "Port was already closed.", wasOpen ? "Disconnected" : "Info");
             btnConnect.Enabled = true;
             btnDisconnect.Enabled = true;
         }
@@ -156,7 +165,7 @@ namespace Alicat
                     string resp = PingAlicat(_port);
                     if (!string.IsNullOrWhiteSpace(resp) && resp.StartsWith("A"))
                     {
-                        MessageBox.Show($"Подключено на {s} бод.\r\nОтвет: {resp}", "OK");
+                        MessageBox.Show($"Connected at {s} baud.\r\nResponse: {resp}", "OK");
                         return;
                     }
                 }
@@ -166,7 +175,7 @@ namespace Alicat
                 }
             }
 
-            MessageBox.Show("Таймаут ожидания ответа прибора.", "Ошибка");
+            MessageBox.Show("Device response timeout.", "Error");
             TryClosePort();
         }
 
@@ -188,7 +197,7 @@ namespace Alicat
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ошибка при закрытии порта: " + ex.Message, "Ошибка");
+                MessageBox.Show("Error closing port: " + ex.Message, "Error");
             }
             finally
             {

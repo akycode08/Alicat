@@ -35,7 +35,6 @@ namespace Alicat.Presentation.Presenters
         private bool _isExhaust = false;
         private bool _isPaused = false;
         private double? _lastCurrent = null;
-        private double? _lastLoggedPressure = null;
 
         // Services
         private ISerialClient? _serial;
@@ -98,11 +97,28 @@ namespace Alicat.Presentation.Presenters
         /// </summary>
         public void ConnectDevice(Form parentForm)
         {
+            // Сохраняем состояние подключения до открытия диалога
+            bool wasConnected = _serial != null;
+            
             using var dlg = new FormConnect { StartPosition = FormStartPosition.CenterParent };
             dlg.ShowDialog(parentForm);
 
             var opened = dlg.OpenPort;
-            if (opened is null) return;
+            
+            // Если порт не открыт, но до этого было подключение - отключаем
+            if (opened is null)
+            {
+                if (wasConnected)
+                {
+                    // Пользователь отключил устройство через диалог
+                    _serial?.Dispose();
+                    _serial = null;
+                    _ramp = null;
+                    _pollTimer.Stop();
+                    _view.UI_UpdateConnectionStatus(false);
+                }
+                return;
+            }
 
             _serial?.Dispose();
             _serial = new SerialClient(opened);
@@ -195,15 +211,8 @@ namespace Alicat.Presentation.Presenters
                     _graphForm.AddSample(_current, targetForGraph);
                 }
 
-                // Update table if open
-                if (_tableForm != null && !_tableForm.IsDisposed)
-                {
-                    if (ShouldLog(_current))
-                    {
-                        var spForLog = _isExhaust ? 0.0 : _setPoint;
-                        _tableForm.AddRecordFromDevice(_current, spForLog, _unit);
-                    }
-                }
+                // TableForm получает данные через события DataStore.OnNewPoint
+                // Не нужно вызывать AddRecordFromDevice напрямую
             }));
         }
 
@@ -668,32 +677,88 @@ namespace Alicat.Presentation.Presenters
         }
 
         // ====================================================================
-        // HELPERS
+        // DEVICE MANAGEMENT
         // ====================================================================
 
-        private bool ShouldLog(double currentPressure)
+        /// <summary>
+        /// Отключение устройства напрямую (без диалога).
+        /// </summary>
+        public void DisconnectDevice()
         {
-            if (_tableForm == null || _tableForm.IsDisposed)
-                return false;
-
-            double threshold = _tableForm.Threshold;
-
-            if (_lastLoggedPressure == null)
+            if (_serial == null)
             {
-                _lastLoggedPressure = currentPressure;
-                return true;
+                MessageBox.Show("Device is not connected.", "Disconnect",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
             }
 
-            double delta = Math.Abs(currentPressure - _lastLoggedPressure.Value);
-
-            if (delta >= threshold)
+            try
             {
-                _lastLoggedPressure = currentPressure;
-                return true;
+                _serial?.Dispose();
+                _serial = null;
+                _ramp = null;
+                _pollTimer.Stop();
+                _view.UI_UpdateConnectionStatus(false);
+                _view.UI_AppendStatusInfo("Device disconnected");
             }
-
-            return false;
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error disconnecting device:\n{ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
+
+        /// <summary>
+        /// Emergency Stop - немедленная остановка и сброс давления до нуля.
+        /// </summary>
+        public async Task EmergencyStop()
+        {
+            if (_serial == null)
+            {
+                MessageBox.Show("Device is not connected.", "Emergency Stop",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var result = MessageBox.Show(
+                "Emergency Stop will immediately stop pressure control and reset to zero.\n\n" +
+                "This action cannot be undone. Continue?",
+                "Emergency Stop",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+
+            if (result != DialogResult.Yes) return;
+
+            try
+            {
+                // Открываем выхлоп для быстрого сброса давления
+                _serial.Send("AE");
+                _isExhaust = true;
+                _setPoint = 0.0;
+                _view.UI_SetSetPoint(0.0, _unit);
+                _view.UI_SetTrendStatus(_lastCurrent, _current, isExhaust: true, _rampSpeed);
+                _view.UI_AppendStatusInfo("EMERGENCY STOP ACTIVATED");
+
+                // Ждем немного для сброса
+                await Task.Delay(500);
+
+                // Возвращаем в режим управления (закрываем выхлоп)
+                _serial.Send("AC");
+                _serial.Send("AS 0.0");
+                _serial.Send(AlicatCommands.ReadAls);
+
+                _view.UI_AppendStatusInfo("Emergency stop complete - pressure reset to zero");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Emergency Stop error:\n{ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // ====================================================================
+        // HELPERS
+        // ====================================================================
 
         // ====================================================================
         // CLEANUP

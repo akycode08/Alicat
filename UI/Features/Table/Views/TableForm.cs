@@ -207,6 +207,7 @@ namespace Alicat.UI.Features.Table.Views
         }
 
         private double? _lastLoggedPressure = null;
+        private double? _lastLoggedSetpoint = null;
 
         private bool ShouldLogPoint(DataPointModel point)
         {
@@ -216,14 +217,24 @@ namespace Alicat.UI.Features.Table.Views
             if (_lastLoggedPressure == null)
             {
                 _lastLoggedPressure = point.Current;
+                _lastLoggedSetpoint = point.Target;
                 return true;
             }
 
-            double delta = Math.Abs(point.Current - _lastLoggedPressure.Value);
+            // Записываем если изменился setpoint (пользователь изменил давление)
+            if (_lastLoggedSetpoint.HasValue && Math.Abs(point.Target - _lastLoggedSetpoint.Value) > 0.01)
+            {
+                _lastLoggedPressure = point.Current;
+                _lastLoggedSetpoint = point.Target;
+                return true;
+            }
 
+            // Записываем если изменилось текущее давление на величину >= threshold
+            double delta = Math.Abs(point.Current - _lastLoggedPressure.Value);
             if (delta >= threshold)
             {
                 _lastLoggedPressure = point.Current;
+                _lastLoggedSetpoint = point.Target;
                 return true;
             }
 
