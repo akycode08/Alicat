@@ -45,7 +45,8 @@ namespace Alicat
         private readonly DeviceState _state = new();
         private RampController? _ramp;
 
-        private readonly SessionDataStore _dataStore = new();
+        // _dataStore moved to AlicatForm.Presenter.cs to avoid ambiguity
+        // private readonly SessionDataStore _dataStore = new();
 
         private TerminalForm? _terminalForm;
         private GraphForm? _graphForm;

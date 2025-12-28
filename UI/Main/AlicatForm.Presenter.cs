@@ -14,6 +14,9 @@ namespace Alicat
         private MainPresenter? _presenter;
         private readonly SessionDataStore _dataStore = new();
 
+        // Property to access _dataStore from other partial class files
+        internal SessionDataStore DataStore => _dataStore;
+
         // ====================================================================
         // IMainView Implementation - Properties
         // ====================================================================

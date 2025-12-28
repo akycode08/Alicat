@@ -78,7 +78,7 @@ namespace Alicat
             UI_SetSetPoint(_setPoint, _unit);
 
             // Записываем событие в Store
-            _dataStore.RecordEvent(_current, _setPoint, _unit, "TARGET_CHANGED");
+            DataStore.RecordEvent(_current, _setPoint, _unit, "TARGET_CHANGED");
 
             System.Diagnostics.Debug.WriteLine($"TEST: Set target to {randomTarget:F1}");
         }

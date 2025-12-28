@@ -34,9 +34,9 @@ namespace Alicat
             _ramp = new RampController(_serial);
             _serial.Send("ASR");
 
-            if (!_dataStore.IsRunning)
+            if (!DataStore.IsRunning)
             {
-                _dataStore.StartSession();
+                DataStore.StartSession();
             }
 
             // Обновляем статус после подключения (Attach вызывает Connected событие, но обновим явно)
@@ -92,7 +92,7 @@ namespace Alicat
                 _lastCurrent = _current;
 
                 // 👉 ЗАПИСЫВАЕМ В STORE (всегда, независимо от открытых окон)
-                _dataStore.RecordSample(_current, _isExhaust ? 0.0 : _setPoint, _unit);
+                DataStore.RecordSample(_current, _isExhaust ? 0.0 : _setPoint, _unit);
 
                 // 👉 ОБНОВЛЯЕМ ГРАФИК, ЕСЛИ ОКНО ОТКРЫТО
                 if (_graphForm != null && !_graphForm.IsDisposed)
@@ -145,7 +145,7 @@ namespace Alicat
         {
             base.OnFormClosing(e);
             _pollTimer.Stop();
-            _dataStore.EndSession();
+            DataStore.EndSession();
             _serial?.Dispose();
         }
 

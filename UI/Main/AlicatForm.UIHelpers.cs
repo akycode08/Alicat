@@ -147,15 +147,9 @@ namespace Alicat
             else
             {
                 // Calculate ETA: (Target - Current) / Ramp Speed
-
-                if (_rampSpeed > 0.001) // Avoid division by zero
-                {
-                    double eta = diff / _rampSpeed;
-
                 if (rampSpeed > 0.001) // Avoid division by zero
                 {
                     double eta = diff / rampSpeed;
-
                     lblTargetStatus.Text = $"ETA: {eta:F1} s";
                 }
                 else

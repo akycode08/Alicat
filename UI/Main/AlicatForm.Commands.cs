@@ -287,7 +287,7 @@ namespace Alicat
             string fileName = $"session_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.csv";
             string fullPath = System.IO.Path.Combine(folderDialog.SelectedPath, fileName);
 
-            _dataStore.StartSession(fullPath);
+            DataStore.StartSession(fullPath);
 
             MessageBox.Show(
                 $"Session started!\n\nSaving to:\n{fullPath}",
@@ -307,7 +307,7 @@ namespace Alicat
         {
             if (_graphForm == null || _graphForm.IsDisposed)
             {
-                _graphForm = new GraphForm(_dataStore);
+                _graphForm = new GraphForm(DataStore);
                 _graphForm.Show(this);
             }
             else
@@ -326,7 +326,7 @@ namespace Alicat
         {
             if (_tableForm == null || _tableForm.IsDisposed)
             {
-                _tableForm = new TableForm(_dataStore);
+                _tableForm = new TableForm(DataStore);
                 _tableForm.StartPosition = FormStartPosition.CenterParent;
                 _tableForm.Show(this);
             }
