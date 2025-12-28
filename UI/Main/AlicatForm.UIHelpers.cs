@@ -17,7 +17,7 @@ namespace Alicat
         /// <summary>
         /// Обновляет отображение текущего давления в карточке Current Pressure.
         /// </summary>
-        private void RefreshCurrent()
+        public void RefreshCurrent()
         {
             // Используем свойство из IMainView, если доступно, иначе используем локальное поле
             double currentValue = ((IMainView)this).Current;
@@ -97,7 +97,7 @@ namespace Alicat
         /// <summary>
         /// Обновляет статус тренда (растет/падает/стабильно) и статус достижения цели.
         /// </summary>
-        private void UI_SetTrendStatus(double? prev, double now, bool isExhaust, double rampSpeed)
+        public void UI_SetTrendStatus(double? prev, double now, bool isExhaust, double rampSpeed)
         {
             if (isExhaust)
             {

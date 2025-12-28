@@ -3,7 +3,7 @@ using System.Windows.Forms;
 
 namespace Alicat
 {
-    public partial class AlicatForm : Form
+    public partial class AlicatForm
     {
         // ═══════════════════════════════════════════
         // ТЕСТОВЫЙ КОД — удалить после тестирования

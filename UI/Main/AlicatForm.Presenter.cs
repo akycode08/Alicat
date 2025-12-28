@@ -9,7 +9,7 @@ namespace Alicat
     /// Partial class AlicatForm: интеграция с MainPresenter.
     /// Этот файл содержит связь между View (AlicatForm) и Presenter (MainPresenter).
     /// </summary>
-    public partial class AlicatForm : Form, IMainView
+    public partial class AlicatForm
     {
         private MainPresenter? _presenter;
         private readonly SessionDataStore _dataStore = new();

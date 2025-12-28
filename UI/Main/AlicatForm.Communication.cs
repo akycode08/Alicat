@@ -5,7 +5,7 @@ using Alicat.Services.Controllers;
 
 namespace Alicat
 {
-    public partial class AlicatForm : Form
+    public partial class AlicatForm
     {
         private void btnCommunication_Click(object? sender, EventArgs e)
         {

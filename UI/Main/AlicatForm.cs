@@ -11,6 +11,7 @@ using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Alicat.Services.Data;
+using Alicat.Presentation.Presenters;
 using Timer = System.Windows.Forms.Timer;
 
 namespace Alicat
@@ -19,7 +20,7 @@ namespace Alicat
     /// Главная форма приложения Alicat Controller.
     /// Partial class: основная логика, поля, конструктор.
     /// </summary>
-    public partial class AlicatForm : Form
+    public partial class AlicatForm : Form, IMainView
     {
         // ====================================================================
         // ПОЛЯ
@@ -286,7 +287,7 @@ namespace Alicat
         /// <summary>
         /// Валидация целевого значения давления против максимального.
         /// </summary>
-        private void ValidateTargetAgainstMax()
+        public void ValidateTargetAgainstMax()
         {
             var text = txtTargetInput.Text?.Trim();
             bool parsed = double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double targetVal);
@@ -306,7 +307,7 @@ namespace Alicat
         /// Валидация increment против максимального лимита.
         /// Вызывается из Communication.cs при получении данных.
         /// </summary>
-        private void ValidateIncrementAgainstMax()
+        public void ValidateIncrementAgainstMax()
         {
             bool overLimit = _currentIncrement > _maxIncrementLimit;
 
@@ -334,7 +335,7 @@ namespace Alicat
             }
         }
 
-        private void UpdateIncrementButtons()
+        public void UpdateIncrementButtons()
         {
             btnIncrease.Text = $"▲ Increase (+{_currentIncrement:F1} {_unit})";
             btnDecrease.Text = $"▼ Decrease (-{_currentIncrement:F1} {_unit})";
