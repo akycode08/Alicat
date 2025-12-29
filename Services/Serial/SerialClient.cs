@@ -14,6 +14,24 @@ namespace Alicat.Services.Serial
         public event EventHandler? Disconnected;
         public event EventHandler<string>? LineReceived;
 
+        // Port information
+        public string PortName => _port.PortName;
+        public int BaudRate => _port.BaudRate;
+        public bool IsConnected
+        {
+            get
+            {
+                try
+                {
+                    return _port != null && _port.IsOpen;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
         public SerialClient(SerialPort existingOpenPort)
         {
             _port = existingOpenPort ?? throw new ArgumentNullException(nameof(existingOpenPort));

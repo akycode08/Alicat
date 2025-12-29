@@ -46,6 +46,14 @@
         "net8.0-windows7.0": {
           "targetAlias": "net8.0-windows",
           "dependencies": {
+            "LiveChartsCore": {
+              "target": "Package",
+              "version": "[2.0.0-beta.830, )"
+            },
+            "LiveChartsCore.SkiaSharpView.WinForms": {
+              "target": "Package",
+              "version": "[2.0.0-beta.830, )"
+            },
             "System.IO.Ports": {
               "target": "Package",
               "version": "[9.0.10, )"

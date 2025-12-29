@@ -162,7 +162,7 @@ namespace Alicat
         // Status Info panel
         private Panel panelStatusInfo;
         private Label lblStatusInfoTitle;
-        private Label lblStatusInfoText;
+        private RichTextBox lblStatusInfoText;
 
         // Spacers
         private Panel spacerContentCol;
@@ -297,7 +297,7 @@ namespace Alicat
             lblSystemSettingsTitle = new Label();
             spacerRightGap = new Panel();
             panelStatusInfo = new Panel();
-            lblStatusInfoText = new Label();
+            lblStatusInfoText = new RichTextBox();
             lblStatusInfoTitle = new Label();
             menuMain.SuspendLayout();
             rootLayout.SuspendLayout();
@@ -347,7 +347,7 @@ namespace Alicat
             // 
             // menuFile
             // 
-            menuFile.DropDownItems.AddRange(new ToolStripItem[] { menuFileNewSession, menuFileSeparator1, menuFileExit });
+            menuFile.DropDownItems.AddRange(new ToolStripItem[] { menuFileNewSession, menuFileTestMode, menuFileSeparator1, menuFileExit });
             menuFile.Name = "menuFile";
             menuFile.Size = new Size(37, 23);
             menuFile.Text = "File";
@@ -364,7 +364,7 @@ namespace Alicat
             menuFileTestMode.Name = "menuFileTestMode";
             menuFileTestMode.Size = new Size(156, 22);
             menuFileTestMode.Text = "Start Test Mode";
-            menuFileTestMode.Visible = false; // Скрыто - только для разработки
+            menuFileTestMode.Visible = true; // Включено для тестирования
             // 
             // menuFileSeparator1
             // 
@@ -1619,6 +1619,9 @@ namespace Alicat
             lblStatusInfoText.Size = new Size(366, 231);
             lblStatusInfoText.TabIndex = 0;
             lblStatusInfoText.Text = "• Controller is running\r\n• Pressure increasing\r\n• Systems operational\r\n• Last update: 0.5s ago";
+            lblStatusInfoText.ReadOnly = true;
+            lblStatusInfoText.BorderStyle = BorderStyle.None;
+            lblStatusInfoText.BackColor = Color.FromArgb(227, 242, 253);
             // 
             // lblStatusInfoTitle
             // 

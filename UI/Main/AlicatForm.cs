@@ -36,6 +36,7 @@ namespace Alicat
 
         private SerialClient? _serial;
         private readonly Timer _pollTimer = new() { Interval = 500 };
+        private bool _isWaitingForResponse = false; // Защита от переполнения при малых интервалах
 
         private double _maxPressure = 200.0;
         private double _minPressure = 0.0;
@@ -107,8 +108,11 @@ namespace Alicat
             // Pause останавливает только рампу, но не мониторинг
             _pollTimer.Tick += (_, __) =>
             {
-                if (_serial != null)
+                // Не отправляем новый запрос, пока не получен ответ на предыдущий
+                // Это защищает от переполнения при малых интервалах (например, 10мс)
+                if (_serial != null && !_isWaitingForResponse)
                 {
+                    _isWaitingForResponse = true;
                     _serial.Send(AlicatCommands.ReadAls);
                 }
             };
@@ -140,11 +144,35 @@ namespace Alicat
             _minIncrementLimit = FormOptions.AppOptions.Current.MinIncrement ?? 0.1;
 
             // Update Ramp Speed from Preferences
-            var rampSpeed = FormOptions.AppOptions.Current.PressureRamp;
-            if (rampSpeed.HasValue && rampSpeed.Value > 0.001)
+            // НЕ перезаписываем значение, если устройство подключено и уже получило значение от устройства
+            // Значение должно обновляться только от устройства через ASR
+            // Если устройство не подключено, используем значение из Preferences для отображения
+            if (_serial == null || !_serial.IsConnected || _rampSpeed < 0.001)
             {
-                _rampSpeed = rampSpeed.Value;
-                UI_SetRampSpeedUnits($"{TrimZeros(_rampSpeed)} {_unit}/s");
+                var rampSpeed = FormOptions.AppOptions.Current.PressureRamp;
+                if (rampSpeed.HasValue && rampSpeed.Value > 0.001)
+                {
+                    _rampSpeed = rampSpeed.Value;
+                    UI_SetRampSpeedUnits($"{TrimZeros(_rampSpeed)} {_unit}/s");
+                }
+            }
+            else
+            {
+                // Если устройство подключено и значение уже есть, просто обновляем отображение с текущими единицами
+                if (_rampSpeed > 0.001)
+                {
+                    UI_SetRampSpeedUnits($"{TrimZeros(_rampSpeed)} {_unit}/s");
+                }
+            }
+
+            // Update Polling Frequency from Preferences
+            var pollingFreq = FormOptions.AppOptions.Current.PollingFrequency ?? 500;
+            bool wasRunning = _pollTimer.Enabled;
+            _pollTimer.Stop();
+            _pollTimer.Interval = pollingFreq;
+            if (wasRunning)
+            {
+                _pollTimer.Start();
             }
 
             ValidateTargetAgainstMax();
@@ -314,23 +342,24 @@ namespace Alicat
         // ====================================================================
 
         /// <summary>
-        /// Валидация целевого значения давления против максимального и минимального.
+        /// Валидация целевого значения давления против максимального.
+        /// Показывает красный цвет только если значение превышает максимум.
+        /// Проверка минимума выполняется только при нажатии кнопки "Go to Target".
         /// </summary>
         public void ValidateTargetAgainstMax()
         {
             var text = txtTargetInput.Text?.Trim();
             bool parsed = double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double targetVal);
+            // Показываем красный цвет только при превышении максимума
             bool over = parsed && targetVal > _maxPressure;
-            bool under = parsed && targetVal < _minPressure;
-            bool invalid = over || under;
 
             if (isDarkTheme)
             {
-                txtTargetInput.BackColor = invalid ? System.Drawing.Color.FromArgb(60, 20, 20) : darkBgWindow;
+                txtTargetInput.BackColor = over ? System.Drawing.Color.FromArgb(60, 20, 20) : darkBgWindow;
             }
             else
             {
-                txtTargetInput.BackColor = invalid ? System.Drawing.Color.MistyRose : lightBgWindow;
+                txtTargetInput.BackColor = over ? System.Drawing.Color.MistyRose : lightBgWindow;
             }
         }
 
@@ -356,6 +385,36 @@ namespace Alicat
             // Опционально: можно отключать кнопки, если превышен лимит
             // btnIncrease.Enabled = !overLimit;
             // btnDecrease.Enabled = !overLimit;
+        }
+
+        /// <summary>
+        /// Обновляет текст "Last update" на основе интервала таймера опроса.
+        /// </summary>
+        private void UpdateLastUpdateText()
+        {
+            int intervalMs = _pollTimer.Interval;
+            string text;
+            
+            if (intervalMs < 1000)
+            {
+                // Меньше секунды - показываем в миллисекундах
+                double seconds = intervalMs / 1000.0;
+                text = $"Last update: {seconds:F1}s ago";
+            }
+            else if (intervalMs < 60000)
+            {
+                // Меньше минуты - показываем в секундах
+                double seconds = intervalMs / 1000.0;
+                text = $"Last update: {seconds:F0}s ago";
+            }
+            else
+            {
+                // Больше минуты - показываем в минутах
+                double minutes = intervalMs / 60000.0;
+                text = $"Last update: {minutes:F1}m ago";
+            }
+            
+            UI_UpdateLastUpdate(text);
         }
 
         private void UpdateIncrementFromText()

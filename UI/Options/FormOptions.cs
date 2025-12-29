@@ -19,6 +19,7 @@ namespace Alicat
                 public double? MinPressure;           // e.g. 0
                 public double? MaxIncrement;          // e.g. 20 (Maximum Step)
                 public double? MinIncrement;          // e.g. 0.1 (Minimum Step)
+                public int? PollingFrequency;         // Polling frequency in milliseconds (10, 50, 100, 250, 500, 1000, 2000, 5000)
 
                 public Model Clone() => new Model
                 {
@@ -28,7 +29,8 @@ namespace Alicat
                     MaxPressure = this.MaxPressure,
                     MinPressure = this.MinPressure,
                     MaxIncrement = this.MaxIncrement,
-                    MinIncrement = this.MinIncrement
+                    MinIncrement = this.MinIncrement,
+                    PollingFrequency = this.PollingFrequency
                 };
             }
 
@@ -48,7 +50,8 @@ namespace Alicat
                 MaxPressure = 200,
                 MinPressure = 0,
                 MaxIncrement = 20,
-                MinIncrement = 0.1
+                MinIncrement = 0.1,
+                PollingFrequency = 500 // Default 500ms
             };
         }
 
@@ -57,6 +60,9 @@ namespace Alicat
 
         // Событие для уведомления о применении настроек (без закрытия диалога)
         public event EventHandler? Applied;
+        
+        // Событие для уведомления о восстановлении настроек по умолчанию
+        public event EventHandler? RestoredDefaults;
 
         public FormOptions()
         {
@@ -81,6 +87,8 @@ namespace Alicat
             {
                 if (TryApplyFromUi())
                 {
+                    // Вызываем событие для обновления UI в главной форме перед закрытием
+                    Applied?.Invoke(this, EventArgs.Empty);
                     this.DialogResult = DialogResult.OK;
                     this.Close();
                 }
@@ -95,6 +103,7 @@ namespace Alicat
                 var d = AppOptions.Defaults();
                 BindModelToUi(d);
                 ClearErrorStyle();
+                RestoredDefaults?.Invoke(this, EventArgs.Empty);
             };
         }
 
@@ -104,6 +113,31 @@ namespace Alicat
             // Выпадающие списки
             SafeSelect(cmbPressureUnits, m.PressureUnits, "PSI");
             SafeSelect(cmbTimeUnits, m.TimeUnits, "s");
+            
+            // Polling Frequency
+            int pollingFreq = m.PollingFrequency ?? 500;
+            int[] intervals = { 10, 50, 100, 250, 500, 1000, 2000, 5000 };
+            int index = Array.IndexOf(intervals, pollingFreq);
+            if (index >= 0)
+            {
+                cmbPollingFrequency.SelectedIndex = index;
+            }
+            else
+            {
+                // Выбираем ближайшее значение
+                int closestIndex = 0;
+                int minDiff = Math.Abs(intervals[0] - pollingFreq);
+                for (int i = 1; i < intervals.Length; i++)
+                {
+                    int diff = Math.Abs(intervals[i] - pollingFreq);
+                    if (diff < minDiff)
+                    {
+                        minDiff = diff;
+                        closestIndex = i;
+                    }
+                }
+                cmbPollingFrequency.SelectedIndex = closestIndex;
+            }
 
             // Числовые поля (пусто, если null)
             txtPressureRamp.Text = m.PressureRamp?.ToString(CultureInfo.InvariantCulture) ?? "";
@@ -127,6 +161,17 @@ namespace Alicat
         {
             ClearErrorStyle();
 
+            // Получаем Polling Frequency из ComboBox
+            int? pollingFreq = null;
+            if (cmbPollingFrequency.SelectedIndex >= 0)
+            {
+                int[] intervals = { 10, 50, 100, 250, 500, 1000, 2000, 5000 };
+                if (cmbPollingFrequency.SelectedIndex < intervals.Length)
+                {
+                    pollingFreq = intervals[cmbPollingFrequency.SelectedIndex];
+                }
+            }
+
             var m = new AppOptions.Model
             {
                 PressureUnits = cmbPressureUnits.SelectedItem?.ToString() ?? "PSI",
@@ -135,7 +180,8 @@ namespace Alicat
                 MaxPressure = ParseNullableDouble(txtMaxPressure.Text),
                 MinPressure = ParseNullableDouble(txtMinPressure.Text),
                 MaxIncrement = ParseNullableDouble(txtMaxIncrement.Text),
-                MinIncrement = ParseNullableDouble(txtMinIncrement.Text)
+                MinIncrement = ParseNullableDouble(txtMinIncrement.Text),
+                PollingFrequency = pollingFreq
             };
 
             // Валидация: числа, если введены, должны быть ≥ 0

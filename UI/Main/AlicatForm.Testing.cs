@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Globalization;
+using System.Linq;
 using System.Windows.Forms;
+using Alicat.Presentation.Presenters;
+using Alicat.Services.Data;
 
 namespace Alicat
 {
@@ -28,7 +32,7 @@ namespace Alicat
         private void StartTestMode()
         {
             _testRandom = new Random();
-            _testTimer = new System.Windows.Forms.Timer { Interval = 120000 }; // 30 сек
+            _testTimer = new System.Windows.Forms.Timer { Interval = 120000 }; // 2 минуты (120 секунд)
             _testTimer.Tick += TestTimer_Tick;
             _testTimer.Start();
             _isTestRunning = true;
@@ -37,7 +41,7 @@ namespace Alicat
             menuFileTestMode.Text = "Stop Test Mode";
 
             MessageBox.Show(
-                "Test mode started!\n\nRandom target (10-120) every 30 seconds.",
+                "Test mode started!\n\nRandom target (0-1700) every 2 minutes.",
                 "Test Mode",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information
@@ -64,23 +68,50 @@ namespace Alicat
 
         private void TestTimer_Tick(object? sender, EventArgs e)
         {
-            if (_serial == null) return;
-            if (_testRandom == null) return;
+            if (_testRandom == null)
+            {
+                System.Diagnostics.Debug.WriteLine("TEST: _testRandom is null!");
+                return;
+            }
 
-            // Случайное значение от 10 до 120
-            double randomTarget = _testRandom.Next(10, 121);
+            // Случайное значение от 0 до 1700
+            double randomTarget = _testRandom.Next(0, 1701);
 
-            // Отправляем команду на устройство
-            _serial.Send($"AS {randomTarget:F1}");
-            _setPoint = randomTarget;
+            System.Diagnostics.Debug.WriteLine($"TEST: Timer tick - setting target to {randomTarget:F1}");
 
-            // Обновляем UI
-            UI_SetSetPoint(_setPoint, _unit);
-
-            // Записываем событие в Store
-            DataStore.RecordEvent(_current, _setPoint, _unit, "TARGET_CHANGED");
-
-            System.Diagnostics.Debug.WriteLine($"TEST: Set target to {randomTarget:F1}");
+            // Используем Presenter для установки целевого давления без подтверждения
+            // _presenter доступен, так как это partial class
+            if (_presenter != null)
+            {
+                try
+                {
+                    // Используем SetTargetSilent для установки без подтверждения
+                    _presenter.SetTargetSilent(randomTarget);
+                    
+                    BeginInvoke(new Action(() =>
+                    {
+                        UI_AppendStatusInfo($"TEST: Target set to {randomTarget:F1} {_unit}");
+                    }));
+                    
+                    System.Diagnostics.Debug.WriteLine($"TEST: Successfully set target via Presenter: {randomTarget:F1}");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"TEST: Error setting target: {ex.Message}");
+                    BeginInvoke(new Action(() =>
+                    {
+                        UI_AppendStatusInfo($"TEST ERROR: {ex.Message}");
+                    }));
+                }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("TEST: _presenter is null - cannot set target");
+                BeginInvoke(new Action(() =>
+                {
+                    UI_AppendStatusInfo("TEST ERROR: Presenter not available");
+                }));
+            }
         }
     }
 }

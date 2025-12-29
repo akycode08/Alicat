@@ -28,6 +28,7 @@ namespace Alicat
                     _serial = null;
                     _ramp = null;
                     _pollTimer.Stop();
+                    _isWaitingForResponse = false; // Сбрасываем флаг при отключении
                     UI_UpdateConnectionStatus(false);
                 }
                 return;
@@ -78,6 +79,8 @@ namespace Alicat
             if (TryParseAsr(line, out var ramp, out var rampUnits))
             {
                 _rampSpeed = ramp; // Сохраняем значение скорости рампы
+                // Сбрасываем флаг ожидания ответа
+                _isWaitingForResponse = false;
                 BeginInvoke(new Action(() =>
                 {
                     UI_SetRampSpeedUnits($"{TrimZeros(ramp)} {rampUnits}");
@@ -89,11 +92,19 @@ namespace Alicat
 
             // 2) Если это не ASR — пробуем ALS
             if (!TryParseAls(line, out var cur, out var sp, out var unit))
+            {
+                // Если это не ASR и не ALS, сбрасываем флаг ожидания
+                // (на случай, если получен другой ответ)
+                _isWaitingForResponse = false;
                 return;
+            }
 
             _current = cur;
             if (!_isExhaust) _setPoint = sp;
             if (!string.IsNullOrWhiteSpace(unit)) _unit = unit!;
+
+            // Сбрасываем флаг ожидания ответа
+            _isWaitingForResponse = false;
 
             BeginInvoke(new Action(() =>
             {
@@ -107,6 +118,9 @@ namespace Alicat
 
                 _state.Update(_current, _setPoint, _unit, _isExhaust);
                 _lastCurrent = _current;
+
+                // Обновляем "Last update" на основе интервала таймера
+                UpdateLastUpdateText();
 
                 // 👉 ЗАПИСЫВАЕМ В STORE (всегда, независимо от открытых окон)
                 DataStore.RecordSample(_current, _isExhaust ? 0.0 : _setPoint, _unit);

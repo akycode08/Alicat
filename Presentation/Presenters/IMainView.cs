@@ -14,6 +14,7 @@ namespace Alicat.Presentation.Presenters
         void UI_SetRampSpeedUnits(string units);
         void UI_SetSetPoint(double sp, string? units = null);
         void UI_UpdateConnectionStatus(bool connected, string? portName = null);
+        void UI_UpdateLastUpdate(string text);
         void UI_SetTrendStatus(double? prev, double now, bool isExhaust, double rampSpeed);
         void RefreshCurrent();
         void UI_AppendStatusInfo(string line);
@@ -45,6 +46,9 @@ namespace Alicat.Presentation.Presenters
 
         // Apply options to UI (for internal View fields like _minPressure, _minIncrementLimit)
         void ApplyOptionsToUi();
+
+        // Theme information
+        bool IsDarkTheme { get; }
     }
 }
 

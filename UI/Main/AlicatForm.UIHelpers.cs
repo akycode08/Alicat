@@ -176,12 +176,20 @@ namespace Alicat
                     ? $"Connected ({portName})"
                     : "Connected (COM3)";
                 lblConnectionStatus.ForeColor = isDarkTheme ? darkTextSecondary : lightTextSecondary;
+                
+                // Возвращаем нормальные цвета для значений
+                lblCurrentValue.ForeColor = isDarkTheme ? darkAccentBlue : lightAccentBlue;
+                lblTargetValue.ForeColor = isDarkTheme ? darkAccentGold : lightAccentGold;
             }
             else
             {
                 lblStatusDot.ForeColor = isDarkTheme ? darkStatusDotDisconnected : lightStatusDotDisconnected;
                 lblConnectionStatus.Text = "Disconnected";
                 lblConnectionStatus.ForeColor = isDarkTheme ? darkTextMuted : lightTextMuted;
+                
+                // Устанавливаем красный цвет для значений при отключении
+                lblCurrentValue.ForeColor = isDarkTheme ? darkValueDisconnected : lightValueDisconnected;
+                lblTargetValue.ForeColor = isDarkTheme ? darkValueDisconnected : lightValueDisconnected;
                 
                 // Обновляем rate с правильными единицами при отключении
                 UI_SetTrendStatus(null, 0.0, false, 0.0);
@@ -218,6 +226,7 @@ namespace Alicat
 
         /// <summary>
         /// Добавляет строку в Status Information (сохраняя предыдущие).
+        /// Последняя строка выделяется жирным шрифтом.
         /// </summary>
         public void UI_AppendStatusInfo(string line)
         {
@@ -226,9 +235,29 @@ namespace Alicat
 
             // Keep last 3 lines + new one
             var keep = lines.Length > 3 ? lines[^3..] : lines;
-            var newText = string.Join("\n", keep) + "\n• " + line;
-
-            lblStatusInfoText.Text = newText.TrimStart('\n', '\r');
+            
+            // Очищаем и добавляем текст с форматированием
+            lblStatusInfoText.Clear();
+            
+            // Добавляем предыдущие строки обычным шрифтом
+            foreach (var oldLine in keep)
+            {
+                if (!string.IsNullOrWhiteSpace(oldLine))
+                {
+                    lblStatusInfoText.SelectionFont = new Font("Segoe UI", 9F, FontStyle.Regular);
+                    lblStatusInfoText.SelectionColor = isDarkTheme ? darkTextSecondary : lightTextSecondary;
+                    lblStatusInfoText.AppendText(oldLine + "\n");
+                }
+            }
+            
+            // Добавляем новую строку жирным шрифтом
+            lblStatusInfoText.SelectionFont = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblStatusInfoText.SelectionColor = isDarkTheme ? darkTextPrimary : lightTextPrimary;
+            lblStatusInfoText.AppendText("• " + line);
+            
+            // Прокручиваем вниз
+            lblStatusInfoText.SelectionStart = lblStatusInfoText.Text.Length;
+            lblStatusInfoText.ScrollToCaret();
         }
     }
 }

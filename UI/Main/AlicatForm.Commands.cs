@@ -6,6 +6,7 @@ using Alicat.UI.Features.Graph.Views;
 using Alicat.UI.Features.Table.Views;
 using Alicat.UI.Features.Terminal.Views;
 using System.Threading.Tasks;
+using Alicat.Presentation.Presenters;
 
 namespace Alicat
 {
@@ -91,22 +92,24 @@ namespace Alicat
                 return;
             }
 
+            if (targetValue < _minPressure)
+            {
+                System.Media.SystemSounds.Beep.Play();
+                MessageBox.Show(this,
+                    $"Target value must not be less than Min Pressure ({_minPressure.ToString("0.###", CultureInfo.InvariantCulture)} PSI).",
+                    "Limit exceeded",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             if (targetValue > _maxPressure)
             {
                 System.Media.SystemSounds.Beep.Play();
                 MessageBox.Show(this,
-                    $"Target value exceeds Max Pressure ({_maxPressure.ToString("0.###", CultureInfo.InvariantCulture)} PSI).",
+                    $"Target value must not exceed Max Pressure ({_maxPressure.ToString("0.###", CultureInfo.InvariantCulture)} PSI).",
                     "Limit exceeded",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 ValidateTargetAgainstMax();
-                return;
-            }
-
-            const double MIN = 0.0, MAX_SOFT = 1000.0;
-            if (targetValue < MIN || targetValue > MAX_SOFT)
-            {
-                MessageBox.Show($"Target value must be between {MIN} and {MAX_SOFT}.", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -230,8 +233,22 @@ namespace Alicat
         {
             using var dlg = new FormOptions();
             dlg.StartPosition = FormStartPosition.CenterParent;
+            
+            // Подписываемся на событие Applied для обновления при нажатии "Apply"
+            dlg.Applied += (_, __) =>
+            {
+                ApplyOptionsToUi();
+                var ramp = FormOptions.AppOptions.Current.PressureRamp;
+                _ramp?.TryApply(ramp);
+                if (_serial != null && ramp is double r)
+                {
+                    _serial.Send($"SR {r.ToString("G", CultureInfo.InvariantCulture)}");
+                }
+            };
+            
             dlg.ShowDialog(this);
 
+            // Применяем настройки после закрытия диалога (на случай, если нажали OK)
             ApplyOptionsToUi();
 
             var ramp = FormOptions.AppOptions.Current.PressureRamp;
@@ -279,6 +296,8 @@ namespace Alicat
             if (_graphForm == null || _graphForm.IsDisposed)
             {
                 _graphForm = new GraphForm(DataStore);
+                // Устанавливаем обработчик для автоматического сохранения настроек при изменении thresholds
+                _graphForm.SetThresholdsChangedHandler(() => ((IMainView)this).SaveSettingsIfAutoSaveEnabled());
                 _graphForm.Show(this);
             }
             else

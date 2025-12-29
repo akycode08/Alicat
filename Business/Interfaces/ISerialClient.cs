@@ -22,6 +22,11 @@ namespace Alicat.Business.Interfaces
         event EventHandler<string>? LineReceived;
 
         /// <summary>
+        /// Проверяет, подключено ли устройство (порт открыт)
+        /// </summary>
+        bool IsConnected { get; }
+
+        /// <summary>
         /// Подключиться к устройству
         /// </summary>
         void Attach();

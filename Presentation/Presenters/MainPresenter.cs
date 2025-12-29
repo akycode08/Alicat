@@ -40,10 +40,13 @@ namespace Alicat.Presentation.Presenters
         private ISerialClient? _serial;
         private IRampController? _ramp;
         private readonly Timer _pollTimer = new() { Interval = 500 };
+        private bool _isWaitingForResponse = false; // Защита от переполнения при малых интервалах
 
         // Settings
         private double _maxPressure = 200.0;
+        private double _minPressure = 0.0;
         private double _maxIncrementLimit = 20.0;
+        private double _minIncrementLimit = 0.1;
         private double _currentIncrement = 5.0;
 
         // State
@@ -62,8 +65,11 @@ namespace Alicat.Presentation.Presenters
             // Setup polling timer
             _pollTimer.Tick += (_, __) =>
             {
-                if (_serial != null)
+                // Не отправляем новый запрос, пока не получен ответ на предыдущий
+                // Это защищает от переполнения при малых интервалах (например, 10мс)
+                if (_serial != null && !_isWaitingForResponse)
                 {
+                    _isWaitingForResponse = true;
                     _serial.Send(AlicatCommands.ReadAls);
                 }
             };
@@ -127,23 +133,52 @@ namespace Alicat.Presentation.Presenters
             {
                 _pollTimer.Start();
                 _view.UI_UpdateConnectionStatus(true, opened.PortName);
+                
+                // Update GraphForm connection info if open
+                if (_graphForm != null && !_graphForm.IsDisposed && _serial is SerialClient serialClient)
+                {
+                    _graphForm.SetConnectionInfo(serialClient.PortName, serialClient.BaudRate);
+                }
             }));
             _serial.Disconnected += (_, __) => _view.BeginInvoke(new Action(() =>
             {
                 _pollTimer.Stop();
                 _view.UI_UpdateConnectionStatus(false);
+                
+                // Update GraphForm connection info if open
+                if (_graphForm != null && !_graphForm.IsDisposed)
+                {
+                    _graphForm.SetConnectionInfo(null, null);
+                }
             }));
 
-            _serial.Attach();
-            _ramp = new RampController(_serial);
-            _serial.Send("ASR");
-
-            if (!_dataStore.IsRunning)
+            try
             {
-                _dataStore.StartSession();
-            }
+                _serial.Attach();
+                _ramp = new RampController(_serial);
+                _serial.Send("ASR");
 
-            _view.UI_UpdateConnectionStatus(true, opened.PortName);
+                if (!_dataStore.IsRunning)
+                {
+                    _dataStore.StartSession();
+                }
+
+                _view.UI_UpdateConnectionStatus(true, opened.PortName);
+                _view.UI_AppendStatusInfo($"Device connected to {opened.PortName}");
+                
+                // Update GraphForm connection info if open
+                if (_graphForm != null && !_graphForm.IsDisposed)
+                {
+                    _graphForm.SetConnectionInfo(opened.PortName, opened.BaudRate);
+                }
+            }
+            catch (Exception ex)
+            {
+                _view.UI_AppendStatusInfo($"Connection failed: {ex.Message}");
+                _view.UI_UpdateConnectionStatus(false);
+                MessageBox.Show($"Failed to connect: {ex.Message}", "Connection Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         // ====================================================================
@@ -167,6 +202,8 @@ namespace Alicat.Presentation.Presenters
             if (TryParseAsr(line, out var ramp, out var rampUnits))
             {
                 _rampSpeed = ramp;
+                // Сбрасываем флаг ожидания ответа
+                _isWaitingForResponse = false;
                 _view.BeginInvoke(new Action(() =>
                 {
                     _view.UI_SetRampSpeedUnits($"{TrimZeros(ramp)} {rampUnits}");
@@ -176,11 +213,19 @@ namespace Alicat.Presentation.Presenters
 
             // 2) Try to parse ALS
             if (!TryParseAls(line, out var cur, out var sp, out var unit))
+            {
+                // Если это не ASR и не ALS, сбрасываем флаг ожидания
+                // (на случай, если получен другой ответ)
+                _isWaitingForResponse = false;
                 return;
+            }
 
             _current = cur;
             if (!_isExhaust) _setPoint = sp;
             if (!string.IsNullOrWhiteSpace(unit)) _unit = unit!;
+
+            // Сбрасываем флаг ожидания ответа
+            _isWaitingForResponse = false;
 
             _view.BeginInvoke(new Action(() =>
             {
@@ -200,6 +245,9 @@ namespace Alicat.Presentation.Presenters
 
                 _state.Update(_current, _setPoint, _unit, _isExhaust);
                 _lastCurrent = _current;
+
+                // Обновляем "Last update" на основе интервала таймера
+                UpdateLastUpdateText();
 
                 // Record to store
                 _dataStore.RecordSample(_current, _isExhaust ? 0.0 : _setPoint, _unit);
@@ -359,34 +407,27 @@ namespace Alicat.Presentation.Presenters
                 return;
             }
 
-            var maxPressure = FormOptions.AppOptions.Current.MaxPressure ?? 200.0;
-            var minPressure = FormOptions.AppOptions.Current.MinPressure ?? 0.0;
-
-            if (targetValue > maxPressure)
+            // Проверка на превышение Max Pressure
+            if (targetValue > _maxPressure)
             {
                 System.Media.SystemSounds.Beep.Play();
                 MessageBox.Show(
-                    $"Target value exceeds Max Pressure ({maxPressure.ToString("0.###", CultureInfo.InvariantCulture)} {_unit}).",
+                    $"Target value exceeds Max Pressure ({_maxPressure.ToString("0.###", CultureInfo.InvariantCulture)} {_unit}).",
                     "Limit exceeded",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                _view.ValidateTargetAgainstMax();
                 return;
             }
 
-            if (targetValue < minPressure)
+            // Проверка на значение ниже Min Pressure
+            if (targetValue < _minPressure)
             {
                 System.Media.SystemSounds.Beep.Play();
                 MessageBox.Show(
-                    $"Target value is below Min Pressure ({minPressure.ToString("0.###", CultureInfo.InvariantCulture)} {_unit}).",
+                    $"Target value is below Min Pressure ({_minPressure.ToString("0.###", CultureInfo.InvariantCulture)} {_unit}).",
                     "Limit exceeded",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            const double MAX_SOFT = 1000.0;
-            if (targetValue > MAX_SOFT)
-            {
-                MessageBox.Show($"Target value must not exceed {MAX_SOFT}.", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _view.ValidateTargetAgainstMax();
                 return;
             }
 
@@ -400,11 +441,14 @@ namespace Alicat.Presentation.Presenters
 
             try
             {
-                if (targetValue > 0.05)
+                // Если выхлоп открыт (purge режим), закрываем его перед установкой давления
+                if (_isExhaust)
                 {
                     _serial.Send("AC");
                     _isExhaust = false;
                     _lastCurrent = null;
+                    _view.UI_SetTrendStatus(_lastCurrent, _current, isExhaust: false, _rampSpeed);
+                    _view.UI_AppendStatusInfo("Exhaust closed - returning to control mode");
                 }
 
                 _serial.Send($"AS {targetValue:F1}");
@@ -419,6 +463,7 @@ namespace Alicat.Presentation.Presenters
             }
             catch (Exception ex)
             {
+                _view.UI_AppendStatusInfo($"Command failed: GoToTarget - {ex.Message}");
                 MessageBox.Show("Failed to send command:\n" + ex.Message, "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -435,12 +480,28 @@ namespace Alicat.Presentation.Presenters
 
             try
             {
-                _serial.Send($"AS{_current:F2}");
-                _setPoint = _current;
-                _view.UI_SetSetPoint(_current, _unit);
-
-                _isPaused = true;
-                _view.UI_AppendStatusInfo($"Ramp paused - setpoint set to current ({_current:F2} {_unit}). Polling continues.");
+                // Toggle pause state
+                if (_isPaused)
+                {
+                    // Resume - restore previous setpoint or use current target
+                    _isPaused = false;
+                    _view.UI_AppendStatusInfo("Ramp resumed");
+                }
+                else
+                {
+                    // Pause - set setpoint to current
+                    _serial.Send($"AS{_current:F2}");
+                    _setPoint = _current;
+                    _view.UI_SetSetPoint(_current, _unit);
+                    _isPaused = true;
+                    _view.UI_AppendStatusInfo($"Ramp paused - setpoint set to current ({_current:F2} {_unit}). Polling continues.");
+                }
+                
+                // Update GraphForm pause state
+                if (_graphForm != null && !_graphForm.IsDisposed)
+                {
+                    _graphForm.UpdatePauseState(_isPaused);
+                }
             }
             catch (Exception ex)
             {
@@ -449,19 +510,19 @@ namespace Alicat.Presentation.Presenters
             }
         }
 
-        public async Task Purge()
+        public Task Purge()
         {
             if (_serial is null)
             {
                 MessageBox.Show("No connection to device.", "Purge",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                return Task.CompletedTask;
             }
 
             var ask = MessageBox.Show("Open exhaust and hold?",
                                       "Confirm purge",
                                       MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-            if (ask != DialogResult.Yes) return;
+            if (ask != DialogResult.Yes) return Task.CompletedTask;
 
             try
             {
@@ -469,22 +530,22 @@ namespace Alicat.Presentation.Presenters
                 _isExhaust = true;
 
                 _view.UI_SetTrendStatus(_lastCurrent, _current, isExhaust: true, _rampSpeed);
-                _view.UI_AppendStatusInfo("Purge started");
+                _view.UI_AppendStatusInfo("Purge started - exhaust open");
 
+                // Устанавливаем setpoint на устройстве в 0.0
+                _serial.Send("AS 0.0");
                 _setPoint = 0.0;
                 _view.UI_SetSetPoint(_setPoint, _unit);
 
-                await Task.Delay(400);
-                _serial.Send("AC");
                 _serial.Send(AlicatCommands.ReadAls);
-
-                _view.UI_AppendStatusInfo("Purge complete");
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Purge error: {ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+
+            return Task.CompletedTask;
         }
 
         public void Increase()
@@ -502,12 +563,26 @@ namespace Alicat.Presentation.Presenters
             }
 
             SendSetPoint(next);
+            _view.UI_AppendStatusInfo($"Pressure increased by {_currentIncrement:F1} {_unit}");
         }
 
         public void Decrease()
         {
-            var next = Math.Max(0, _setPoint - _currentIncrement);
+            var next = _setPoint - _currentIncrement;
+            
+            if (next < _minPressure)
+            {
+                System.Media.SystemSounds.Beep.Play();
+                MessageBox.Show(
+                    $"Cannot go below Min Pressure ({_minPressure.ToString("0.###", CultureInfo.InvariantCulture)} {_unit}).",
+                    "Limit exceeded",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
             SendSetPoint(next);
+            _view.UI_AppendStatusInfo($"Pressure decreased by {_currentIncrement:F1} {_unit}");
         }
 
         private void SendSetPoint(double sp)
@@ -517,15 +592,72 @@ namespace Alicat.Presentation.Presenters
 
             if (_serial is null) return;
 
-            if (sp > 0.05)
+            // Если выхлоп открыт (purge режим), закрываем его перед установкой давления
+            if (_isExhaust)
             {
                 _serial.Send("AC");
                 _isExhaust = false;
                 _lastCurrent = null;
+                _view.UI_SetTrendStatus(_lastCurrent, _current, isExhaust: false, _rampSpeed);
+                _view.UI_AppendStatusInfo("Exhaust closed - returning to control mode");
             }
 
-            _serial.Send($"AS {sp.ToString("F2", CultureInfo.InvariantCulture)}");
-            _serial.Send(AlicatCommands.ReadAls);
+            try
+            {
+                _serial.Send($"AS {sp.ToString("F2", CultureInfo.InvariantCulture)}");
+                _serial.Send(AlicatCommands.ReadAls);
+            }
+            catch (Exception ex)
+            {
+                _view.UI_AppendStatusInfo($"Command failed: AS {sp:F2} - {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Устанавливает целевое давление без подтверждения (для тестового режима)
+        /// </summary>
+        public void SetTargetSilent(double targetValue)
+        {
+            if (_serial == null)
+            {
+                throw new InvalidOperationException("Device is not connected.");
+            }
+
+            // Проверка на превышение Max Pressure (только предупреждение, не блокируем)
+            if (targetValue > _maxPressure)
+            {
+                Debug.WriteLine($"TEST: Target value {targetValue} exceeds Max Pressure {_maxPressure}");
+            }
+
+            // Проверка на значение ниже Min Pressure (только предупреждение, не блокируем)
+            if (targetValue < _minPressure)
+            {
+                Debug.WriteLine($"TEST: Target value {targetValue} is below Min Pressure {_minPressure}");
+            }
+
+            try
+            {
+                // Если выхлоп открыт (purge режим), закрываем его перед установкой давления
+                if (_isExhaust)
+                {
+                    _serial.Send("AC");
+                    _isExhaust = false;
+                    _lastCurrent = null;
+                    _view.UI_SetTrendStatus(_lastCurrent, _current, isExhaust: false, _rampSpeed);
+                    _view.UI_AppendStatusInfo("Exhaust closed - returning to control mode");
+                }
+
+                _serial.Send($"AS {targetValue.ToString("F1", CultureInfo.InvariantCulture)}");
+                _setPoint = targetValue;
+                _view.UI_SetSetPoint(_setPoint, _unit);
+                _serial.Send(AlicatCommands.ReadAls);
+            }
+            catch (Exception ex)
+            {
+                _view.UI_AppendStatusInfo($"Command failed: AS {targetValue:F1} - {ex.Message}");
+                throw;
+            }
         }
 
         // ====================================================================
@@ -534,24 +666,59 @@ namespace Alicat.Presentation.Presenters
 
         public void IncrementMinus()
         {
-            _currentIncrement = Math.Max(0.1, _currentIncrement - 0.1);
+            var newValue = _currentIncrement - 0.1;
+            
+            if (newValue < _minIncrementLimit)
+            {
+                System.Media.SystemSounds.Beep.Play();
+                MessageBox.Show(
+                    $"Cannot go below Minimum Step ({_minIncrementLimit.ToString("F1", CultureInfo.InvariantCulture)} {_unit}).",
+                    "Limit exceeded",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            _currentIncrement = newValue;
             _view.IncrementText = _currentIncrement.ToString("F1", CultureInfo.InvariantCulture);
             _view.UpdateIncrementButtons();
+            _view.UI_AppendStatusInfo($"Increment changed to {_currentIncrement:F1} {_unit}");
         }
 
         public void IncrementPlus()
         {
-            _currentIncrement = Math.Min(_maxIncrementLimit, _currentIncrement + 0.1);
+            var newValue = _currentIncrement + 0.1;
+            
+            if (newValue > _maxIncrementLimit)
+            {
+                System.Media.SystemSounds.Beep.Play();
+                MessageBox.Show(
+                    $"Cannot exceed Maximum Step ({_maxIncrementLimit.ToString("F1", CultureInfo.InvariantCulture)} {_unit}).",
+                    "Limit exceeded",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            _currentIncrement = newValue;
             _view.IncrementText = _currentIncrement.ToString("F1", CultureInfo.InvariantCulture);
             _view.UpdateIncrementButtons();
+            _view.UI_AppendStatusInfo($"Increment changed to {_currentIncrement:F1} {_unit}");
         }
 
         public void UpdateIncrementFromText(string text)
         {
             if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double val))
             {
-                _currentIncrement = Math.Clamp(val, 0.1, _maxIncrementLimit);
+                var oldIncrement = _currentIncrement;
+                _currentIncrement = Math.Clamp(val, _minIncrementLimit, _maxIncrementLimit);
                 _view.UpdateIncrementButtons();
+                
+                // Логируем только если значение действительно изменилось
+                if (Math.Abs(oldIncrement - _currentIncrement) > 0.01)
+                {
+                    _view.UI_AppendStatusInfo($"Increment changed to {_currentIncrement:F1} {_unit}");
+                }
             }
         }
 
@@ -561,9 +728,28 @@ namespace Alicat.Presentation.Presenters
 
         public void ApplyOptionsToUi()
         {
+            // Сохраняем старые значения для сравнения
+            var oldUnit = _unit;
+            var oldMaxPressure = _maxPressure;
+            var oldMinPressure = _minPressure;
+            var oldMaxIncrement = _maxIncrementLimit;
+            var oldMinIncrement = _minIncrementLimit;
+
             // Обновляем настройки в Presenter
             _maxPressure = FormOptions.AppOptions.Current.MaxPressure ?? 200.0;
+            _minPressure = FormOptions.AppOptions.Current.MinPressure ?? 0.0;
             _maxIncrementLimit = FormOptions.AppOptions.Current.MaxIncrement ?? 20.0;
+            _minIncrementLimit = FormOptions.AppOptions.Current.MinIncrement ?? 0.1;
+
+            // Update Polling Frequency from Preferences
+            var pollingFreq = FormOptions.AppOptions.Current.PollingFrequency ?? 500;
+            bool wasRunning = _pollTimer.Enabled;
+            _pollTimer.Stop();
+            _pollTimer.Interval = pollingFreq;
+            if (wasRunning)
+            {
+                _pollTimer.Start();
+            }
 
             // Обновляем значения в View для валидации
             _view.MaxPressure = _maxPressure;
@@ -574,7 +760,24 @@ namespace Alicat.Presentation.Presenters
             _view.ValidateIncrementAgainstMax();
             _view.UpdateIncrementButtons();
 
-            _view.UI_SetPressureUnits(_unit);
+            // Проверяем, изменились ли единицы измерения
+            var newUnit = FormOptions.AppOptions.Current.PressureUnits ?? "PSIG";
+            if (newUnit != oldUnit)
+            {
+                _unit = newUnit;
+                _view.UI_SetPressureUnits(_unit);
+                _view.UI_AppendStatusInfo($"Units changed to {_unit}");
+            }
+            else
+            {
+                _view.UI_SetPressureUnits(_unit);
+            }
+
+            // Обновляем thresholds в GraphForm, если он открыт
+            if (_graphForm != null && !_graphForm.IsDisposed)
+            {
+                _graphForm.UpdateThresholdsFromSettings();
+            }
         }
 
         public void ShowOptions(Form parentForm)
@@ -598,6 +801,7 @@ namespace Alicat.Presentation.Presenters
 
                 // Сохраняем настройки, если Auto-save включен
                 _view.SaveSettingsIfAutoSaveEnabled();
+                _view.UI_AppendStatusInfo("Settings applied");
             };
 
             var result = dlg.ShowDialog(parentForm);
@@ -619,6 +823,7 @@ namespace Alicat.Presentation.Presenters
 
                 // Сохраняем настройки, если Auto-save включен
                 _view.SaveSettingsIfAutoSaveEnabled();
+                _view.UI_AppendStatusInfo("Settings applied");
             }
         }
 
@@ -661,10 +866,37 @@ namespace Alicat.Presentation.Presenters
                 var sessionDataStore = _dataStore as SessionDataStore 
                     ?? throw new InvalidOperationException("DataStore must be SessionDataStore instance");
                 _graphForm = new GraphForm(sessionDataStore);
+                
+                // Set connection info if device is connected
+                if (_serial != null && _serial is SerialClient serialClient)
+                {
+                    _graphForm.SetConnectionInfo(serialClient.PortName, serialClient.BaudRate);
+                }
+                
+                // Set pause handler
+                _graphForm.SetPauseHandler(() => Pause());
+                
+                // Set target handler
+                _graphForm.SetTargetHandler((target) => GoToTarget(target.ToString("F1", CultureInfo.InvariantCulture)));
+                
+                // Set emergency vent handler
+                _graphForm.SetEmergencyVentHandler(async () => await EmergencyStop());
+                
+                // Apply theme from main form
+                bool isDark = _view.IsDarkTheme;
+                _graphForm.ApplyTheme(isDark);
+                
+                // Update pause state
+                _graphForm.UpdatePauseState(_isPaused);
+                
                 _graphForm.Show(parentForm);
             }
             else
             {
+                // Update theme if form is already open
+                bool isDark = _view.IsDarkTheme;
+                _graphForm.ApplyTheme(isDark);
+                
                 if (_graphForm.WindowState == FormWindowState.Minimized)
                     _graphForm.WindowState = FormWindowState.Normal;
                 _graphForm.Focus();
@@ -745,8 +977,15 @@ namespace Alicat.Presentation.Presenters
                 _serial = null;
                 _ramp = null;
                 _pollTimer.Stop();
+                _isWaitingForResponse = false; // Сбрасываем флаг при отключении
                 _view.UI_UpdateConnectionStatus(false);
                 _view.UI_AppendStatusInfo("Device disconnected");
+                
+                // Update GraphForm connection info if open
+                if (_graphForm != null && !_graphForm.IsDisposed)
+                {
+                    _graphForm.SetConnectionInfo(null, null);
+                }
             }
             catch (Exception ex)
             {
@@ -1042,6 +1281,36 @@ namespace Alicat.Presentation.Presenters
         public double MaxPressure => _maxPressure;
         public double CurrentIncrement => _currentIncrement;
         public double MaxIncrementLimit => _maxIncrementLimit;
+
+        /// <summary>
+        /// Обновляет текст "Last update" на основе интервала таймера опроса.
+        /// </summary>
+        private void UpdateLastUpdateText()
+        {
+            int intervalMs = _pollTimer.Interval;
+            string text;
+            
+            if (intervalMs < 1000)
+            {
+                // Меньше секунды - показываем в миллисекундах
+                double seconds = intervalMs / 1000.0;
+                text = $"Last update: {seconds:F1}s ago";
+            }
+            else if (intervalMs < 60000)
+            {
+                // Меньше минуты - показываем в секундах
+                double seconds = intervalMs / 1000.0;
+                text = $"Last update: {seconds:F0}s ago";
+            }
+            else
+            {
+                // Больше минуты - показываем в минутах
+                double minutes = intervalMs / 60000.0;
+                text = $"Last update: {minutes:F1}m ago";
+            }
+            
+            _view.UI_UpdateLastUpdate(text);
+        }
     }
 }
 

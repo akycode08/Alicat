@@ -364,13 +364,25 @@ namespace Alicat
             _minIncrementLimit = FormOptions.AppOptions.Current.MinIncrement ?? 0.1;
 
             // Update Ramp Speed from Preferences
-            var rampSpeed = FormOptions.AppOptions.Current.PressureRamp;
-            if (rampSpeed.HasValue && rampSpeed.Value > 0.001)
+            // НЕ обновляем значение, если оно уже получено от устройства
+            // Значение должно обновляться только от устройства через ASR
+            // Если значение еще не получено от устройства, используем значение из Preferences
+            if (_rampSpeed < 0.001)
             {
-                // _rampSpeed is in AlicatForm.cs, we need to update it through a method or property
-                // For now, just update the display
-                var rampValue = rampSpeed.Value;
-                var rampText = rampValue.ToString("F1", System.Globalization.CultureInfo.InvariantCulture).TrimEnd('0').TrimEnd('.');
+                var rampSpeed = FormOptions.AppOptions.Current.PressureRamp;
+                if (rampSpeed.HasValue && rampSpeed.Value > 0.001)
+                {
+                    // _rampSpeed is in AlicatForm.cs, we need to update it through a method or property
+                    // For now, just update the display
+                    var rampValue = rampSpeed.Value;
+                    var rampText = rampValue.ToString("F1", System.Globalization.CultureInfo.InvariantCulture).TrimEnd('0').TrimEnd('.');
+                    UI_SetRampSpeedUnits($"{rampText} {_unit}/s");
+                }
+            }
+            else
+            {
+                // Если значение уже есть, просто обновляем отображение с текущими единицами
+                var rampText = _rampSpeed.ToString("F1", System.Globalization.CultureInfo.InvariantCulture).TrimEnd('0').TrimEnd('.');
                 UI_SetRampSpeedUnits($"{rampText} {_unit}/s");
             }
 
@@ -384,6 +396,8 @@ namespace Alicat
             lblMaxIncrementValue.Text = $"{_maxIncrementLimit:F1} {_unit}";
             lblMinIncrementValue.Text = $"{_minIncrementLimit:F1} {_unit}";
         }
+
+        bool IMainView.IsDarkTheme => isDarkTheme;
 
         // ====================================================================
         // Help Menu Handlers

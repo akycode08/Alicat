@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Windows.Forms;
+using Alicat.Presentation.Presenters;
 
 namespace Alicat
 {
@@ -26,6 +27,7 @@ namespace Alicat
         private readonly Color lightAccentGreen = Color.FromArgb(76, 175, 80);
         private readonly Color lightStatusDot = Color.FromArgb(76, 175, 80);
         private readonly Color lightStatusDotDisconnected = Color.FromArgb(244, 67, 54); // Красный для отключенного состояния
+        private readonly Color lightValueDisconnected = Color.FromArgb(244, 67, 54); // Красный для значений при отключении
 
         // ====================================================================
         // ЦВЕТОВАЯ ПАЛИТРА (Dark Theme)
@@ -44,6 +46,7 @@ namespace Alicat
         private readonly Color darkAccentGreen = Color.FromArgb(0, 224, 128);
         private readonly Color darkStatusDot = Color.FromArgb(0, 224, 128);
         private readonly Color darkStatusDotDisconnected = Color.FromArgb(255, 82, 82); // Красный для отключенного состояния (темная тема)
+        private readonly Color darkValueDisconnected = Color.FromArgb(255, 82, 82); // Красный для значений при отключении (темная тема)
 
         // ====================================================================
         // ОБРАБОТЧИКИ МЕНЮ (View -> Light/Dark Theme)
@@ -53,6 +56,13 @@ namespace Alicat
             ApplyLightTheme();
             menuViewLightTheme.Checked = true;
             menuViewDarkTheme.Checked = false;
+            
+            // Update GraphForm theme if open
+            var graphForm = ((IMainView)this).GraphForm;
+            if (graphForm != null && !graphForm.IsDisposed)
+            {
+                graphForm.ApplyTheme(false);
+            }
         }
 
         private void MenuViewDarkTheme_Click(object sender, EventArgs e)
@@ -60,6 +70,13 @@ namespace Alicat
             ApplyDarkTheme();
             menuViewLightTheme.Checked = false;
             menuViewDarkTheme.Checked = true;
+            
+            // Update GraphForm theme if open
+            var graphForm = ((IMainView)this).GraphForm;
+            if (graphForm != null && !graphForm.IsDisposed)
+            {
+                graphForm.ApplyTheme(true);
+            }
         }
 
         // ====================================================================
@@ -162,6 +179,7 @@ namespace Alicat
 
             panelStatusInfo.BackColor = Color.FromArgb(227, 242, 253);
             lblStatusInfoTitle.ForeColor = Color.FromArgb(21, 101, 192);
+            lblStatusInfoText.BackColor = Color.FromArgb(227, 242, 253);
             lblStatusInfoText.ForeColor = lightTextSecondary;
 
             btnPause.BackColor = lightBgWindow;
@@ -276,6 +294,7 @@ namespace Alicat
 
             panelStatusInfo.BackColor = Color.FromArgb(28, 40, 56);
             lblStatusInfoTitle.ForeColor = Color.FromArgb(0, 168, 224);
+            lblStatusInfoText.BackColor = darkBgSection;
             lblStatusInfoText.ForeColor = darkTextSecondary;
 
             btnPause.BackColor = darkBgWindow;

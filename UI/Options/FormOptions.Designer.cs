@@ -20,6 +20,8 @@ namespace Alicat
         private ComboBox cmbTimeUnits;
         private Label lblPressureRamp;
         private TextBox txtPressureRamp;
+        private Label lblPollingFrequency;
+        private ComboBox cmbPollingFrequency;
 
         // Limits Tab
         private TableLayoutPanel limitsGrid;
@@ -217,7 +219,7 @@ namespace Alicat
             {
                 Dock = DockStyle.Top,
                 ColumnCount = 2,
-                RowCount = 3,
+                RowCount = 4,
                 AutoSize = true,
                 Padding = new Padding(0),
                 BackColor = Color.White
@@ -225,6 +227,7 @@ namespace Alicat
             unitsGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 160f)); // labels
             unitsGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));  // inputs
 
+            unitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
             unitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
             unitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
             unitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
@@ -304,12 +307,36 @@ namespace Alicat
 #endif
             toolTips.SetToolTip(txtPressureRamp, "Rate of setpoint change per time unit.");
 
+            // Polling Frequency
+            lblPollingFrequency = new Label
+            {
+                Text = "Polling Frequency",
+                TextAlign = ContentAlignment.MiddleLeft,
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 16, 0),
+                ForeColor = ModernText,
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular)
+            };
+            cmbPollingFrequency = new ComboBox
+            {
+                Width = 200,
+                Height = 26,
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Margin = new Padding(0),
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
+                FlatStyle = FlatStyle.Flat
+            };
+            cmbPollingFrequency.Items.AddRange(new object[] { "10ms", "50ms", "100ms", "250ms", "500ms", "1000ms", "2000ms", "5000ms" });
+            toolTips.SetToolTip(cmbPollingFrequency, "Frequency of device polling in milliseconds.");
+
             unitsGrid.Controls.Add(lblPressureUnits, 0, 0);
             unitsGrid.Controls.Add(cmbPressureUnits, 1, 0);
             unitsGrid.Controls.Add(lblTimeUnits, 0, 1);
             unitsGrid.Controls.Add(cmbTimeUnits, 1, 1);
             unitsGrid.Controls.Add(lblPressureRamp, 0, 2);
             unitsGrid.Controls.Add(txtPressureRamp, 1, 2);
+            unitsGrid.Controls.Add(lblPollingFrequency, 0, 3);
+            unitsGrid.Controls.Add(cmbPollingFrequency, 1, 3);
 
             tabUnits.Controls.Add(unitsGrid);
 
