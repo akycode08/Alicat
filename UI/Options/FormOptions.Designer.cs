@@ -7,51 +7,53 @@ namespace Alicat
     {
         private System.ComponentModel.IContainer components = null;
 
-        // Root
-        private TableLayoutPanel root;
+        // TabControl
+        private TabControl tabControl;
+        private TabPage tabUnits;
+        private TabPage tabLimits;
 
-        private MenuStrip menuMain;
-        private ToolStripMenuItem menuUnits;
-        private ToolStripMenuItem menuSave;
-        private ToolStripMenuItem menuGraph;
-
-
-
-
-        // Content
-        private Panel contentHost;
-        private Panel panelUnits;
-
-        // Units grid
+        // Units Tab
         private TableLayoutPanel unitsGrid;
         private Label lblPressureUnits;
         private ComboBox cmbPressureUnits;
-
         private Label lblTimeUnits;
         private ComboBox cmbTimeUnits;
-
-        private Label lblMaxPressure;
-        private TextBox txtMaxPressure;
-
         private Label lblPressureRamp;
         private TextBox txtPressureRamp;
 
+        // Limits Tab
+        private TableLayoutPanel limitsGrid;
+        private Label lblMaxPressure;
+        private TextBox txtMaxPressure;
+        private Label lblMinPressure;
+        private TextBox txtMinPressure;
         private Label lblMaxIncrement;
         private TextBox txtMaxIncrement;
+        private Label lblMinIncrement;
+        private TextBox txtMinIncrement;
+        private Panel safetyNoticePanel;
+        private Label lblSafetyNotice;
 
-        // Under-grid row (restore)
-        private Panel restoreRow;
-        private FlowLayoutPanel restoreRight;
-        private Button btnRestoreDefaults;
-
-        // Bottom (отдельный хост + ряд кнопок)
+        // Bottom buttons
         private Panel bottomHost;
         private FlowLayoutPanel btnRow;
         private Button btnOK;
         private Button btnCancel;
         private Button btnApply;
+        private Button btnRestoreDefaults;
 
         private ToolTip toolTips;
+
+        // Modern color palette
+        private static readonly Color ModernBg = Color.FromArgb(250, 250, 250);
+        private static readonly Color ModernBorder = Color.FromArgb(220, 220, 220);
+        private static readonly Color ModernText = Color.FromArgb(51, 51, 51);
+        private static readonly Color ModernTextMuted = Color.FromArgb(120, 120, 120);
+        private static readonly Color ModernAccent = Color.FromArgb(0, 102, 170);
+        private static readonly Color ModernAccentHover = Color.FromArgb(0, 85, 150);
+        private static readonly Color SafetyYellow = Color.FromArgb(255, 243, 205);
+        private static readonly Color SafetyYellowBorder = Color.FromArgb(255, 193, 7);
+        private static readonly Color SafetyText = Color.FromArgb(133, 88, 0);
 
         protected override void Dispose(bool disposing)
         {
@@ -64,54 +66,34 @@ namespace Alicat
         {
             components = new System.ComponentModel.Container();
 
-            menuMain = new MenuStrip();
-            menuUnits = new ToolStripMenuItem();
-            menuSave = new ToolStripMenuItem();
-            menuGraph = new ToolStripMenuItem();
-
-            menuUnits.Name = "menuUnits";
-            menuUnits.Text = "Units";
-
-            menuSave.Name = "menuSave";
-            menuSave.Text = "Save";
-
-            menuGraph.Name = "menuGraph";
-            menuGraph.Text = "Graph";
-
-            menuMain.Items.AddRange(new ToolStripItem[]
-            {
-                menuUnits,
-                menuSave,
-                menuGraph
-            });
-
-            menuMain.Dock = DockStyle.Top;
-            menuMain.Name = "menuMain";
-
-            this.MainMenuStrip = menuMain;
-            this.Controls.Add(menuMain);
-
             // -------- Form --------
             this.SuspendLayout();
-            this.Text = "Options";
-            this.ClientSize = new Size(640, 480);
-            this.MinimumSize = new Size(560, 420);
+            this.Text = "Preferences";
+            this.ClientSize = new Size(520, 380);
+            this.MinimumSize = new Size(480, 340);
             this.StartPosition = FormStartPosition.CenterParent;
-            this.BackColor = SystemColors.Control;
+            this.BackColor = ModernBg;
+            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
 
             // -------- ToolTips --------
             toolTips = new ToolTip();
+            toolTips.IsBalloon = false;
+            toolTips.ToolTipTitle = "";
 
-            // -------- Bottom host (ВСЕГДА внизу, не в root) --------
+            // -------- Bottom host (ВСЕГДА внизу) --------
             bottomHost = new Panel
             {
                 Dock = DockStyle.Bottom,
-                Height = 56,
-                Padding = new Padding(12, 10, 12, 10),
-                BackColor = SystemColors.Control
+                Height = 60,
+                Padding = new Padding(20, 12, 20, 12),
+                BackColor = Color.White,
+                BorderStyle = BorderStyle.None
             };
             this.Controls.Add(bottomHost);
 
+            // -------- Bottom buttons row --------
             btnRow = new FlowLayoutPanel
             {
                 Dock = DockStyle.Right,
@@ -122,209 +104,379 @@ namespace Alicat
                 Margin = new Padding(0)
             };
 
-            btnOK = new Button { Text = "OK", AutoSize = true, Margin = new Padding(6, 0, 6, 0) };
-            btnCancel = new Button { Text = "Cancel", AutoSize = true, Margin = new Padding(6, 0, 6, 0) };
-            btnApply = new Button { Text = "Apply", AutoSize = true, Margin = new Padding(6, 0, 6, 0) };
+            // Restore Defaults button (secondary style)
+            btnRestoreDefaults = new Button
+            {
+                Text = "Restore defaults",
+                Size = new Size(130, 32),
+                Margin = new Padding(0, 0, 16, 0),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.White,
+                ForeColor = ModernText,
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
+                Cursor = Cursors.Hand
+            };
+            btnRestoreDefaults.FlatAppearance.BorderColor = ModernBorder;
+            btnRestoreDefaults.FlatAppearance.BorderSize = 1;
+            btnRestoreDefaults.FlatAppearance.MouseOverBackColor = Color.FromArgb(245, 245, 245);
+            toolTips.SetToolTip(btnRestoreDefaults, "Reset all fields to factory defaults.");
 
+            // OK button (primary style)
+            btnOK = new Button
+            {
+                Text = "OK",
+                Size = new Size(90, 32),
+                Margin = new Padding(0, 0, 8, 0),
+                DialogResult = DialogResult.OK,
+                FlatStyle = FlatStyle.Flat,
+                BackColor = ModernAccent,
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
+                Cursor = Cursors.Hand
+            };
+            btnOK.FlatAppearance.BorderSize = 0;
+            btnOK.FlatAppearance.MouseOverBackColor = ModernAccentHover;
+
+            // Cancel button (secondary style)
+            btnCancel = new Button
+            {
+                Text = "Cancel",
+                Size = new Size(90, 32),
+                Margin = new Padding(0, 0, 8, 0),
+                DialogResult = DialogResult.Cancel,
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.White,
+                ForeColor = ModernText,
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
+                Cursor = Cursors.Hand
+            };
+            btnCancel.FlatAppearance.BorderColor = ModernBorder;
+            btnCancel.FlatAppearance.BorderSize = 1;
+            btnCancel.FlatAppearance.MouseOverBackColor = Color.FromArgb(245, 245, 245);
+
+            // Apply button (secondary style)
+            btnApply = new Button
+            {
+                Text = "Apply",
+                Size = new Size(90, 32),
+                Margin = new Padding(0),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.White,
+                ForeColor = ModernText,
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
+                Cursor = Cursors.Hand
+            };
+            btnApply.FlatAppearance.BorderColor = ModernBorder;
+            btnApply.FlatAppearance.BorderSize = 1;
+            btnApply.FlatAppearance.MouseOverBackColor = Color.FromArgb(245, 245, 245);
+
+            btnRow.Controls.Add(btnRestoreDefaults);
             btnRow.Controls.Add(btnOK);
             btnRow.Controls.Add(btnCancel);
             btnRow.Controls.Add(btnApply);
             bottomHost.Controls.Add(btnRow);
 
-            // -------- Root layout (заполняет остальное) --------
-            root = new TableLayoutPanel
+            // -------- TabControl --------
+            tabControl = new TabControl
             {
                 Dock = DockStyle.Fill,
-                ColumnCount = 1,
-                RowCount = 2,              // header + content (без bottom строки!)
-                Padding = new Padding(0),
-                BackColor = SystemColors.Control
+                Padding = new Point(0, 0),
+                Appearance = TabAppearance.Normal,
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular)
             };
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 56f));   // Header
-            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));   // Content
-            this.Controls.Add(root);
-
-
-
-
-
-            // -------- Content host --------
-            contentHost = new Panel
+            tabControl.DrawMode = TabDrawMode.OwnerDrawFixed;
+            tabControl.DrawItem += (sender, e) =>
             {
-                Dock = DockStyle.Fill,
-                Padding = new Padding(20),
-                BackColor = SystemColors.Control
+                var tab = tabControl.TabPages[e.Index];
+                var rect = tabControl.GetTabRect(e.Index);
+                var isSelected = tabControl.SelectedIndex == e.Index;
+
+                e.Graphics.FillRectangle(
+                    new SolidBrush(isSelected ? Color.White : ModernBg),
+                    rect);
+
+                TextRenderer.DrawText(
+                    e.Graphics,
+                    tab.Text,
+                    new Font("Segoe UI", 9F, FontStyle.Regular),
+                    rect,
+                    isSelected ? ModernText : ModernTextMuted,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
             };
-            root.Controls.Add(contentHost, 0, 1);
 
-            // ======== Units panel ========
-            panelUnits = new Panel { Dock = DockStyle.Fill, BackColor = SystemColors.Control };
+            // ======== Units Tab ========
+            tabUnits = new TabPage
+            {
+                Text = "Units",
+                Padding = new Padding(24, 20, 24, 20),
+                BackColor = Color.White,
+                UseVisualStyleBackColor = false
+            };
 
-            // Grid: labels left, inputs right
             unitsGrid = new TableLayoutPanel
             {
                 Dock = DockStyle.Top,
                 ColumnCount = 2,
-                RowCount = 5,
+                RowCount = 3,
                 AutoSize = true,
-                Padding = new Padding(4),
-                BackColor = SystemColors.Control
+                Padding = new Padding(0),
+                BackColor = Color.White
             };
-            unitsGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180f)); // labels
+            unitsGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 160f)); // labels
             unitsGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));  // inputs
 
-            // 5 строк по 36 px (без циклов)
-            unitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
-            unitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
             unitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
             unitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
             unitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
 
-            // ---- Pressure Units
+            // Pressure Units
             lblPressureUnits = new Label
             {
                 Text = "Pressure Units",
                 TextAlign = ContentAlignment.MiddleLeft,
                 Dock = DockStyle.Fill,
-                Margin = new Padding(2, 0, 8, 0)
+                Margin = new Padding(0, 0, 16, 0),
+                ForeColor = ModernText,
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular)
             };
             cmbPressureUnits = new ComboBox
             {
-                Dock = DockStyle.Left,
-                Width = 160,
+                Width = 200,
+                Height = 26,
                 DropDownStyle = ComboBoxStyle.DropDownList,
-                Margin = new Padding(0, 6, 0, 6)
+                Margin = new Padding(0),
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
+                FlatStyle = FlatStyle.Flat
             };
-            cmbPressureUnits.Items.AddRange(new object[] { "PSI", "BAR" });
+            cmbPressureUnits.Items.AddRange(new object[] 
+            { 
+                "PSI", "PSIG", "PSF", "PSFG",
+                "Pa", "hPa", "kPa", "MPa",
+                "mbar", "bar",
+                "g/cm²", "kg/cm",
+                "mTorr", "torr"
+            });
             toolTips.SetToolTip(cmbPressureUnits, "Select pressure measurement units.");
 
-            // ---- Time / Speed Units
+            // Time / Speed Units
             lblTimeUnits = new Label
             {
                 Text = "Time / Speed Units",
                 TextAlign = ContentAlignment.MiddleLeft,
                 Dock = DockStyle.Fill,
-                Margin = new Padding(2, 0, 8, 0)
+                Margin = new Padding(0, 0, 16, 0),
+                ForeColor = ModernText,
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular)
             };
             cmbTimeUnits = new ComboBox
             {
-                Dock = DockStyle.Left,
-                Width = 160,
+                Width = 200,
+                Height = 26,
                 DropDownStyle = ComboBoxStyle.DropDownList,
-                Margin = new Padding(0, 6, 0, 6)
+                Margin = new Padding(0),
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
+                FlatStyle = FlatStyle.Flat
             };
             cmbTimeUnits.Items.AddRange(new object[] { "ms", "s", "m", "h" });
             toolTips.SetToolTip(cmbTimeUnits, "Select time or speed measurement units.");
 
-            // ---- Max Pressure
-            lblMaxPressure = new Label
-            {
-                Text = "Max Pressure",
-                TextAlign = ContentAlignment.MiddleLeft,
-                Dock = DockStyle.Fill,
-                Margin = new Padding(2, 0, 8, 0)
-            };
-            txtMaxPressure = new TextBox
-            {
-                Dock = DockStyle.Left,
-                Width = 160,
-                Margin = new Padding(0, 6, 0, 6)
-#if NET6_0_OR_GREATER
-                ,
-                PlaceholderText = "e.g. 100"
-#endif
-            };
-            toolTips.SetToolTip(txtMaxPressure, "Maximum pressure allowed (device limit).");
-
-            // ---- Pressure Ramp
+            // Pressure Ramp
             lblPressureRamp = new Label
             {
-                Text = "Pressure Ramp",
+                Text = "Ramp Speed",
                 TextAlign = ContentAlignment.MiddleLeft,
                 Dock = DockStyle.Fill,
-                Margin = new Padding(2, 0, 8, 0)
+                Margin = new Padding(0, 0, 16, 0),
+                ForeColor = ModernText,
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular)
             };
             txtPressureRamp = new TextBox
             {
-                Dock = DockStyle.Left,
-                Width = 160,
-                Margin = new Padding(0, 6, 0, 6)
-#if NET6_0_OR_GREATER
-                ,
-                PlaceholderText = "e.g. 5"
-#endif
+                Width = 200,
+                Height = 26,
+                Margin = new Padding(0),
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
+                BorderStyle = BorderStyle.FixedSingle
             };
+            txtPressureRamp.BorderStyle = BorderStyle.FixedSingle;
+#if NET6_0_OR_GREATER
+            txtPressureRamp.PlaceholderText = "e.g. 10.0";
+#endif
             toolTips.SetToolTip(txtPressureRamp, "Rate of setpoint change per time unit.");
 
-            // ---- Max Increment
-            lblMaxIncrement = new Label
+            unitsGrid.Controls.Add(lblPressureUnits, 0, 0);
+            unitsGrid.Controls.Add(cmbPressureUnits, 1, 0);
+            unitsGrid.Controls.Add(lblTimeUnits, 0, 1);
+            unitsGrid.Controls.Add(cmbTimeUnits, 1, 1);
+            unitsGrid.Controls.Add(lblPressureRamp, 0, 2);
+            unitsGrid.Controls.Add(txtPressureRamp, 1, 2);
+
+            tabUnits.Controls.Add(unitsGrid);
+
+            // ======== Limits Tab ========
+            tabLimits = new TabPage
             {
-                Text = "Max Increment",
+                Text = "Limits",
+                Padding = new Padding(24, 20, 24, 20),
+                BackColor = Color.White,
+                UseVisualStyleBackColor = false
+            };
+
+            limitsGrid = new TableLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                ColumnCount = 2,
+                RowCount = 4,
+                AutoSize = true,
+                Padding = new Padding(0),
+                BackColor = Color.White
+            };
+            limitsGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 160f)); // labels
+            limitsGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));  // inputs
+
+            limitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
+            limitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
+            limitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
+            limitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
+
+            // Maximum Pressure
+            lblMaxPressure = new Label
+            {
+                Text = "Maximum Pressure",
                 TextAlign = ContentAlignment.MiddleLeft,
                 Dock = DockStyle.Fill,
-                Margin = new Padding(2, 0, 8, 0)
+                Margin = new Padding(0, 0, 16, 0),
+                ForeColor = ModernText,
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular)
+            };
+            txtMaxPressure = new TextBox
+            {
+                Width = 200,
+                Height = 26,
+                Margin = new Padding(0),
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
+                BorderStyle = BorderStyle.FixedSingle
+            };
+#if NET6_0_OR_GREATER
+            txtMaxPressure.PlaceholderText = "e.g. 200";
+#endif
+            toolTips.SetToolTip(txtMaxPressure, "Maximum pressure allowed (device limit).");
+
+            // Minimum Pressure
+            lblMinPressure = new Label
+            {
+                Text = "Minimum Pressure",
+                TextAlign = ContentAlignment.MiddleLeft,
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 16, 0),
+                ForeColor = ModernText,
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular)
+            };
+            txtMinPressure = new TextBox
+            {
+                Width = 200,
+                Height = 26,
+                Margin = new Padding(0),
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
+                BorderStyle = BorderStyle.FixedSingle
+            };
+#if NET6_0_OR_GREATER
+            txtMinPressure.PlaceholderText = "e.g. 0";
+#endif
+            toolTips.SetToolTip(txtMinPressure, "Minimum pressure allowed.");
+
+            // Maximum Step (Increment)
+            lblMaxIncrement = new Label
+            {
+                Text = "Maximum Step",
+                TextAlign = ContentAlignment.MiddleLeft,
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 16, 0),
+                ForeColor = ModernText,
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular)
             };
             txtMaxIncrement = new TextBox
             {
-                Dock = DockStyle.Left,
-                Width = 160,
-                Margin = new Padding(0, 6, 0, 6)
-#if NET6_0_OR_GREATER
-                ,
-                PlaceholderText = "e.g. 1"
-#endif
+                Width = 200,
+                Height = 26,
+                Margin = new Padding(0),
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
+                BorderStyle = BorderStyle.FixedSingle
             };
-            toolTips.SetToolTip(txtMaxIncrement, "Maximum manual increment step.");
+#if NET6_0_OR_GREATER
+            txtMaxIncrement.PlaceholderText = "e.g. 20";
+#endif
+            toolTips.SetToolTip(txtMaxIncrement, "Maximum increment step.");
 
-            // Размещение в сетке
-            unitsGrid.Controls.Add(lblPressureUnits, 0, 0);
-            unitsGrid.Controls.Add(cmbPressureUnits, 1, 0);
+            // Minimum Step (Increment)
+            lblMinIncrement = new Label
+            {
+                Text = "Minimum Step",
+                TextAlign = ContentAlignment.MiddleLeft,
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 16, 0),
+                ForeColor = ModernText,
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular)
+            };
+            txtMinIncrement = new TextBox
+            {
+                Width = 200,
+                Height = 26,
+                Margin = new Padding(0),
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
+                BorderStyle = BorderStyle.FixedSingle
+            };
+#if NET6_0_OR_GREATER
+            txtMinIncrement.PlaceholderText = "e.g. 0.1";
+#endif
+            toolTips.SetToolTip(txtMinIncrement, "Minimum increment step.");
 
-            unitsGrid.Controls.Add(lblTimeUnits, 0, 1);
-            unitsGrid.Controls.Add(cmbTimeUnits, 1, 1);
+            limitsGrid.Controls.Add(lblMaxPressure, 0, 0);
+            limitsGrid.Controls.Add(txtMaxPressure, 1, 0);
+            limitsGrid.Controls.Add(lblMinPressure, 0, 1);
+            limitsGrid.Controls.Add(txtMinPressure, 1, 1);
+            limitsGrid.Controls.Add(lblMaxIncrement, 0, 2);
+            limitsGrid.Controls.Add(txtMaxIncrement, 1, 2);
+            limitsGrid.Controls.Add(lblMinIncrement, 0, 3);
+            limitsGrid.Controls.Add(txtMinIncrement, 1, 3);
 
-            unitsGrid.Controls.Add(lblMaxPressure, 0, 2);
-            unitsGrid.Controls.Add(txtMaxPressure, 1, 2);
-
-            unitsGrid.Controls.Add(lblPressureRamp, 0, 3);
-            unitsGrid.Controls.Add(txtPressureRamp, 1, 3);
-
-            unitsGrid.Controls.Add(lblMaxIncrement, 0, 4);
-            unitsGrid.Controls.Add(txtMaxIncrement, 1, 4);
-
-            // -------- Restore defaults row (компактно справа) --------
-            restoreRow = new Panel
+            // Safety Notice Panel (modern warning banner)
+            safetyNoticePanel = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 44,
-                Padding = new Padding(0, 8, 0, 0),
-                BackColor = SystemColors.Control
+                Height = 56,
+                Padding = new Padding(14, 12, 14, 12),
+                BackColor = SafetyYellow,
+                Margin = new Padding(0, 0, 0, 16),
+                BorderStyle = BorderStyle.None
             };
-            btnRestoreDefaults = new Button
+            lblSafetyNotice = new Label
             {
-                Text = "Restore defaults",
-                AutoSize = true,
-                Margin = new Padding(0, 0, 0, 0)
+                Text = "⚠ Safety Notice: Ensure pressure limits are set correctly to prevent equipment damage or personal injury.",
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                ForeColor = SafetyText,
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
+                AutoSize = false
             };
-            restoreRight = new FlowLayoutPanel
+            safetyNoticePanel.Controls.Add(lblSafetyNotice);
+            safetyNoticePanel.Paint += (sender, e) =>
             {
-                Dock = DockStyle.Right,
-                FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = false,
-                AutoSize = true,
-                Padding = new Padding(0),
-                Margin = new Padding(0)
+                var rect = safetyNoticePanel.ClientRectangle;
+                using (var pen = new Pen(SafetyYellowBorder, 1))
+                {
+                    e.Graphics.DrawRectangle(pen, 0, 0, rect.Width - 1, rect.Height - 1);
+                }
             };
-            restoreRight.Controls.Add(btnRestoreDefaults);
-            restoreRow.Controls.Add(restoreRight);
-            toolTips.SetToolTip(btnRestoreDefaults, "Reset all fields to factory defaults.");
 
-            // Добавляем в Units панель
-            panelUnits.Controls.Add(restoreRow);
-            panelUnits.Controls.Add(unitsGrid);
+            tabLimits.Controls.Add(safetyNoticePanel);
+            tabLimits.Controls.Add(limitsGrid);
 
-            contentHost.Controls.Add(panelUnits);
+            // Add tabs to TabControl
+            tabControl.TabPages.Add(tabUnits);
+            tabControl.TabPages.Add(tabLimits);
+
+            this.Controls.Add(tabControl);
 
             this.ResumeLayout(false);
         }

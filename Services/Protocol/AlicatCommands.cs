@@ -16,5 +16,8 @@ public static class AlicatCommands
     // Режимы
     public const string ExhaustHold = "AE"; // открыть и держать выхлоп
     public const string ControlOn = "AC"; // вернуться в управление (закрыть выхлоп)
+
+    // Информация об устройстве
+    public const string GetDeviceInfo = "AVE";  // получить информацию об устройстве (модель, версия, дата)
 }
 

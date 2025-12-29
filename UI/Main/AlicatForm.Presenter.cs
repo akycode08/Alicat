@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Windows.Forms;
 using Alicat.Presentation.Presenters;
 using Alicat.Services.Data;
@@ -227,19 +228,262 @@ namespace Alicat
         }
 
         // ====================================================================
+        // Settings Menu Handlers
+        // ====================================================================
+
+        private void menuSettingsAutoSave_Click(object? sender, EventArgs e)
+        {
+            bool isEnabled = menuSettingsAutoSave.Checked;
+            
+            if (isEnabled)
+            {
+                // Если включили Auto-save, сразу сохраняем текущие настройки
+                SaveSettingsToFile();
+                UI_AppendStatusInfo("Auto-save enabled - settings will be saved automatically");
+            }
+            else
+            {
+                UI_AppendStatusInfo("Auto-save disabled");
+            }
+        }
+
+        // ====================================================================
+        // Settings Persistence
+        // ====================================================================
+
+        private static string GetSettingsFilePath()
+        {
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string settingsDir = System.IO.Path.Combine(appDataPath, "DACTools", "AlicatController");
+            return System.IO.Path.Combine(settingsDir, "settings.json");
+        }
+
+        private void SaveSettingsToFile()
+        {
+            if (!menuSettingsAutoSave.Checked) return;
+
+            try
+            {
+                string settingsPath = GetSettingsFilePath();
+                string? directory = System.IO.Path.GetDirectoryName(settingsPath);
+                
+                if (!string.IsNullOrEmpty(directory) && !System.IO.Directory.Exists(directory))
+                {
+                    System.IO.Directory.CreateDirectory(directory);
+                }
+
+                var settingsData = new
+                {
+                    PressureUnits = FormOptions.AppOptions.Current.PressureUnits,
+                    TimeUnits = FormOptions.AppOptions.Current.TimeUnits,
+                    PressureRamp = FormOptions.AppOptions.Current.PressureRamp,
+                    MaxPressure = FormOptions.AppOptions.Current.MaxPressure,
+                    MinPressure = FormOptions.AppOptions.Current.MinPressure,
+                    MaxIncrement = FormOptions.AppOptions.Current.MaxIncrement,
+                    MinIncrement = FormOptions.AppOptions.Current.MinIncrement,
+                    AutoSaveEnabled = menuSettingsAutoSave.Checked,
+                    LastSaved = DateTime.Now
+                };
+
+                string json = System.Text.Json.JsonSerializer.Serialize(settingsData, new System.Text.Json.JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
+                System.IO.File.WriteAllText(settingsPath, json);
+            }
+            catch (Exception ex)
+            {
+                // Не показываем ошибку пользователю при автосохранении
+                System.Diagnostics.Debug.WriteLine($"Failed to save settings: {ex.Message}");
+            }
+        }
+
+        private void LoadSettingsFromFile()
+        {
+            try
+            {
+                string settingsPath = GetSettingsFilePath();
+                if (!System.IO.File.Exists(settingsPath)) return;
+
+                string json = System.IO.File.ReadAllText(settingsPath);
+                var settingsData = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(json);
+
+                // Восстанавливаем настройки
+                var model = new FormOptions.AppOptions.Model
+                {
+                    PressureUnits = settingsData.TryGetProperty("PressureUnits", out var pu)
+                        ? pu.GetString() ?? "PSI" : "PSI",
+                    TimeUnits = settingsData.TryGetProperty("TimeUnits", out var tu)
+                        ? tu.GetString() ?? "s" : "s",
+                    PressureRamp = settingsData.TryGetProperty("PressureRamp", out var pr) && pr.ValueKind != System.Text.Json.JsonValueKind.Null
+                        ? pr.GetDouble() : null,
+                    MaxPressure = settingsData.TryGetProperty("MaxPressure", out var mp) && mp.ValueKind != System.Text.Json.JsonValueKind.Null
+                        ? mp.GetDouble() : null,
+                    MinPressure = settingsData.TryGetProperty("MinPressure", out var minp) && minp.ValueKind != System.Text.Json.JsonValueKind.Null
+                        ? minp.GetDouble() : null,
+                    MaxIncrement = settingsData.TryGetProperty("MaxIncrement", out var mi) && mi.ValueKind != System.Text.Json.JsonValueKind.Null
+                        ? mi.GetDouble() : null,
+                    MinIncrement = settingsData.TryGetProperty("MinIncrement", out var mini) && mini.ValueKind != System.Text.Json.JsonValueKind.Null
+                        ? mini.GetDouble() : null
+                };
+
+                FormOptions.AppOptions.Current = model;
+
+                // Восстанавливаем состояние Auto-save
+                if (settingsData.TryGetProperty("AutoSaveEnabled", out var ase))
+                {
+                    menuSettingsAutoSave.Checked = ase.GetBoolean();
+                }
+
+                // Применяем загруженные настройки
+                _presenter?.ApplyOptionsToUi();
+            }
+            catch (Exception ex)
+            {
+                // При ошибке загрузки используем настройки по умолчанию
+                System.Diagnostics.Debug.WriteLine($"Failed to load settings: {ex.Message}");
+            }
+        }
+
+        // ====================================================================
+        // IMainView Implementation - Settings Persistence
+        // ====================================================================
+
+        void IMainView.SaveSettingsIfAutoSaveEnabled()
+        {
+            SaveSettingsToFile();
+        }
+
+        void IMainView.ApplyOptionsToUi()
+        {
+            // Update internal fields from FormOptions
+            _maxPressure = FormOptions.AppOptions.Current.MaxPressure ?? 200.0;
+            _minPressure = FormOptions.AppOptions.Current.MinPressure ?? 0.0;
+            _maxIncrementLimit = FormOptions.AppOptions.Current.MaxIncrement ?? 20.0;
+            _minIncrementLimit = FormOptions.AppOptions.Current.MinIncrement ?? 0.1;
+
+            // Update Ramp Speed from Preferences
+            var rampSpeed = FormOptions.AppOptions.Current.PressureRamp;
+            if (rampSpeed.HasValue && rampSpeed.Value > 0.001)
+            {
+                // _rampSpeed is in AlicatForm.cs, we need to update it through a method or property
+                // For now, just update the display
+                var rampValue = rampSpeed.Value;
+                var rampText = rampValue.ToString("F1", System.Globalization.CultureInfo.InvariantCulture).TrimEnd('0').TrimEnd('.');
+                UI_SetRampSpeedUnits($"{rampText} {_unit}/s");
+            }
+
+            ValidateTargetAgainstMax();
+            ValidateIncrementAgainstMax();
+            UpdateIncrementButtons();
+
+            // Update System Settings display
+            lblMaxPressureValue.Text = $"{_maxPressure:F0} {_unit}";
+            lblMinPressureValue.Text = $"{_minPressure:F0} {_unit}";
+            lblMaxIncrementValue.Text = $"{_maxIncrementLimit:F1} {_unit}";
+            lblMinIncrementValue.Text = $"{_minIncrementLimit:F1} {_unit}";
+        }
+
+        // ====================================================================
         // Help Menu Handlers
         // ====================================================================
 
         private void menuHelpAboutDACTools_Click(object? sender, EventArgs e)
         {
-            string message = "DAC Tools\n\n" +
-                           "Custom Equipment for High-Pressure Research\n\n" +
-                           "Professional tools for Diamond Anvil Cell (DAC) experiments\n" +
-                           "and high-pressure research applications.\n\n" +
-                           "© 2025 DAC Tools";
+            // Создаем кастомный диалог с кликабельной ссылкой
+            using var aboutDialog = new Form
+            {
+                Text = "About DACTools",
+                Size = new System.Drawing.Size(500, 350),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false,
+                MinimizeBox = false,
+                ShowInTaskbar = false
+            };
 
-            MessageBox.Show(message, "About DACTools",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            var panel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                Padding = new Padding(20)
+            };
+
+            var titleLabel = new Label
+            {
+                Text = "DACTools",
+                Font = new System.Drawing.Font("Segoe UI", 14, System.Drawing.FontStyle.Bold),
+                AutoSize = true,
+                Location = new System.Drawing.Point(20, 20)
+            };
+
+            var descriptionLabel = new Label
+            {
+                Text = "Custom Equipment for High-Pressure Research\n\n" +
+                       "DACTools specializes in developing professional software and\n" +
+                       "equipment solutions for Diamond Anvil Cell (DAC) experiments\n" +
+                       "and high-pressure research applications.\n\n" +
+                       "Our tools are designed for leading research laboratories\n" +
+                       "worldwide, providing precise control and monitoring capabilities\n" +
+                       "for critical scientific experiments.",
+                AutoSize = false,
+                Size = new System.Drawing.Size(440, 180),
+                Location = new System.Drawing.Point(20, 55)
+            };
+
+            var websiteLabel = new Label
+            {
+                Text = "Website: https://dactools.com/",
+                AutoSize = true,
+                Location = new System.Drawing.Point(20, 245),
+                ForeColor = System.Drawing.Color.Blue,
+                Cursor = Cursors.Hand,
+                Font = new System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Underline)
+            };
+
+            websiteLabel.Click += (s, args) =>
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "https://dactools.com/",
+                        UseShellExecute = true
+                    });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to open website:\n{ex.Message}", "Error",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            };
+
+            var copyrightLabel = new Label
+            {
+                Text = "© 2025 DACTools\nAll rights reserved",
+                AutoSize = true,
+                Location = new System.Drawing.Point(20, 275),
+                ForeColor = System.Drawing.Color.Gray
+            };
+
+            var okButton = new Button
+            {
+                Text = "OK",
+                DialogResult = DialogResult.OK,
+                Size = new System.Drawing.Size(75, 25),
+                Location = new System.Drawing.Point(385, 280)
+            };
+
+            panel.Controls.Add(titleLabel);
+            panel.Controls.Add(descriptionLabel);
+            panel.Controls.Add(websiteLabel);
+            panel.Controls.Add(copyrightLabel);
+            panel.Controls.Add(okButton);
+
+            aboutDialog.Controls.Add(panel);
+            aboutDialog.AcceptButton = okButton;
+
+            aboutDialog.ShowDialog(this);
         }
 
         private void menuHelpAboutAlicat_Click(object? sender, EventArgs e)
@@ -259,6 +503,15 @@ namespace Alicat
 
             MessageBox.Show(message, "About Alicat Controller",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        // ====================================================================
+        // Device Menu Handlers
+        // ====================================================================
+
+        private void menuDeviceInfo_Click(object? sender, EventArgs e)
+        {
+            _presenter?.ShowDeviceInfo(this);
         }
 
         // ====================================================================

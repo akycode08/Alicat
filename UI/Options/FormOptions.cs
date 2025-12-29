@@ -12,19 +12,23 @@ namespace Alicat
         {
             internal class Model
             {
-                public string PressureUnits = "PSI"; // "PSI" | "BAR"
+                public string PressureUnits = "PSI"; // PSI, PSIG, PSF, PSFG, Pa, hPa, kPa, MPa, mbar, bar, g/cm², kg/cm, mTorr, torr
                 public string TimeUnits = "s";        // "ms" | "s" | "m" | "h"
-                public double? MaxPressure;           // e.g. 200
                 public double? PressureRamp;          // e.g. 5
-                public double? MaxIncrement;          // e.g. 1
+                public double? MaxPressure;           // e.g. 200
+                public double? MinPressure;           // e.g. 0
+                public double? MaxIncrement;          // e.g. 20 (Maximum Step)
+                public double? MinIncrement;          // e.g. 0.1 (Minimum Step)
 
                 public Model Clone() => new Model
                 {
                     PressureUnits = this.PressureUnits,
                     TimeUnits = this.TimeUnits,
-                    MaxPressure = this.MaxPressure,
                     PressureRamp = this.PressureRamp,
-                    MaxIncrement = this.MaxIncrement
+                    MaxPressure = this.MaxPressure,
+                    MinPressure = this.MinPressure,
+                    MaxIncrement = this.MaxIncrement,
+                    MinIncrement = this.MinIncrement
                 };
             }
 
@@ -40,14 +44,19 @@ namespace Alicat
             {
                 PressureUnits = "PSI",
                 TimeUnits = "s",
-                MaxPressure = 200,  // разумный дефолт
                 PressureRamp = 5,
-                MaxIncrement = 20
+                MaxPressure = 200,
+                MinPressure = 0,
+                MaxIncrement = 20,
+                MinIncrement = 0.1
             };
         }
 
         // Локальная копия настроек на время редактирования
         private AppOptions.Model _working;
+
+        // Событие для уведомления о применении настроек (без закрытия диалога)
+        public event EventHandler? Applied;
 
         public FormOptions()
         {
@@ -63,8 +72,10 @@ namespace Alicat
             btnApply.Click += (_, __) =>
             {
                 if (TryApplyFromUi())
-                    MessageBox.Show(this, "Applied.", "Options",
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                {
+                    // Вызываем событие для обновления UI в главной форме
+                    Applied?.Invoke(this, EventArgs.Empty);
+                }
             };
             btnOK.Click += (_, __) =>
             {
@@ -95,9 +106,11 @@ namespace Alicat
             SafeSelect(cmbTimeUnits, m.TimeUnits, "s");
 
             // Числовые поля (пусто, если null)
-            txtMaxPressure.Text = m.MaxPressure?.ToString(CultureInfo.InvariantCulture) ?? "";
             txtPressureRamp.Text = m.PressureRamp?.ToString(CultureInfo.InvariantCulture) ?? "";
+            txtMaxPressure.Text = m.MaxPressure?.ToString(CultureInfo.InvariantCulture) ?? "";
+            txtMinPressure.Text = m.MinPressure?.ToString(CultureInfo.InvariantCulture) ?? "";
             txtMaxIncrement.Text = m.MaxIncrement?.ToString(CultureInfo.InvariantCulture) ?? "";
+            txtMinIncrement.Text = m.MinIncrement?.ToString(CultureInfo.InvariantCulture) ?? "";
         }
 
         private static void SafeSelect(ComboBox cmb, string value, string fallback)
@@ -118,19 +131,14 @@ namespace Alicat
             {
                 PressureUnits = cmbPressureUnits.SelectedItem?.ToString() ?? "PSI",
                 TimeUnits = cmbTimeUnits.SelectedItem?.ToString() ?? "s",
-                MaxPressure = ParseNullableDouble(txtMaxPressure.Text),
                 PressureRamp = ParseNullableDouble(txtPressureRamp.Text),
-                MaxIncrement = ParseNullableDouble(txtMaxIncrement.Text)
+                MaxPressure = ParseNullableDouble(txtMaxPressure.Text),
+                MinPressure = ParseNullableDouble(txtMinPressure.Text),
+                MaxIncrement = ParseNullableDouble(txtMaxIncrement.Text),
+                MinIncrement = ParseNullableDouble(txtMinIncrement.Text)
             };
 
-            // Простая валидация: числа, если введены, должны быть ≥ 0
-            if (!IsNullOrPositive(m.MaxPressure))
-            {
-                MarkError(txtMaxPressure);
-                MessageBox.Show(this, "Max Pressure must be a non-negative number (or empty).",
-                    "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return false;
-            }
+            // Валидация: числа, если введены, должны быть ≥ 0
             if (!IsNullOrPositive(m.PressureRamp))
             {
                 MarkError(txtPressureRamp);
@@ -138,10 +146,47 @@ namespace Alicat
                     "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
+            if (!IsNullOrPositive(m.MaxPressure))
+            {
+                MarkError(txtMaxPressure);
+                MessageBox.Show(this, "Maximum Pressure must be a non-negative number (or empty).",
+                    "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+            if (!IsNullOrPositive(m.MinPressure))
+            {
+                MarkError(txtMinPressure);
+                MessageBox.Show(this, "Minimum Pressure must be a non-negative number (or empty).",
+                    "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
             if (!IsNullOrPositive(m.MaxIncrement))
             {
                 MarkError(txtMaxIncrement);
-                MessageBox.Show(this, "Max Increment must be a non-negative number (or empty).",
+                MessageBox.Show(this, "Maximum Step must be a non-negative number (or empty).",
+                    "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+            if (!IsNullOrPositive(m.MinIncrement))
+            {
+                MarkError(txtMinIncrement);
+                MessageBox.Show(this, "Minimum Step must be a non-negative number (or empty).",
+                    "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            // Валидация: Min ≤ Max
+            if (m.MinPressure.HasValue && m.MaxPressure.HasValue && m.MinPressure > m.MaxPressure)
+            {
+                MarkError(txtMinPressure);
+                MessageBox.Show(this, "Minimum Pressure cannot be greater than Maximum Pressure.",
+                    "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+            if (m.MinIncrement.HasValue && m.MaxIncrement.HasValue && m.MinIncrement > m.MaxIncrement)
+            {
+                MarkError(txtMinIncrement);
+                MessageBox.Show(this, "Minimum Step cannot be greater than Maximum Step.",
                     "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
@@ -173,9 +218,11 @@ namespace Alicat
 
         private void ClearErrorStyle()
         {
-            txtMaxPressure.BackColor = System.Drawing.SystemColors.Window;
             txtPressureRamp.BackColor = System.Drawing.SystemColors.Window;
+            txtMaxPressure.BackColor = System.Drawing.SystemColors.Window;
+            txtMinPressure.BackColor = System.Drawing.SystemColors.Window;
             txtMaxIncrement.BackColor = System.Drawing.SystemColors.Window;
+            txtMinIncrement.BackColor = System.Drawing.SystemColors.Window;
         }
 
         // (опционально) Если нужно забрать результат напрямую

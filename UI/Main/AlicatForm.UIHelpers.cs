@@ -38,9 +38,6 @@ namespace Alicat
             // Обновляем внутреннюю переменную единиц
             _unit = displayUnits;
 
-            // System Settings panel
-            lblUnitsValue.Text = displayUnits;
-
             // Current card
             lblCurrentUnit.Text = displayUnits;
 
@@ -56,8 +53,11 @@ namespace Alicat
             // Update buttons with new units
             UpdateIncrementButtons();
 
-            // Update max pressure with new units
+            // Update System Settings with new units
             lblMaxPressureValue.Text = $"{_maxPressure:F0} {displayUnits}";
+            lblMinPressureValue.Text = $"{_minPressure:F0} {displayUnits}";
+            lblMaxIncrementValue.Text = $"{_maxIncrementLimit:F1} {displayUnits}";
+            lblMinIncrementValue.Text = $"{_minIncrementLimit:F1} {displayUnits}";
 
             // Update ramp speed with new units (preserve value if available)
             if (_rampSpeed > 0.001)
@@ -176,26 +176,24 @@ namespace Alicat
                     ? $"Connected ({portName})"
                     : "Connected (COM3)";
                 lblConnectionStatus.ForeColor = isDarkTheme ? darkTextSecondary : lightTextSecondary;
-
-                lblConnectionValue.Text = portName ?? "COM3";
             }
             else
             {
                 lblStatusDot.ForeColor = isDarkTheme ? darkStatusDotDisconnected : lightStatusDotDisconnected;
                 lblConnectionStatus.Text = "Disconnected";
                 lblConnectionStatus.ForeColor = isDarkTheme ? darkTextMuted : lightTextMuted;
-
-                lblConnectionValue.Text = "—";
+                
+                // Обновляем rate с правильными единицами при отключении
+                UI_SetTrendStatus(null, 0.0, false, 0.0);
             }
         }
 
         /// <summary>
-        /// Обновляет baud rate в Status Bar и System Settings.
+        /// Обновляет baud rate в Status Bar.
         /// </summary>
         public void UI_UpdateBaudRate(int baudRate)
         {
             lblBaudRate.Text = $"Baud: {baudRate}";
-            lblBaudRateValue.Text = baudRate.ToString();
         }
 
         /// <summary>

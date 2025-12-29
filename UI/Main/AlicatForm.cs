@@ -38,7 +38,9 @@ namespace Alicat
         private readonly Timer _pollTimer = new() { Interval = 500 };
 
         private double _maxPressure = 200.0;
+        private double _minPressure = 0.0;
         private double _maxIncrementLimit = 20.0;
+        private double _minIncrementLimit = 0.1;
         private double _currentIncrement = 5.0;
 
         private readonly DeviceState _state = new();
@@ -66,9 +68,11 @@ namespace Alicat
 
             // Меню
             menuSettingsPreferences.Click += btnOptions_Click_Presenter;
+            menuSettingsAutoSave.Click += menuSettingsAutoSave_Click;
             menuDeviceConnect.Click += btnCommunication_Click_Presenter;
             menuDeviceDisconnect.Click += menuDeviceDisconnect_Click;
             menuDeviceEmergencyStop.Click += menuDeviceEmergencyStop_Click;
+            menuDeviceInfo.Click += menuDeviceInfo_Click;
             menuFileNewSession.Click += menuFileNewSession_Click_Presenter;
             menuFileTestMode.Click += menuFileTestMode_Click;
             menuFileExit.Click += menuFileExit_Click;
@@ -120,6 +124,9 @@ namespace Alicat
             // Устанавливаем правильный статус подключения ПОСЛЕ применения темы
             // (чтобы тема не перезаписала цвет индикатора)
             UI_UpdateConnectionStatus(false);
+
+            // Загружаем сохраненные настройки при старте (если Auto-save был включен)
+            LoadSettingsFromFile();
         }
 
         // ====================================================================
@@ -128,14 +135,27 @@ namespace Alicat
         private void ApplyOptionsToUi()
         {
             _maxPressure = FormOptions.AppOptions.Current.MaxPressure ?? 200.0;
+            _minPressure = FormOptions.AppOptions.Current.MinPressure ?? 0.0;
             _maxIncrementLimit = FormOptions.AppOptions.Current.MaxIncrement ?? 20.0;
+            _minIncrementLimit = FormOptions.AppOptions.Current.MinIncrement ?? 0.1;
+
+            // Update Ramp Speed from Preferences
+            var rampSpeed = FormOptions.AppOptions.Current.PressureRamp;
+            if (rampSpeed.HasValue && rampSpeed.Value > 0.001)
+            {
+                _rampSpeed = rampSpeed.Value;
+                UI_SetRampSpeedUnits($"{TrimZeros(_rampSpeed)} {_unit}/s");
+            }
 
             ValidateTargetAgainstMax();
             ValidateIncrementAgainstMax();
             UpdateIncrementButtons();
 
-            // Update max pressure display
+            // Update System Settings display
             lblMaxPressureValue.Text = $"{_maxPressure:F0} {_unit}";
+            lblMinPressureValue.Text = $"{_minPressure:F0} {_unit}";
+            lblMaxIncrementValue.Text = $"{_maxIncrementLimit:F1} {_unit}";
+            lblMinIncrementValue.Text = $"{_minIncrementLimit:F1} {_unit}";
         }
 
         // ====================================================================
@@ -294,39 +314,43 @@ namespace Alicat
         // ====================================================================
 
         /// <summary>
-        /// Валидация целевого значения давления против максимального.
+        /// Валидация целевого значения давления против максимального и минимального.
         /// </summary>
         public void ValidateTargetAgainstMax()
         {
             var text = txtTargetInput.Text?.Trim();
             bool parsed = double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double targetVal);
             bool over = parsed && targetVal > _maxPressure;
+            bool under = parsed && targetVal < _minPressure;
+            bool invalid = over || under;
 
             if (isDarkTheme)
             {
-                txtTargetInput.BackColor = over ? System.Drawing.Color.FromArgb(60, 20, 20) : darkBgWindow;
+                txtTargetInput.BackColor = invalid ? System.Drawing.Color.FromArgb(60, 20, 20) : darkBgWindow;
             }
             else
             {
-                txtTargetInput.BackColor = over ? System.Drawing.Color.MistyRose : lightBgWindow;
+                txtTargetInput.BackColor = invalid ? System.Drawing.Color.MistyRose : lightBgWindow;
             }
         }
 
         /// <summary>
-        /// Валидация increment против максимального лимита.
+        /// Валидация increment против максимального и минимального лимита.
         /// Вызывается из Communication.cs при получении данных.
         /// </summary>
         public void ValidateIncrementAgainstMax()
         {
             bool overLimit = _currentIncrement > _maxIncrementLimit;
+            bool underLimit = _currentIncrement < _minIncrementLimit;
+            bool invalid = overLimit || underLimit;
 
             if (isDarkTheme)
             {
-                txtIncrement.BackColor = overLimit ? System.Drawing.Color.FromArgb(60, 20, 20) : darkBgWindow;
+                txtIncrement.BackColor = invalid ? System.Drawing.Color.FromArgb(60, 20, 20) : darkBgWindow;
             }
             else
             {
-                txtIncrement.BackColor = overLimit ? System.Drawing.Color.MistyRose : lightBgWindow;
+                txtIncrement.BackColor = invalid ? System.Drawing.Color.MistyRose : lightBgWindow;
             }
 
             // Опционально: можно отключать кнопки, если превышен лимит
@@ -338,7 +362,7 @@ namespace Alicat
         {
             if (double.TryParse(txtIncrement.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out double val))
             {
-                _currentIncrement = Math.Clamp(val, 0.1, _maxIncrementLimit);
+                _currentIncrement = Math.Clamp(val, _minIncrementLimit, _maxIncrementLimit);
                 UpdateIncrementButtons();
                 ValidateIncrementAgainstMax();
             }
@@ -361,33 +385,53 @@ namespace Alicat
         // ====================================================================
         private void CreateLogo()
         {
-            var logoBitmap = new System.Drawing.Bitmap(180, 45);
-            using (var g = System.Drawing.Graphics.FromImage(logoBitmap))
+            if (picLogo == null) return;
+
+            // Пытаемся загрузить логотип из файла
+            // Проверяем несколько возможных путей (с учетом разных регистров)
+            string[] possiblePaths = new[]
             {
-                g.Clear(System.Drawing.Color.FromArgb(0, 102, 170)); // DAC Blue
+                // В папке приложения
+                System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logo.png"),
+                System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo.png"),
+                System.IO.Path.Combine(Application.StartupPath, "Logo.png"),
+                System.IO.Path.Combine(Application.StartupPath, "logo.png"),
+                // В папках Assets/Images
+                System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Logo.png"),
+                System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "logo.png"),
+                System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images", "Logo.png"),
+                System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images", "logo.png"),
+            };
 
-                using (var font = new System.Drawing.Font("Arial", 14, System.Drawing.FontStyle.Bold))
-                using (var brush = new System.Drawing.SolidBrush(System.Drawing.Color.White))
+            System.Drawing.Image? logoImage = null;
+
+            foreach (var path in possiblePaths)
+            {
+                if (System.IO.File.Exists(path))
                 {
-                    g.DrawString("DAC Tools", font, brush, new System.Drawing.PointF(50, 8));
+                    try
+                    {
+                        logoImage = System.Drawing.Image.FromFile(path);
+                        break;
+                    }
+                    catch
+                    {
+                        // Продолжаем поиск, если файл не удалось загрузить
+                    }
                 }
-
-                using (var font = new System.Drawing.Font("Arial", 7))
-                using (var brush = new System.Drawing.SolidBrush(System.Drawing.Color.White))
-                {
-                    g.DrawString("Custom Equipment for High-Pressure Research", font, brush, new System.Drawing.PointF(50, 28));
-                }
-
-                // Simple gear icon
-                g.DrawEllipse(System.Drawing.Pens.White, 15, 12, 20, 20);
-                g.DrawLine(System.Drawing.Pens.White, 25, 12, 25, 32);
-                g.DrawLine(System.Drawing.Pens.White, 15, 22, 35, 22);
             }
 
-            if (picLogo != null)
+            // Если файл не найден, создаем пустое изображение
+            if (logoImage == null)
             {
-                picLogo.Image = logoBitmap;
+                logoImage = new System.Drawing.Bitmap(180, 45);
+                using (var g = System.Drawing.Graphics.FromImage(logoImage))
+                {
+                    g.Clear(System.Drawing.Color.FromArgb(0, 102, 170)); // DAC Blue
+                }
             }
+
+            picLogo.Image = logoImage;
         }
 
         private void btnGoToTarget_Click(object sender, EventArgs e)

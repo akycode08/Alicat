@@ -58,7 +58,7 @@ namespace Alicat
 
         private void btnDecrease_Click(object? sender, EventArgs e)
         {
-            var next = Math.Max(0, _setPoint - _currentIncrement);
+            var next = Math.Max(_minPressure, _setPoint - _currentIncrement);
             SendSetPoint(next);
             ValidateTargetAgainstMax();
         }
@@ -151,37 +151,8 @@ namespace Alicat
         // ====================================================================
         // PAUSE / CONTINUE
         // ====================================================================
-
-        private void btnPause_Click(object? sender, EventArgs e)
-        {
-            if (_serial == null)
-            {
-                MessageBox.Show("Device is not connected.", "Pause",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            // Останавливаем рампу: устанавливаем уставку равную текущему значению
-            // Это останавливает процесс рампы на устройстве
-            // ВАЖНО: Polling продолжает работать для обновления UI
-            // Кнопку можно использовать несколько раз - каждый раз останавливает рампу на текущем значении
-            try
-            {
-                _serial.Send($"AS{_current:F2}");
-                _setPoint = _current;
-                UI_SetSetPoint(_current, _unit);
-                // НЕ останавливаем polling timer - он должен продолжать работать
-                // чтобы приложение получало обновления от устройства
-                _isPaused = true;
-                // Кнопка остается активной - можно использовать несколько раз
-                UI_AppendStatusInfo($"Ramp paused - setpoint set to current ({_current:F2} {_unit}). Polling continues.");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Failed to pause: {ex.Message}", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
+        // Обработчик перенесен в AlicatForm.Presenter.cs (btnPause_Click_Presenter)
+        // для использования Presenter паттерна
 
         // ====================================================================
         // PURGE

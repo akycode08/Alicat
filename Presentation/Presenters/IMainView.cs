@@ -39,6 +39,12 @@ namespace Alicat.Presentation.Presenters
 
         // Invoke для thread-safe UI updates
         void BeginInvoke(Action action);
+
+        // Settings persistence
+        void SaveSettingsIfAutoSaveEnabled();
+
+        // Apply options to UI (for internal View fields like _minPressure, _minIncrementLimit)
+        void ApplyOptionsToUi();
     }
 }
 

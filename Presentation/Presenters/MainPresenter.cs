@@ -359,20 +359,33 @@ namespace Alicat.Presentation.Presenters
                 return;
             }
 
-            if (targetValue > _maxPressure)
+            var maxPressure = FormOptions.AppOptions.Current.MaxPressure ?? 200.0;
+            var minPressure = FormOptions.AppOptions.Current.MinPressure ?? 0.0;
+
+            if (targetValue > maxPressure)
             {
                 System.Media.SystemSounds.Beep.Play();
                 MessageBox.Show(
-                    $"Target value exceeds Max Pressure ({_maxPressure.ToString("0.###", CultureInfo.InvariantCulture)} {_unit}).",
+                    $"Target value exceeds Max Pressure ({maxPressure.ToString("0.###", CultureInfo.InvariantCulture)} {_unit}).",
                     "Limit exceeded",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            const double MIN = 0.0, MAX_SOFT = 1000.0;
-            if (targetValue < MIN || targetValue > MAX_SOFT)
+            if (targetValue < minPressure)
             {
-                MessageBox.Show($"Target value must be between {MIN} and {MAX_SOFT}.", "Error",
+                System.Media.SystemSounds.Beep.Play();
+                MessageBox.Show(
+                    $"Target value is below Min Pressure ({minPressure.ToString("0.###", CultureInfo.InvariantCulture)} {_unit}).",
+                    "Limit exceeded",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            const double MAX_SOFT = 1000.0;
+            if (targetValue > MAX_SOFT)
+            {
+                MessageBox.Show($"Target value must not exceed {MAX_SOFT}.", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -548,9 +561,15 @@ namespace Alicat.Presentation.Presenters
 
         public void ApplyOptionsToUi()
         {
+            // Обновляем настройки в Presenter
             _maxPressure = FormOptions.AppOptions.Current.MaxPressure ?? 200.0;
             _maxIncrementLimit = FormOptions.AppOptions.Current.MaxIncrement ?? 20.0;
 
+            // Обновляем значения в View для валидации
+            _view.MaxPressure = _maxPressure;
+            _view.MaxIncrementLimit = _maxIncrementLimit;
+
+            // Вызываем валидацию и обновление UI
             _view.ValidateTargetAgainstMax();
             _view.ValidateIncrementAgainstMax();
             _view.UpdateIncrementButtons();
@@ -562,16 +581,44 @@ namespace Alicat.Presentation.Presenters
         {
             using var dlg = new FormOptions();
             dlg.StartPosition = FormStartPosition.CenterParent;
-            dlg.ShowDialog(parentForm);
-
-            ApplyOptionsToUi();
-
-            var ramp = FormOptions.AppOptions.Current.PressureRamp;
-            _ramp?.TryApply(ramp);
-
-            if (_serial != null && ramp is double r)
+            
+            // Подписываемся на событие Applied для обновления UI при нажатии Apply
+            dlg.Applied += (_, __) =>
             {
-                _serial.Send($"SR {r.ToString("G", CultureInfo.InvariantCulture)}");
+                ApplyOptionsToUi();
+                _view.ApplyOptionsToUi();
+
+                var ramp = FormOptions.AppOptions.Current.PressureRamp;
+                _ramp?.TryApply(ramp);
+
+                if (_serial != null && ramp is double r)
+                {
+                    _serial.Send($"SR {r.ToString("G", CultureInfo.InvariantCulture)}");
+                }
+
+                // Сохраняем настройки, если Auto-save включен
+                _view.SaveSettingsIfAutoSaveEnabled();
+            };
+
+            var result = dlg.ShowDialog(parentForm);
+
+            if (result == DialogResult.OK || result == DialogResult.None)
+            {
+                ApplyOptionsToUi();
+                
+                // Также обновляем внутренние поля View (MinPressure, MinIncrementLimit)
+                _view.ApplyOptionsToUi();
+
+                var ramp = FormOptions.AppOptions.Current.PressureRamp;
+                _ramp?.TryApply(ramp);
+
+                if (_serial != null && ramp is double r)
+                {
+                    _serial.Send($"SR {r.ToString("G", CultureInfo.InvariantCulture)}");
+                }
+
+                // Сохраняем настройки, если Auto-save включен
+                _view.SaveSettingsIfAutoSaveEnabled();
             }
         }
 
@@ -753,6 +800,219 @@ namespace Alicat.Presentation.Presenters
             {
                 MessageBox.Show($"Emergency Stop error:\n{ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // ====================================================================
+        // DEVICE INFORMATION
+        // ====================================================================
+
+        /// <summary>
+        /// Получение и отображение информации об устройстве.
+        /// </summary>
+        public async void ShowDeviceInfo(Form parentForm)
+        {
+            if (_serial == null)
+            {
+                MessageBox.Show("Device is not connected.\n\nPlease connect to a device first.", 
+                    "Device Info", 
+                    MessageBoxButtons.OK, 
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                // Собираем информацию об устройстве асинхронно
+                string deviceInfo = await GetDeviceInfoAsync();
+
+                // Показываем информацию в MessageBox
+                MessageBox.Show(deviceInfo, "Device Information",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Failed to retrieve device information:\n{ex.Message}",
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Асинхронное получение информации об устройстве через RS-232.
+        /// </summary>
+        private async Task<string> GetDeviceInfoAsync()
+        {
+            if (_serial == null)
+                return "Device not connected";
+
+            var info = new System.Text.StringBuilder();
+            info.AppendLine("Alicat Pressure Controller");
+            info.AppendLine("═══════════════════════════════════");
+            info.AppendLine();
+
+            // Получаем информацию из текущего состояния
+            info.AppendLine("Current Status:");
+            info.AppendLine("─────────────────────────");
+            info.AppendLine($"Connection Status: Connected");
+            info.AppendLine($"Current Pressure: {_current:F2} {_unit}");
+            info.AppendLine($"Set Point: {_setPoint:F2} {_unit}");
+            info.AppendLine($"Ramp Speed: {_rampSpeed:F2} {_unit}/s");
+            info.AppendLine($"Units: {_unit}");
+            info.AppendLine($"Exhaust: {(_isExhaust ? "Open" : "Closed")}");
+            info.AppendLine($"Paused: {(_isPaused ? "Yes" : "No")}");
+            info.AppendLine();
+
+            // Получаем детальную информацию об устройстве
+            info.AppendLine("Device Information:");
+            info.AppendLine("─────────────────────────");
+
+            try
+            {
+                // Запрашиваем информацию об устройстве через команду AVE
+                // Формат ответа: "A 10v22.0-R24 Apr 29 2025,10:58:06"
+                string? deviceInfoResponse = await RequestDeviceResponseAsync(AlicatCommands.GetDeviceInfo, 1500);
+                if (!string.IsNullOrWhiteSpace(deviceInfoResponse))
+                {
+                    // Парсим ответ AVE
+                    // Формат: "A <model/version> <date> <time>"
+                    string response = deviceInfoResponse.Trim();
+                    
+                    // Убираем префикс "A " если есть
+                    if (response.StartsWith("A "))
+                    {
+                        response = response.Substring(2).Trim();
+                    }
+                    else if (response.StartsWith("A"))
+                    {
+                        response = response.Substring(1).Trim();
+                    }
+                    
+                    // Разбиваем на части
+                    var parts = response.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    
+                    if (parts.Length >= 1)
+                    {
+                        // Первая часть - модель/версия (например, "10v22.0-R24")
+                        string modelVersion = parts[0];
+                        info.AppendLine($"Model / Version: {modelVersion}");
+                    }
+                    
+                    if (parts.Length >= 2)
+                    {
+                        // Остальные части - дата и время
+                        string dateTime = string.Join(" ", parts, 1, parts.Length - 1);
+                        info.AppendLine($"Firmware Date: {dateTime}");
+                    }
+                }
+                else
+                {
+                    info.AppendLine("Model / Version: Not available");
+                    info.AppendLine("Firmware Date: Not available");
+                }
+            }
+            catch (Exception ex)
+            {
+                info.AppendLine($"Error retrieving device info: {ex.Message}");
+            }
+
+            info.AppendLine();
+            info.AppendLine($"Last Update: {_state.UpdatedAtUtc:yyyy-MM-dd HH:mm:ss} UTC");
+
+            return info.ToString();
+        }
+
+        /// <summary>
+        /// Отправляет команду устройству и ждет ответа с таймаутом.
+        /// ВАЖНО: Временно останавливает polling, чтобы избежать конфликтов.
+        /// </summary>
+        private async Task<string?> RequestDeviceResponseAsync(string command, int timeoutMs)
+        {
+            if (_serial == null)
+                return null;
+
+            // Временно останавливаем polling
+            bool wasPolling = _pollTimer.Enabled;
+            _pollTimer.Stop();
+
+            try
+            {
+                string? response = null;
+                var responseReceived = new System.Threading.Tasks.TaskCompletionSource<string?>();
+                var timeout = false;
+
+                // Подписываемся на получение ответа
+                EventHandler<string>? handler = null;
+                handler = (sender, line) =>
+                {
+                    if (!timeout && !string.IsNullOrWhiteSpace(line))
+                    {
+                        string trimmedLine = line.Trim();
+                        
+                        // Для команды AVE принимаем ответ, который содержит версию/дату
+                        // Формат AVE ответа: "A 10v22.0-R24 Apr 29 2025,10:58:06"
+                        // ALS ответы: "A +0053.9 +0053.9 10 PSIG" (содержат два числа давления подряд)
+                        
+                        // Проверяем, является ли это ALS ответом (содержит два числа давления)
+                        // Паттерн: "A" + пробел + число + пробел + число
+                        bool isAlsResponse = trimmedLine.StartsWith("A") && 
+                                            System.Text.RegularExpressions.Regex.IsMatch(trimmedLine, @"^A\s+[+-]?\d+\.\d+\s+[+-]?\d+\.\d+");
+                        
+                        // Если это не ALS ответ (не содержит два числа давления подряд), принимаем его
+                        // Это может быть ответ AVE или другой информационный ответ
+                        if (!isAlsResponse)
+                        {
+                            response = line;
+                            responseReceived.TrySetResult(line);
+                        }
+                    }
+                };
+
+                _serial.LineReceived += handler;
+
+                try
+                {
+                    // Очищаем буфер перед отправкой команды
+                    await Task.Delay(50); // Небольшая задержка для очистки буфера
+
+                    // Отправляем команду
+                    _serial.Send(command);
+
+                    // Ждем ответа с таймаутом
+                    var timeoutTask = Task.Delay(timeoutMs);
+                    var completedTask = await Task.WhenAny(responseReceived.Task, timeoutTask);
+
+                    if (completedTask == timeoutTask)
+                    {
+                        timeout = true;
+                        responseReceived.TrySetResult(null);
+                        return null;
+                    }
+
+                    return await responseReceived.Task;
+                }
+                catch
+                {
+                    return null;
+                }
+                finally
+                {
+                    // Отписываемся от события
+                    if (handler != null)
+                    {
+                        _serial.LineReceived -= handler;
+                    }
+                }
+            }
+            finally
+            {
+                // Восстанавливаем polling, если он был активен
+                if (wasPolling)
+                {
+                    _pollTimer.Start();
+                }
             }
         }
 

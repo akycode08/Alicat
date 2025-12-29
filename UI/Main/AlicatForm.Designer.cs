@@ -31,11 +31,15 @@ namespace Alicat
         private ToolStripMenuItem menuFileExit;
         private ToolStripMenuItem menuSettings;
         private ToolStripMenuItem menuSettingsPreferences;
+        private ToolStripSeparator menuSettingsSeparator1;
+        private ToolStripMenuItem menuSettingsAutoSave;
         private ToolStripMenuItem menuDevice;
         private ToolStripMenuItem menuDeviceConnect;
         private ToolStripMenuItem menuDeviceDisconnect;
         private ToolStripSeparator menuDeviceSeparator1;
         private ToolStripMenuItem menuDeviceEmergencyStop;
+        private ToolStripSeparator menuDeviceSeparator2;
+        private ToolStripMenuItem menuDeviceInfo;
         private ToolStripMenuItem menuView;
         private ToolStripMenuItem menuViewTheme;
         private ToolStripMenuItem menuViewLightTheme;
@@ -137,23 +141,23 @@ namespace Alicat
         private Label lblMaxPressureLabel;
         private Label lblMaxPressureValue;
 
-        private Panel settingUnits;
-        private TableLayoutPanel settingUnitsRow;
-        private Panel stripUnits;
-        private Label lblUnitsLabel;
-        private Label lblUnitsValue;
+        private Panel settingMinPressure;
+        private TableLayoutPanel settingMinPressureRow;
+        private Panel stripMinPressure;
+        private Label lblMinPressureLabel;
+        private Label lblMinPressureValue;
 
-        private Panel settingConnection;
-        private TableLayoutPanel settingConnectionRow;
-        private Panel stripConnection;
-        private Label lblConnectionLabel;
-        private Label lblConnectionValue;
+        private Panel settingMaxIncrement;
+        private TableLayoutPanel settingMaxIncrementRow;
+        private Panel stripMaxIncrement;
+        private Label lblMaxIncrementLabel;
+        private Label lblMaxIncrementValue;
 
-        private Panel settingBaudRate;
-        private TableLayoutPanel settingBaudRateRow;
-        private Panel stripBaudRate;
-        private Label lblBaudRateLabel;
-        private Label lblBaudRateValue;
+        private Panel settingMinIncrement;
+        private TableLayoutPanel settingMinIncrementRow;
+        private Panel stripMinIncrement;
+        private Label lblMinIncrementLabel;
+        private Label lblMinIncrementValue;
 
         // Status Info panel
         private Panel panelStatusInfo;
@@ -190,11 +194,15 @@ namespace Alicat
             menuFileExit = new ToolStripMenuItem();
             menuSettings = new ToolStripMenuItem();
             menuSettingsPreferences = new ToolStripMenuItem();
+            menuSettingsSeparator1 = new ToolStripSeparator();
+            menuSettingsAutoSave = new ToolStripMenuItem();
             menuDevice = new ToolStripMenuItem();
             menuDeviceConnect = new ToolStripMenuItem();
             menuDeviceDisconnect = new ToolStripMenuItem();
             menuDeviceSeparator1 = new ToolStripSeparator();
             menuDeviceEmergencyStop = new ToolStripMenuItem();
+            menuDeviceSeparator2 = new ToolStripSeparator();
+            menuDeviceInfo = new ToolStripMenuItem();
             menuView = new ToolStripMenuItem();
             menuViewTheme = new ToolStripMenuItem();
             menuViewLightTheme = new ToolStripMenuItem();
@@ -271,21 +279,21 @@ namespace Alicat
             stripMaxPressure = new Panel();
             lblMaxPressureLabel = new Label();
             lblMaxPressureValue = new Label();
-            settingUnits = new Panel();
-            settingUnitsRow = new TableLayoutPanel();
-            stripUnits = new Panel();
-            lblUnitsLabel = new Label();
-            lblUnitsValue = new Label();
-            settingConnection = new Panel();
-            settingConnectionRow = new TableLayoutPanel();
-            stripConnection = new Panel();
-            lblConnectionLabel = new Label();
-            lblConnectionValue = new Label();
-            settingBaudRate = new Panel();
-            settingBaudRateRow = new TableLayoutPanel();
-            stripBaudRate = new Panel();
-            lblBaudRateLabel = new Label();
-            lblBaudRateValue = new Label();
+            settingMinPressure = new Panel();
+            settingMinPressureRow = new TableLayoutPanel();
+            stripMinPressure = new Panel();
+            lblMinPressureLabel = new Label();
+            lblMinPressureValue = new Label();
+            settingMaxIncrement = new Panel();
+            settingMaxIncrementRow = new TableLayoutPanel();
+            stripMaxIncrement = new Panel();
+            lblMaxIncrementLabel = new Label();
+            lblMaxIncrementValue = new Label();
+            settingMinIncrement = new Panel();
+            settingMinIncrementRow = new TableLayoutPanel();
+            stripMinIncrement = new Panel();
+            lblMinIncrementLabel = new Label();
+            lblMinIncrementValue = new Label();
             lblSystemSettingsTitle = new Label();
             spacerRightGap = new Panel();
             panelStatusInfo = new Panel();
@@ -317,12 +325,12 @@ namespace Alicat
             settingRampSpeedRow.SuspendLayout();
             settingMaxPressure.SuspendLayout();
             settingMaxPressureRow.SuspendLayout();
-            settingUnits.SuspendLayout();
-            settingUnitsRow.SuspendLayout();
-            settingConnection.SuspendLayout();
-            settingConnectionRow.SuspendLayout();
-            settingBaudRate.SuspendLayout();
-            settingBaudRateRow.SuspendLayout();
+            settingMinPressure.SuspendLayout();
+            settingMinPressureRow.SuspendLayout();
+            settingMaxIncrement.SuspendLayout();
+            settingMaxIncrementRow.SuspendLayout();
+            settingMinIncrement.SuspendLayout();
+            settingMinIncrementRow.SuspendLayout();
             panelStatusInfo.SuspendLayout();
             SuspendLayout();
             // 
@@ -349,7 +357,7 @@ namespace Alicat
             menuFileNewSession.Name = "menuFileNewSession";
             menuFileNewSession.Size = new Size(156, 22);
             menuFileNewSession.Text = "New Session...";
-            menuFileNewSession.Click += menuFileNewSession_Click;
+            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // menuFileTestMode
             // 
@@ -373,7 +381,7 @@ namespace Alicat
             // 
             // menuSettings
             // 
-            menuSettings.DropDownItems.AddRange(new ToolStripItem[] { menuSettingsPreferences });
+            menuSettings.DropDownItems.AddRange(new ToolStripItem[] { menuSettingsPreferences, menuSettingsSeparator1, menuSettingsAutoSave });
             menuSettings.Name = "menuSettings";
             menuSettings.Size = new Size(61, 23);
             menuSettings.Text = "Settings";
@@ -386,9 +394,22 @@ namespace Alicat
             menuSettingsPreferences.ShortcutKeys = Keys.Control | Keys.Oemcomma;
             // Click event handler is set in constructor (AlicatForm.cs)
             // 
+            // menuSettingsSeparator1
+            // 
+            menuSettingsSeparator1.Name = "menuSettingsSeparator1";
+            menuSettingsSeparator1.Size = new Size(177, 6);
+            // 
+            // menuSettingsAutoSave
+            // 
+            menuSettingsAutoSave.CheckOnClick = true;
+            menuSettingsAutoSave.Name = "menuSettingsAutoSave";
+            menuSettingsAutoSave.Size = new Size(180, 22);
+            menuSettingsAutoSave.Text = "Auto-save Settings";
+            // Click event handler is set in constructor (AlicatForm.cs)
+            // 
             // menuDevice
             // 
-            menuDevice.DropDownItems.AddRange(new ToolStripItem[] { menuDeviceConnect, menuDeviceDisconnect, menuDeviceSeparator1, menuDeviceEmergencyStop });
+            menuDevice.DropDownItems.AddRange(new ToolStripItem[] { menuDeviceConnect, menuDeviceDisconnect, menuDeviceSeparator1, menuDeviceEmergencyStop, menuDeviceSeparator2, menuDeviceInfo });
             menuDevice.Name = "menuDevice";
             menuDevice.Size = new Size(54, 23);
             menuDevice.Text = "Device";
@@ -419,6 +440,18 @@ namespace Alicat
             menuDeviceEmergencyStop.Size = new Size(180, 22);
             menuDeviceEmergencyStop.Text = "Emergency Stop";
             menuDeviceEmergencyStop.ShortcutKeys = Keys.Control | Keys.Shift | Keys.E;
+            // Click event handler is set in constructor (AlicatForm.cs)
+            // 
+            // menuDeviceSeparator2
+            // 
+            menuDeviceSeparator2.Name = "menuDeviceSeparator2";
+            menuDeviceSeparator2.Size = new Size(177, 6);
+            // 
+            // menuDeviceInfo
+            // 
+            menuDeviceInfo.Name = "menuDeviceInfo";
+            menuDeviceInfo.Size = new Size(180, 22);
+            menuDeviceInfo.Text = "Device Info...";
             // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // menuView
@@ -655,7 +688,7 @@ namespace Alicat
             btnPause.Size = new Size(100, 45);
             btnPause.TabIndex = 1;
             btnPause.Text = "Pause";
-            btnPause.Click += btnPause_Click;
+            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // btnPurge
             // 
@@ -667,7 +700,7 @@ namespace Alicat
             btnPurge.Size = new Size(100, 45);
             btnPurge.TabIndex = 2;
             btnPurge.Text = "Purge";
-            btnPurge.Click += btnPurge_Click;
+            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // lblToolbarWindows
             // 
@@ -811,7 +844,7 @@ namespace Alicat
             lblCurrentRate.Name = "lblCurrentRate";
             lblCurrentRate.Size = new Size(408, 25);
             lblCurrentRate.TabIndex = 0;
-            lblCurrentRate.Text = "→ 0.0 /s";
+            lblCurrentRate.Text = "→ 0.0 PSIG/s";
             lblCurrentRate.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblCurrentUnit
@@ -1042,7 +1075,7 @@ namespace Alicat
             btnDecrease.Size = new Size(802, 50);
             btnDecrease.TabIndex = 0;
             btnDecrease.Text = "▼  Decrease (-5.0 PSIG)";
-            btnDecrease.Click += btnDecrease_Click;
+            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // btnIncrease
             // 
@@ -1055,7 +1088,7 @@ namespace Alicat
             btnIncrease.Size = new Size(802, 50);
             btnIncrease.TabIndex = 1;
             btnIncrease.Text = "▲  Increase (+5.0 PSIG)";
-            btnIncrease.Click += btnIncrease_Click;
+            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // lblAdjustPressureLabel
             // 
@@ -1100,7 +1133,7 @@ namespace Alicat
             btnIncrementMinus.Size = new Size(40, 34);
             btnIncrementMinus.TabIndex = 0;
             btnIncrementMinus.Text = "−";
-            btnIncrementMinus.Click += btnIncrementMinus_Click;
+            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // txtIncrement
             // 
@@ -1123,7 +1156,7 @@ namespace Alicat
             btnIncrementPlus.Size = new Size(40, 34);
             btnIncrementPlus.TabIndex = 2;
             btnIncrementPlus.Text = "+";
-            btnIncrementPlus.Click += btnIncrementPlus_Click;
+            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // lblIncrementUnit
             // 
@@ -1217,9 +1250,9 @@ namespace Alicat
             systemSettingsStack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             systemSettingsStack.Controls.Add(settingRampSpeed, 0, 0);
             systemSettingsStack.Controls.Add(settingMaxPressure, 0, 1);
-            systemSettingsStack.Controls.Add(settingUnits, 0, 2);
-            systemSettingsStack.Controls.Add(settingConnection, 0, 3);
-            systemSettingsStack.Controls.Add(settingBaudRate, 0, 4);
+            systemSettingsStack.Controls.Add(settingMinPressure, 0, 2);
+            systemSettingsStack.Controls.Add(settingMaxIncrement, 0, 3);
+            systemSettingsStack.Controls.Add(settingMinIncrement, 0, 4);
             systemSettingsStack.Dock = DockStyle.Fill;
             systemSettingsStack.Location = new Point(16, 44);
             systemSettingsStack.Margin = new Padding(0);
@@ -1357,191 +1390,191 @@ namespace Alicat
             lblMaxPressureValue.Text = "200 PSIG";
             lblMaxPressureValue.TextAlign = ContentAlignment.MiddleRight;
             // 
-            // settingUnits
+            // settingMinPressure
             // 
-            settingUnits.BorderStyle = BorderStyle.FixedSingle;
-            settingUnits.Controls.Add(settingUnitsRow);
-            settingUnits.Dock = DockStyle.Fill;
-            settingUnits.Location = new Point(0, 96);
-            settingUnits.Margin = new Padding(0, 0, 0, 10);
-            settingUnits.Name = "settingUnits";
-            settingUnits.Size = new Size(366, 38);
-            settingUnits.TabIndex = 2;
+            settingMinPressure.BorderStyle = BorderStyle.FixedSingle;
+            settingMinPressure.Controls.Add(settingMinPressureRow);
+            settingMinPressure.Dock = DockStyle.Fill;
+            settingMinPressure.Location = new Point(0, 96);
+            settingMinPressure.Margin = new Padding(0, 0, 0, 10);
+            settingMinPressure.Name = "settingMinPressure";
+            settingMinPressure.Size = new Size(366, 38);
+            settingMinPressure.TabIndex = 2;
             // 
-            // settingUnitsRow
+            // settingMinPressureRow
             // 
-            settingUnitsRow.ColumnCount = 3;
-            settingUnitsRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 4F));
-            settingUnitsRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65F));
-            settingUnitsRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
-            settingUnitsRow.Controls.Add(stripUnits, 0, 0);
-            settingUnitsRow.Controls.Add(lblUnitsLabel, 1, 0);
-            settingUnitsRow.Controls.Add(lblUnitsValue, 2, 0);
-            settingUnitsRow.Dock = DockStyle.Fill;
-            settingUnitsRow.Location = new Point(0, 0);
-            settingUnitsRow.Margin = new Padding(0);
-            settingUnitsRow.Name = "settingUnitsRow";
-            settingUnitsRow.RowCount = 1;
-            settingUnitsRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            settingUnitsRow.Size = new Size(364, 36);
-            settingUnitsRow.TabIndex = 0;
+            settingMinPressureRow.ColumnCount = 3;
+            settingMinPressureRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 4F));
+            settingMinPressureRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65F));
+            settingMinPressureRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+            settingMinPressureRow.Controls.Add(stripMinPressure, 0, 0);
+            settingMinPressureRow.Controls.Add(lblMinPressureLabel, 1, 0);
+            settingMinPressureRow.Controls.Add(lblMinPressureValue, 2, 0);
+            settingMinPressureRow.Dock = DockStyle.Fill;
+            settingMinPressureRow.Location = new Point(0, 0);
+            settingMinPressureRow.Margin = new Padding(0);
+            settingMinPressureRow.Name = "settingMinPressureRow";
+            settingMinPressureRow.RowCount = 1;
+            settingMinPressureRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            settingMinPressureRow.Size = new Size(364, 36);
+            settingMinPressureRow.TabIndex = 0;
             // 
-            // stripUnits
+            // stripMinPressure
             // 
-            stripUnits.Dock = DockStyle.Fill;
-            stripUnits.Location = new Point(0, 0);
-            stripUnits.Margin = new Padding(0);
-            stripUnits.Name = "stripUnits";
-            stripUnits.Size = new Size(4, 36);
-            stripUnits.TabIndex = 0;
+            stripMinPressure.Dock = DockStyle.Fill;
+            stripMinPressure.Location = new Point(0, 0);
+            stripMinPressure.Margin = new Padding(0);
+            stripMinPressure.Name = "stripMinPressure";
+            stripMinPressure.Size = new Size(4, 36);
+            stripMinPressure.TabIndex = 0;
             // 
-            // lblUnitsLabel
+            // lblMinPressureLabel
             // 
-            lblUnitsLabel.Dock = DockStyle.Fill;
-            lblUnitsLabel.Font = new Font("Segoe UI", 10F);
-            lblUnitsLabel.Location = new Point(16, 0);
-            lblUnitsLabel.Margin = new Padding(12, 0, 0, 0);
-            lblUnitsLabel.Name = "lblUnitsLabel";
-            lblUnitsLabel.Size = new Size(222, 36);
-            lblUnitsLabel.TabIndex = 1;
-            lblUnitsLabel.Text = "Units";
-            lblUnitsLabel.TextAlign = ContentAlignment.MiddleLeft;
+            lblMinPressureLabel.Dock = DockStyle.Fill;
+            lblMinPressureLabel.Font = new Font("Segoe UI", 10F);
+            lblMinPressureLabel.Location = new Point(16, 0);
+            lblMinPressureLabel.Margin = new Padding(12, 0, 0, 0);
+            lblMinPressureLabel.Name = "lblMinPressureLabel";
+            lblMinPressureLabel.Size = new Size(222, 36);
+            lblMinPressureLabel.TabIndex = 1;
+            lblMinPressureLabel.Text = "Min Pressure";
+            lblMinPressureLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
-            // lblUnitsValue
+            // lblMinPressureValue
             // 
-            lblUnitsValue.Dock = DockStyle.Fill;
-            lblUnitsValue.Font = new Font("Courier New", 10F, FontStyle.Bold);
-            lblUnitsValue.Location = new Point(238, 0);
-            lblUnitsValue.Margin = new Padding(0, 0, 12, 0);
-            lblUnitsValue.Name = "lblUnitsValue";
-            lblUnitsValue.Size = new Size(114, 36);
-            lblUnitsValue.TabIndex = 2;
-            lblUnitsValue.Text = "PSIG";
-            lblUnitsValue.TextAlign = ContentAlignment.MiddleRight;
+            lblMinPressureValue.Dock = DockStyle.Fill;
+            lblMinPressureValue.Font = new Font("Courier New", 10F, FontStyle.Bold);
+            lblMinPressureValue.Location = new Point(238, 0);
+            lblMinPressureValue.Margin = new Padding(0, 0, 12, 0);
+            lblMinPressureValue.Name = "lblMinPressureValue";
+            lblMinPressureValue.Size = new Size(114, 36);
+            lblMinPressureValue.TabIndex = 2;
+            lblMinPressureValue.Text = "0 PSIG";
+            lblMinPressureValue.TextAlign = ContentAlignment.MiddleRight;
             // 
-            // settingConnection
+            // settingMaxIncrement
             // 
-            settingConnection.BorderStyle = BorderStyle.FixedSingle;
-            settingConnection.Controls.Add(settingConnectionRow);
-            settingConnection.Dock = DockStyle.Fill;
-            settingConnection.Location = new Point(0, 144);
-            settingConnection.Margin = new Padding(0, 0, 0, 10);
-            settingConnection.Name = "settingConnection";
-            settingConnection.Size = new Size(366, 38);
-            settingConnection.TabIndex = 3;
+            settingMaxIncrement.BorderStyle = BorderStyle.FixedSingle;
+            settingMaxIncrement.Controls.Add(settingMaxIncrementRow);
+            settingMaxIncrement.Dock = DockStyle.Fill;
+            settingMaxIncrement.Location = new Point(0, 144);
+            settingMaxIncrement.Margin = new Padding(0, 0, 0, 10);
+            settingMaxIncrement.Name = "settingMaxIncrement";
+            settingMaxIncrement.Size = new Size(366, 38);
+            settingMaxIncrement.TabIndex = 3;
             // 
-            // settingConnectionRow
+            // settingMaxIncrementRow
             // 
-            settingConnectionRow.ColumnCount = 3;
-            settingConnectionRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 4F));
-            settingConnectionRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65F));
-            settingConnectionRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
-            settingConnectionRow.Controls.Add(stripConnection, 0, 0);
-            settingConnectionRow.Controls.Add(lblConnectionLabel, 1, 0);
-            settingConnectionRow.Controls.Add(lblConnectionValue, 2, 0);
-            settingConnectionRow.Dock = DockStyle.Fill;
-            settingConnectionRow.Location = new Point(0, 0);
-            settingConnectionRow.Margin = new Padding(0);
-            settingConnectionRow.Name = "settingConnectionRow";
-            settingConnectionRow.RowCount = 1;
-            settingConnectionRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            settingConnectionRow.Size = new Size(364, 36);
-            settingConnectionRow.TabIndex = 0;
+            settingMaxIncrementRow.ColumnCount = 3;
+            settingMaxIncrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 4F));
+            settingMaxIncrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65F));
+            settingMaxIncrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+            settingMaxIncrementRow.Controls.Add(stripMaxIncrement, 0, 0);
+            settingMaxIncrementRow.Controls.Add(lblMaxIncrementLabel, 1, 0);
+            settingMaxIncrementRow.Controls.Add(lblMaxIncrementValue, 2, 0);
+            settingMaxIncrementRow.Dock = DockStyle.Fill;
+            settingMaxIncrementRow.Location = new Point(0, 0);
+            settingMaxIncrementRow.Margin = new Padding(0);
+            settingMaxIncrementRow.Name = "settingMaxIncrementRow";
+            settingMaxIncrementRow.RowCount = 1;
+            settingMaxIncrementRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            settingMaxIncrementRow.Size = new Size(364, 36);
+            settingMaxIncrementRow.TabIndex = 0;
             // 
-            // stripConnection
+            // stripMaxIncrement
             // 
-            stripConnection.Dock = DockStyle.Fill;
-            stripConnection.Location = new Point(0, 0);
-            stripConnection.Margin = new Padding(0);
-            stripConnection.Name = "stripConnection";
-            stripConnection.Size = new Size(4, 36);
-            stripConnection.TabIndex = 0;
+            stripMaxIncrement.Dock = DockStyle.Fill;
+            stripMaxIncrement.Location = new Point(0, 0);
+            stripMaxIncrement.Margin = new Padding(0);
+            stripMaxIncrement.Name = "stripMaxIncrement";
+            stripMaxIncrement.Size = new Size(4, 36);
+            stripMaxIncrement.TabIndex = 0;
             // 
-            // lblConnectionLabel
+            // lblMaxIncrementLabel
             // 
-            lblConnectionLabel.Dock = DockStyle.Fill;
-            lblConnectionLabel.Font = new Font("Segoe UI", 10F);
-            lblConnectionLabel.Location = new Point(16, 0);
-            lblConnectionLabel.Margin = new Padding(12, 0, 0, 0);
-            lblConnectionLabel.Name = "lblConnectionLabel";
-            lblConnectionLabel.Size = new Size(222, 36);
-            lblConnectionLabel.TabIndex = 1;
-            lblConnectionLabel.Text = "Connection";
-            lblConnectionLabel.TextAlign = ContentAlignment.MiddleLeft;
+            lblMaxIncrementLabel.Dock = DockStyle.Fill;
+            lblMaxIncrementLabel.Font = new Font("Segoe UI", 10F);
+            lblMaxIncrementLabel.Location = new Point(16, 0);
+            lblMaxIncrementLabel.Margin = new Padding(12, 0, 0, 0);
+            lblMaxIncrementLabel.Name = "lblMaxIncrementLabel";
+            lblMaxIncrementLabel.Size = new Size(222, 36);
+            lblMaxIncrementLabel.TabIndex = 1;
+            lblMaxIncrementLabel.Text = "Max Increment";
+            lblMaxIncrementLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
-            // lblConnectionValue
+            // lblMaxIncrementValue
             // 
-            lblConnectionValue.Dock = DockStyle.Fill;
-            lblConnectionValue.Font = new Font("Courier New", 10F, FontStyle.Bold);
-            lblConnectionValue.Location = new Point(238, 0);
-            lblConnectionValue.Margin = new Padding(0, 0, 12, 0);
-            lblConnectionValue.Name = "lblConnectionValue";
-            lblConnectionValue.Size = new Size(114, 36);
-            lblConnectionValue.TabIndex = 2;
-            lblConnectionValue.Text = "COM3";
-            lblConnectionValue.TextAlign = ContentAlignment.MiddleRight;
+            lblMaxIncrementValue.Dock = DockStyle.Fill;
+            lblMaxIncrementValue.Font = new Font("Courier New", 10F, FontStyle.Bold);
+            lblMaxIncrementValue.Location = new Point(238, 0);
+            lblMaxIncrementValue.Margin = new Padding(0, 0, 12, 0);
+            lblMaxIncrementValue.Name = "lblMaxIncrementValue";
+            lblMaxIncrementValue.Size = new Size(114, 36);
+            lblMaxIncrementValue.TabIndex = 2;
+            lblMaxIncrementValue.Text = "20 PSIG";
+            lblMaxIncrementValue.TextAlign = ContentAlignment.MiddleRight;
             // 
-            // settingBaudRate
+            // settingMinIncrement
             // 
-            settingBaudRate.BorderStyle = BorderStyle.FixedSingle;
-            settingBaudRate.Controls.Add(settingBaudRateRow);
-            settingBaudRate.Dock = DockStyle.Fill;
-            settingBaudRate.Location = new Point(0, 192);
-            settingBaudRate.Margin = new Padding(0);
-            settingBaudRate.Name = "settingBaudRate";
-            settingBaudRate.Size = new Size(366, 48);
-            settingBaudRate.TabIndex = 4;
+            settingMinIncrement.BorderStyle = BorderStyle.FixedSingle;
+            settingMinIncrement.Controls.Add(settingMinIncrementRow);
+            settingMinIncrement.Dock = DockStyle.Fill;
+            settingMinIncrement.Location = new Point(0, 192);
+            settingMinIncrement.Margin = new Padding(0);
+            settingMinIncrement.Name = "settingMinIncrement";
+            settingMinIncrement.Size = new Size(366, 38);
+            settingMinIncrement.TabIndex = 4;
             // 
-            // settingBaudRateRow
+            // settingMinIncrementRow
             // 
-            settingBaudRateRow.ColumnCount = 3;
-            settingBaudRateRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 4F));
-            settingBaudRateRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65F));
-            settingBaudRateRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
-            settingBaudRateRow.Controls.Add(stripBaudRate, 0, 0);
-            settingBaudRateRow.Controls.Add(lblBaudRateLabel, 1, 0);
-            settingBaudRateRow.Controls.Add(lblBaudRateValue, 2, 0);
-            settingBaudRateRow.Dock = DockStyle.Fill;
-            settingBaudRateRow.Location = new Point(0, 0);
-            settingBaudRateRow.Margin = new Padding(0);
-            settingBaudRateRow.Name = "settingBaudRateRow";
-            settingBaudRateRow.RowCount = 1;
-            settingBaudRateRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            settingBaudRateRow.Size = new Size(364, 46);
-            settingBaudRateRow.TabIndex = 0;
+            settingMinIncrementRow.ColumnCount = 3;
+            settingMinIncrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 4F));
+            settingMinIncrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65F));
+            settingMinIncrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+            settingMinIncrementRow.Controls.Add(stripMinIncrement, 0, 0);
+            settingMinIncrementRow.Controls.Add(lblMinIncrementLabel, 1, 0);
+            settingMinIncrementRow.Controls.Add(lblMinIncrementValue, 2, 0);
+            settingMinIncrementRow.Dock = DockStyle.Fill;
+            settingMinIncrementRow.Location = new Point(0, 0);
+            settingMinIncrementRow.Margin = new Padding(0);
+            settingMinIncrementRow.Name = "settingMinIncrementRow";
+            settingMinIncrementRow.RowCount = 1;
+            settingMinIncrementRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            settingMinIncrementRow.Size = new Size(364, 36);
+            settingMinIncrementRow.TabIndex = 0;
             // 
-            // stripBaudRate
+            // stripMinIncrement
             // 
-            stripBaudRate.Dock = DockStyle.Fill;
-            stripBaudRate.Location = new Point(0, 0);
-            stripBaudRate.Margin = new Padding(0);
-            stripBaudRate.Name = "stripBaudRate";
-            stripBaudRate.Size = new Size(4, 46);
-            stripBaudRate.TabIndex = 0;
+            stripMinIncrement.Dock = DockStyle.Fill;
+            stripMinIncrement.Location = new Point(0, 0);
+            stripMinIncrement.Margin = new Padding(0);
+            stripMinIncrement.Name = "stripMinIncrement";
+            stripMinIncrement.Size = new Size(4, 36);
+            stripMinIncrement.TabIndex = 0;
             // 
-            // lblBaudRateLabel
+            // lblMinIncrementLabel
             // 
-            lblBaudRateLabel.Dock = DockStyle.Fill;
-            lblBaudRateLabel.Font = new Font("Segoe UI", 10F);
-            lblBaudRateLabel.Location = new Point(16, 0);
-            lblBaudRateLabel.Margin = new Padding(12, 0, 0, 0);
-            lblBaudRateLabel.Name = "lblBaudRateLabel";
-            lblBaudRateLabel.Size = new Size(222, 46);
-            lblBaudRateLabel.TabIndex = 1;
-            lblBaudRateLabel.Text = "Baud Rate";
-            lblBaudRateLabel.TextAlign = ContentAlignment.MiddleLeft;
+            lblMinIncrementLabel.Dock = DockStyle.Fill;
+            lblMinIncrementLabel.Font = new Font("Segoe UI", 10F);
+            lblMinIncrementLabel.Location = new Point(16, 0);
+            lblMinIncrementLabel.Margin = new Padding(12, 0, 0, 0);
+            lblMinIncrementLabel.Name = "lblMinIncrementLabel";
+            lblMinIncrementLabel.Size = new Size(222, 36);
+            lblMinIncrementLabel.TabIndex = 1;
+            lblMinIncrementLabel.Text = "Min Increment";
+            lblMinIncrementLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
-            // lblBaudRateValue
+            // lblMinIncrementValue
             // 
-            lblBaudRateValue.Dock = DockStyle.Fill;
-            lblBaudRateValue.Font = new Font("Courier New", 10F, FontStyle.Bold);
-            lblBaudRateValue.Location = new Point(238, 0);
-            lblBaudRateValue.Margin = new Padding(0, 0, 12, 0);
-            lblBaudRateValue.Name = "lblBaudRateValue";
-            lblBaudRateValue.Size = new Size(114, 46);
-            lblBaudRateValue.TabIndex = 2;
-            lblBaudRateValue.Text = "19200";
-            lblBaudRateValue.TextAlign = ContentAlignment.MiddleRight;
+            lblMinIncrementValue.Dock = DockStyle.Fill;
+            lblMinIncrementValue.Font = new Font("Courier New", 10F, FontStyle.Bold);
+            lblMinIncrementValue.Location = new Point(238, 0);
+            lblMinIncrementValue.Margin = new Padding(0, 0, 12, 0);
+            lblMinIncrementValue.Name = "lblMinIncrementValue";
+            lblMinIncrementValue.Size = new Size(114, 36);
+            lblMinIncrementValue.TabIndex = 2;
+            lblMinIncrementValue.Text = "0.1 PSIG";
+            lblMinIncrementValue.TextAlign = ContentAlignment.MiddleRight;
             // 
             // lblSystemSettingsTitle
             // 
@@ -1647,12 +1680,12 @@ namespace Alicat
             settingRampSpeedRow.ResumeLayout(false);
             settingMaxPressure.ResumeLayout(false);
             settingMaxPressureRow.ResumeLayout(false);
-            settingUnits.ResumeLayout(false);
-            settingUnitsRow.ResumeLayout(false);
-            settingConnection.ResumeLayout(false);
-            settingConnectionRow.ResumeLayout(false);
-            settingBaudRate.ResumeLayout(false);
-            settingBaudRateRow.ResumeLayout(false);
+            settingMinPressure.ResumeLayout(false);
+            settingMinPressureRow.ResumeLayout(false);
+            settingMaxIncrement.ResumeLayout(false);
+            settingMaxIncrementRow.ResumeLayout(false);
+            settingMinIncrement.ResumeLayout(false);
+            settingMinIncrementRow.ResumeLayout(false);
             panelStatusInfo.ResumeLayout(false);
             ResumeLayout(false);
         }
