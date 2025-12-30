@@ -351,3 +351,4 @@ if ((DateTime.Now - _lastGraphUpdate).TotalMilliseconds >= GraphUpdateIntervalMs
 **Последнее обновление:** 2024
 
 
+

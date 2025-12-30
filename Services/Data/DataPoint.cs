@@ -41,12 +41,24 @@ namespace Alicat.Services.Data
         /// </summary>
         public string? Event { get; }
 
+        /// <summary>
+        /// Скорость рампа (PSI/s)
+        /// </summary>
+        public double RampSpeed { get; }
+
+        /// <summary>
+        /// Частота опроса (мс)
+        /// </summary>
+        public int PollingFrequency { get; }
+
         public DataPoint(
             DateTime timestamp,
             double elapsedSeconds,
             double current,
             double target,
             string unit,
+            double rampSpeed = 0.0,
+            int pollingFrequency = 500,
             string? eventType = null)
         {
             Timestamp = timestamp;
@@ -54,6 +66,8 @@ namespace Alicat.Services.Data
             Current = current;
             Target = target;
             Unit = unit;
+            RampSpeed = rampSpeed;
+            PollingFrequency = pollingFrequency;
             Event = eventType;
         }
     }

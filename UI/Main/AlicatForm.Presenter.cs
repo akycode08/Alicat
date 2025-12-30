@@ -6,6 +6,7 @@ using Alicat.Services.Data;
 using Alicat.UI.Features.Terminal.Views;
 using Alicat.UI.Features.Graph.Views;
 using Alicat.UI.Features.Table.Views;
+using Alicat.UI.Features.Test;
 
 namespace Alicat
 {
@@ -227,25 +228,14 @@ namespace Alicat
             }
         }
 
+        private void menuFileTestPressure_Click(object? sender, EventArgs e)
+        {
+            _presenter?.ShowTestPressure(this);
+        }
+
         // ====================================================================
         // Settings Menu Handlers
         // ====================================================================
-
-        private void menuSettingsAutoSave_Click(object? sender, EventArgs e)
-        {
-            bool isEnabled = menuSettingsAutoSave.Checked;
-            
-            if (isEnabled)
-            {
-                // Если включили Auto-save, сразу сохраняем текущие настройки
-                SaveSettingsToFile();
-                UI_AppendStatusInfo("Auto-save enabled - settings will be saved automatically");
-            }
-            else
-            {
-                UI_AppendStatusInfo("Auto-save disabled");
-            }
-        }
 
         // ====================================================================
         // Settings Persistence
@@ -253,15 +243,53 @@ namespace Alicat
 
         private static string GetSettingsFilePath()
         {
-            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string settingsDir = System.IO.Path.Combine(appDataPath, "DACTools", "AlicatController");
+            // Используем папку проекта для хранения настроек
+            // Находим папку проекта через поиск .csproj файла
+            string? projectDir = null;
+            
+            // Пробуем найти папку проекта через поиск .csproj файла
+            string? currentDir = System.IO.Directory.GetCurrentDirectory();
+            if (!string.IsNullOrEmpty(currentDir))
+            {
+                var dir = new System.IO.DirectoryInfo(currentDir);
+                while (dir != null)
+                {
+                    if (dir.GetFiles("*.csproj").Length > 0)
+                    {
+                        projectDir = dir.FullName;
+                        break;
+                    }
+                    dir = dir.Parent;
+                }
+            }
+            
+            // Если не нашли через поиск, используем папку где находится exe и поднимаемся до проекта
+            if (string.IsNullOrEmpty(projectDir))
+            {
+                string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                string? exeDir = System.IO.Path.GetDirectoryName(exePath);
+                
+                if (exeDir != null && exeDir.Contains("bin"))
+                {
+                    var dir = new System.IO.DirectoryInfo(exeDir);
+                    while (dir != null && dir.Name != "Alicat" && dir.GetFiles("*.csproj").Length == 0)
+                    {
+                        dir = dir.Parent;
+                    }
+                    projectDir = dir?.FullName ?? System.IO.Directory.GetCurrentDirectory();
+                }
+                else
+                {
+                    projectDir = System.IO.Directory.GetCurrentDirectory();
+                }
+            }
+            
+            string settingsDir = System.IO.Path.Combine(projectDir, "Settings");
             return System.IO.Path.Combine(settingsDir, "settings.json");
         }
 
         private void SaveSettingsToFile()
         {
-            if (!menuSettingsAutoSave.Checked) return;
-
             try
             {
                 string settingsPath = GetSettingsFilePath();
@@ -274,14 +302,24 @@ namespace Alicat
 
                 var settingsData = new
                 {
-                    PressureUnits = FormOptions.AppOptions.Current.PressureUnits,
-                    TimeUnits = FormOptions.AppOptions.Current.TimeUnits,
-                    PressureRamp = FormOptions.AppOptions.Current.PressureRamp,
-                    MaxPressure = FormOptions.AppOptions.Current.MaxPressure,
-                    MinPressure = FormOptions.AppOptions.Current.MinPressure,
-                    MaxIncrement = FormOptions.AppOptions.Current.MaxIncrement,
-                    MinIncrement = FormOptions.AppOptions.Current.MinIncrement,
-                    AutoSaveEnabled = menuSettingsAutoSave.Checked,
+                    General = new
+                    {
+                        PressureUnits = FormOptions.AppOptions.Current.PressureUnits,
+                        TimeUnits = FormOptions.AppOptions.Current.TimeUnits,
+                        PollingFrequency = FormOptions.AppOptions.Current.PollingFrequency
+                    },
+                    Device = new
+                    {
+                        PressureRamp = FormOptions.AppOptions.Current.PressureRamp,
+                        MaxPressure = FormOptions.AppOptions.Current.MaxPressure,
+                        MinPressure = FormOptions.AppOptions.Current.MinPressure
+                    },
+                    Control = new
+                    {
+                        MaxIncrement = FormOptions.AppOptions.Current.MaxIncrement,
+                        MinIncrement = FormOptions.AppOptions.Current.MinIncrement
+                    },
+                    Communication = LoadCommunicationSettingsFromFile(),
                     LastSaved = DateTime.Now
                 };
 
@@ -299,6 +337,36 @@ namespace Alicat
             }
         }
 
+        private static object LoadCommunicationSettingsFromFile()
+        {
+            try
+            {
+                string settingsPath = GetSettingsFilePath();
+                if (!System.IO.File.Exists(settingsPath))
+                    return new { PortName = (string?)null, BaudRate = 19200, Parity = "None", StopBits = "One", DataBits = 8, ReadTimeout = 700, WriteTimeout = 700 };
+
+                string json = System.IO.File.ReadAllText(settingsPath);
+                var settingsData = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(json);
+
+                if (settingsData.TryGetProperty("Communication", out var comm))
+                {
+                    return new
+                    {
+                        PortName = comm.TryGetProperty("PortName", out var pn) && pn.ValueKind != System.Text.Json.JsonValueKind.Null ? pn.GetString() : (string?)null,
+                        BaudRate = comm.TryGetProperty("BaudRate", out var br) && br.ValueKind != System.Text.Json.JsonValueKind.Null ? br.GetInt32() : 19200,
+                        Parity = comm.TryGetProperty("Parity", out var par) ? par.GetString() ?? "None" : "None",
+                        StopBits = comm.TryGetProperty("StopBits", out var sb) ? sb.GetString() ?? "One" : "One",
+                        DataBits = comm.TryGetProperty("DataBits", out var db) && db.ValueKind != System.Text.Json.JsonValueKind.Null ? db.GetInt32() : 8,
+                        ReadTimeout = comm.TryGetProperty("ReadTimeout", out var rt) && rt.ValueKind != System.Text.Json.JsonValueKind.Null ? rt.GetInt32() : 700,
+                        WriteTimeout = comm.TryGetProperty("WriteTimeout", out var wt) && wt.ValueKind != System.Text.Json.JsonValueKind.Null ? wt.GetInt32() : 700
+                    };
+                }
+            }
+            catch { }
+
+            return new { PortName = (string?)null, BaudRate = 19200, Parity = "None", StopBits = "One", DataBits = 8, ReadTimeout = 700, WriteTimeout = 700 };
+        }
+
         private void LoadSettingsFromFile()
         {
             try
@@ -309,32 +377,69 @@ namespace Alicat
                 string json = System.IO.File.ReadAllText(settingsPath);
                 var settingsData = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(json);
 
-                // Восстанавливаем настройки
-                var model = new FormOptions.AppOptions.Model
+                // Восстанавливаем настройки из категоризированной структуры
+                var model = new FormOptions.AppOptions.Model();
+
+                // General category
+                if (settingsData.TryGetProperty("General", out var general))
                 {
-                    PressureUnits = settingsData.TryGetProperty("PressureUnits", out var pu)
-                        ? pu.GetString() ?? "PSI" : "PSI",
-                    TimeUnits = settingsData.TryGetProperty("TimeUnits", out var tu)
-                        ? tu.GetString() ?? "s" : "s",
-                    PressureRamp = settingsData.TryGetProperty("PressureRamp", out var pr) && pr.ValueKind != System.Text.Json.JsonValueKind.Null
-                        ? pr.GetDouble() : null,
-                    MaxPressure = settingsData.TryGetProperty("MaxPressure", out var mp) && mp.ValueKind != System.Text.Json.JsonValueKind.Null
-                        ? mp.GetDouble() : null,
-                    MinPressure = settingsData.TryGetProperty("MinPressure", out var minp) && minp.ValueKind != System.Text.Json.JsonValueKind.Null
-                        ? minp.GetDouble() : null,
-                    MaxIncrement = settingsData.TryGetProperty("MaxIncrement", out var mi) && mi.ValueKind != System.Text.Json.JsonValueKind.Null
-                        ? mi.GetDouble() : null,
-                    MinIncrement = settingsData.TryGetProperty("MinIncrement", out var mini) && mini.ValueKind != System.Text.Json.JsonValueKind.Null
-                        ? mini.GetDouble() : null
-                };
+                    if (general.TryGetProperty("PressureUnits", out var pu))
+                        model.PressureUnits = pu.GetString() ?? "PSI";
+                    if (general.TryGetProperty("TimeUnits", out var tu))
+                        model.TimeUnits = tu.GetString() ?? "s";
+                    if (general.TryGetProperty("PollingFrequency", out var pf) && pf.ValueKind != System.Text.Json.JsonValueKind.Null)
+                        model.PollingFrequency = pf.GetInt32();
+                }
+                else
+                {
+                    // Обратная совместимость: если структура старая (плоская)
+                    if (settingsData.TryGetProperty("PressureUnits", out var pu))
+                        model.PressureUnits = pu.GetString() ?? "PSI";
+                    if (settingsData.TryGetProperty("TimeUnits", out var tu))
+                        model.TimeUnits = tu.GetString() ?? "s";
+                    if (settingsData.TryGetProperty("PollingFrequency", out var pf) && pf.ValueKind != System.Text.Json.JsonValueKind.Null)
+                        model.PollingFrequency = pf.GetInt32();
+                }
+
+                // Device category
+                if (settingsData.TryGetProperty("Device", out var device))
+                {
+                    if (device.TryGetProperty("PressureRamp", out var pr) && pr.ValueKind != System.Text.Json.JsonValueKind.Null)
+                        model.PressureRamp = pr.GetDouble();
+                    if (device.TryGetProperty("MaxPressure", out var mp) && mp.ValueKind != System.Text.Json.JsonValueKind.Null)
+                        model.MaxPressure = mp.GetDouble();
+                    if (device.TryGetProperty("MinPressure", out var minp) && minp.ValueKind != System.Text.Json.JsonValueKind.Null)
+                        model.MinPressure = minp.GetDouble();
+                }
+                else
+                {
+                    // Обратная совместимость
+                    if (settingsData.TryGetProperty("PressureRamp", out var pr) && pr.ValueKind != System.Text.Json.JsonValueKind.Null)
+                        model.PressureRamp = pr.GetDouble();
+                    if (settingsData.TryGetProperty("MaxPressure", out var mp) && mp.ValueKind != System.Text.Json.JsonValueKind.Null)
+                        model.MaxPressure = mp.GetDouble();
+                    if (settingsData.TryGetProperty("MinPressure", out var minp) && minp.ValueKind != System.Text.Json.JsonValueKind.Null)
+                        model.MinPressure = minp.GetDouble();
+                }
+
+                // Control category
+                if (settingsData.TryGetProperty("Control", out var control))
+                {
+                    if (control.TryGetProperty("MaxIncrement", out var mi) && mi.ValueKind != System.Text.Json.JsonValueKind.Null)
+                        model.MaxIncrement = mi.GetDouble();
+                    if (control.TryGetProperty("MinIncrement", out var mini) && mini.ValueKind != System.Text.Json.JsonValueKind.Null)
+                        model.MinIncrement = mini.GetDouble();
+                }
+                else
+                {
+                    // Обратная совместимость
+                    if (settingsData.TryGetProperty("MaxIncrement", out var mi) && mi.ValueKind != System.Text.Json.JsonValueKind.Null)
+                        model.MaxIncrement = mi.GetDouble();
+                    if (settingsData.TryGetProperty("MinIncrement", out var mini) && mini.ValueKind != System.Text.Json.JsonValueKind.Null)
+                        model.MinIncrement = mini.GetDouble();
+                }
 
                 FormOptions.AppOptions.Current = model;
-
-                // Восстанавливаем состояние Auto-save
-                if (settingsData.TryGetProperty("AutoSaveEnabled", out var ase))
-                {
-                    menuSettingsAutoSave.Checked = ase.GetBoolean();
-                }
 
                 // Применяем загруженные настройки
                 _presenter?.ApplyOptionsToUi();
@@ -392,9 +497,7 @@ namespace Alicat
 
             // Update System Settings display
             lblMaxPressureValue.Text = $"{_maxPressure:F0} {_unit}";
-            lblMinPressureValue.Text = $"{_minPressure:F0} {_unit}";
             lblMaxIncrementValue.Text = $"{_maxIncrementLimit:F1} {_unit}";
-            lblMinIncrementValue.Text = $"{_minIncrementLimit:F1} {_unit}";
         }
 
         bool IMainView.IsDarkTheme => isDarkTheme;

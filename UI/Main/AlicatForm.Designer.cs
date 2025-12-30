@@ -27,12 +27,11 @@ namespace Alicat
         private ToolStripMenuItem menuFile;
         private ToolStripMenuItem menuFileNewSession;
         private ToolStripMenuItem menuFileTestMode;
+        private ToolStripMenuItem menuFileTestPressure;
         private ToolStripSeparator menuFileSeparator1;
         private ToolStripMenuItem menuFileExit;
         private ToolStripMenuItem menuSettings;
         private ToolStripMenuItem menuSettingsPreferences;
-        private ToolStripSeparator menuSettingsSeparator1;
-        private ToolStripMenuItem menuSettingsAutoSave;
         private ToolStripMenuItem menuDevice;
         private ToolStripMenuItem menuDeviceConnect;
         private ToolStripMenuItem menuDeviceDisconnect;
@@ -190,12 +189,11 @@ namespace Alicat
             menuFile = new ToolStripMenuItem();
             menuFileNewSession = new ToolStripMenuItem();
             menuFileTestMode = new ToolStripMenuItem();
+            menuFileTestPressure = new ToolStripMenuItem();
             menuFileSeparator1 = new ToolStripSeparator();
             menuFileExit = new ToolStripMenuItem();
             menuSettings = new ToolStripMenuItem();
             menuSettingsPreferences = new ToolStripMenuItem();
-            menuSettingsSeparator1 = new ToolStripSeparator();
-            menuSettingsAutoSave = new ToolStripMenuItem();
             menuDevice = new ToolStripMenuItem();
             menuDeviceConnect = new ToolStripMenuItem();
             menuDeviceDisconnect = new ToolStripMenuItem();
@@ -219,8 +217,8 @@ namespace Alicat
             lblStatusDot = new Label();
             lblConnectionStatus = new Label();
             lblBaudRate = new Label();
-            lblLastUpdate = new Label();
             picLogo = new PictureBox();
+            lblLastUpdate = new Label();
             panelToolbar = new Panel();
             toolbarFlow = new FlowLayoutPanel();
             lblToolbarControl = new Label();
@@ -279,26 +277,26 @@ namespace Alicat
             stripMaxPressure = new Panel();
             lblMaxPressureLabel = new Label();
             lblMaxPressureValue = new Label();
-            settingMinPressure = new Panel();
-            settingMinPressureRow = new TableLayoutPanel();
-            stripMinPressure = new Panel();
-            lblMinPressureLabel = new Label();
-            lblMinPressureValue = new Label();
             settingMaxIncrement = new Panel();
             settingMaxIncrementRow = new TableLayoutPanel();
             stripMaxIncrement = new Panel();
             lblMaxIncrementLabel = new Label();
             lblMaxIncrementValue = new Label();
-            settingMinIncrement = new Panel();
-            settingMinIncrementRow = new TableLayoutPanel();
-            stripMinIncrement = new Panel();
-            lblMinIncrementLabel = new Label();
-            lblMinIncrementValue = new Label();
             lblSystemSettingsTitle = new Label();
             spacerRightGap = new Panel();
             panelStatusInfo = new Panel();
             lblStatusInfoText = new RichTextBox();
             lblStatusInfoTitle = new Label();
+            settingMinPressure = new Panel();
+            settingMinPressureRow = new TableLayoutPanel();
+            stripMinPressure = new Panel();
+            lblMinPressureLabel = new Label();
+            lblMinPressureValue = new Label();
+            settingMinIncrement = new Panel();
+            settingMinIncrementRow = new TableLayoutPanel();
+            stripMinIncrement = new Panel();
+            lblMinIncrementLabel = new Label();
+            lblMinIncrementValue = new Label();
             menuMain.SuspendLayout();
             rootLayout.SuspendLayout();
             panelStatusBar.SuspendLayout();
@@ -325,13 +323,13 @@ namespace Alicat
             settingRampSpeedRow.SuspendLayout();
             settingMaxPressure.SuspendLayout();
             settingMaxPressureRow.SuspendLayout();
-            settingMinPressure.SuspendLayout();
-            settingMinPressureRow.SuspendLayout();
             settingMaxIncrement.SuspendLayout();
             settingMaxIncrementRow.SuspendLayout();
+            panelStatusInfo.SuspendLayout();
+            settingMinPressure.SuspendLayout();
+            settingMinPressureRow.SuspendLayout();
             settingMinIncrement.SuspendLayout();
             settingMinIncrementRow.SuspendLayout();
-            panelStatusInfo.SuspendLayout();
             SuspendLayout();
             // 
             // menuMain
@@ -347,7 +345,7 @@ namespace Alicat
             // 
             // menuFile
             // 
-            menuFile.DropDownItems.AddRange(new ToolStripItem[] { menuFileNewSession, menuFileTestMode, menuFileSeparator1, menuFileExit });
+            menuFile.DropDownItems.AddRange(new ToolStripItem[] { menuFileNewSession, menuFileTestMode, menuFileTestPressure, menuFileSeparator1, menuFileExit });
             menuFile.Name = "menuFile";
             menuFile.Size = new Size(37, 23);
             menuFile.Text = "File";
@@ -355,33 +353,36 @@ namespace Alicat
             // menuFileNewSession
             // 
             menuFileNewSession.Name = "menuFileNewSession";
-            menuFileNewSession.Size = new Size(156, 22);
+            menuFileNewSession.Size = new Size(198, 22);
             menuFileNewSession.Text = "New Session...";
-            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // menuFileTestMode
             // 
             menuFileTestMode.Name = "menuFileTestMode";
-            menuFileTestMode.Size = new Size(156, 22);
+            menuFileTestMode.Size = new Size(198, 22);
             menuFileTestMode.Text = "Start Test Mode";
-            menuFileTestMode.Visible = true; // Включено для тестирования
+            // 
+            // menuFileTestPressure
+            // 
+            menuFileTestPressure.Name = "menuFileTestPressure";
+            menuFileTestPressure.Size = new Size(198, 22);
+            menuFileTestPressure.Text = "Test Pressure Window...";
             // 
             // menuFileSeparator1
             // 
             menuFileSeparator1.Name = "menuFileSeparator1";
-            menuFileSeparator1.Size = new Size(153, 6);
+            menuFileSeparator1.Size = new Size(195, 6);
             // 
             // menuFileExit
             // 
             menuFileExit.Name = "menuFileExit";
-            menuFileExit.Size = new Size(156, 22);
-            menuFileExit.Text = "Exit";
             menuFileExit.ShortcutKeys = Keys.Alt | Keys.F4;
-            // Click event handler is set in constructor (AlicatForm.cs)
+            menuFileExit.Size = new Size(198, 22);
+            menuFileExit.Text = "Exit";
             // 
             // menuSettings
             // 
-            menuSettings.DropDownItems.AddRange(new ToolStripItem[] { menuSettingsPreferences, menuSettingsSeparator1, menuSettingsAutoSave });
+            menuSettings.DropDownItems.AddRange(new ToolStripItem[] { menuSettingsPreferences });
             menuSettings.Name = "menuSettings";
             menuSettings.Size = new Size(61, 23);
             menuSettings.Text = "Settings";
@@ -389,23 +390,9 @@ namespace Alicat
             // menuSettingsPreferences
             // 
             menuSettingsPreferences.Name = "menuSettingsPreferences";
-            menuSettingsPreferences.Size = new Size(180, 22);
-            menuSettingsPreferences.Text = "Preferences...";
             menuSettingsPreferences.ShortcutKeys = Keys.Control | Keys.Oemcomma;
-            // Click event handler is set in constructor (AlicatForm.cs)
-            // 
-            // menuSettingsSeparator1
-            // 
-            menuSettingsSeparator1.Name = "menuSettingsSeparator1";
-            menuSettingsSeparator1.Size = new Size(177, 6);
-            // 
-            // menuSettingsAutoSave
-            // 
-            menuSettingsAutoSave.CheckOnClick = true;
-            menuSettingsAutoSave.Name = "menuSettingsAutoSave";
-            menuSettingsAutoSave.Size = new Size(180, 22);
-            menuSettingsAutoSave.Text = "Auto-save Settings";
-            // Click event handler is set in constructor (AlicatForm.cs)
+            menuSettingsPreferences.Size = new Size(245, 22);
+            menuSettingsPreferences.Text = "Preferences...";
             // 
             // menuDevice
             // 
@@ -417,42 +404,38 @@ namespace Alicat
             // menuDeviceConnect
             // 
             menuDeviceConnect.Name = "menuDeviceConnect";
-            menuDeviceConnect.Size = new Size(180, 22);
-            menuDeviceConnect.Text = "Connect...";
             menuDeviceConnect.ShortcutKeys = Keys.Control | Keys.K;
-            // Click event handler is set in constructor (AlicatForm.cs)
+            menuDeviceConnect.Size = new Size(232, 22);
+            menuDeviceConnect.Text = "Connect...";
             // 
             // menuDeviceDisconnect
             // 
             menuDeviceDisconnect.Name = "menuDeviceDisconnect";
-            menuDeviceDisconnect.Size = new Size(180, 22);
+            menuDeviceDisconnect.Size = new Size(232, 22);
             menuDeviceDisconnect.Text = "Disconnect";
-            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // menuDeviceSeparator1
             // 
             menuDeviceSeparator1.Name = "menuDeviceSeparator1";
-            menuDeviceSeparator1.Size = new Size(177, 6);
+            menuDeviceSeparator1.Size = new Size(229, 6);
             // 
             // menuDeviceEmergencyStop
             // 
             menuDeviceEmergencyStop.Name = "menuDeviceEmergencyStop";
-            menuDeviceEmergencyStop.Size = new Size(180, 22);
-            menuDeviceEmergencyStop.Text = "Emergency Stop";
             menuDeviceEmergencyStop.ShortcutKeys = Keys.Control | Keys.Shift | Keys.E;
-            // Click event handler is set in constructor (AlicatForm.cs)
+            menuDeviceEmergencyStop.Size = new Size(232, 22);
+            menuDeviceEmergencyStop.Text = "Emergency Stop";
             // 
             // menuDeviceSeparator2
             // 
             menuDeviceSeparator2.Name = "menuDeviceSeparator2";
-            menuDeviceSeparator2.Size = new Size(177, 6);
+            menuDeviceSeparator2.Size = new Size(229, 6);
             // 
             // menuDeviceInfo
             // 
             menuDeviceInfo.Name = "menuDeviceInfo";
-            menuDeviceInfo.Size = new Size(180, 22);
+            menuDeviceInfo.Size = new Size(232, 22);
             menuDeviceInfo.Text = "Device Info...";
-            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // menuView
             // 
@@ -465,7 +448,7 @@ namespace Alicat
             // 
             menuViewTheme.DropDownItems.AddRange(new ToolStripItem[] { menuViewLightTheme, menuViewDarkTheme });
             menuViewTheme.Name = "menuViewTheme";
-            menuViewTheme.Size = new Size(180, 22);
+            menuViewTheme.Size = new Size(111, 22);
             menuViewTheme.Text = "Theme";
             // 
             // menuViewLightTheme
@@ -494,21 +477,19 @@ namespace Alicat
             // menuHelpAboutDACTools
             // 
             menuHelpAboutDACTools.Name = "menuHelpAboutDACTools";
-            menuHelpAboutDACTools.Size = new Size(180, 22);
+            menuHelpAboutDACTools.Size = new Size(205, 22);
             menuHelpAboutDACTools.Text = "About DACTools...";
-            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // menuHelpSeparator1
             // 
             menuHelpSeparator1.Name = "menuHelpSeparator1";
-            menuHelpSeparator1.Size = new Size(177, 6);
+            menuHelpSeparator1.Size = new Size(202, 6);
             // 
             // menuHelpAboutAlicat
             // 
             menuHelpAboutAlicat.Name = "menuHelpAboutAlicat";
-            menuHelpAboutAlicat.Size = new Size(180, 22);
+            menuHelpAboutAlicat.Size = new Size(205, 22);
             menuHelpAboutAlicat.Text = "About Alicat Controller...";
-            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // toolStripVersion
             // 
@@ -560,8 +541,8 @@ namespace Alicat
             statusLayout.ColumnStyles.Add(new ColumnStyle());
             statusLayout.Controls.Add(statusConnPanel, 0, 0);
             statusLayout.Controls.Add(lblBaudRate, 2, 0);
-            statusLayout.Controls.Add(lblLastUpdate, 4, 0);
             statusLayout.Controls.Add(picLogo, 6, 0);
+            statusLayout.Controls.Add(lblLastUpdate, 4, 0);
             statusLayout.Dock = DockStyle.Fill;
             statusLayout.Location = new Point(16, 0);
             statusLayout.Margin = new Padding(0);
@@ -579,17 +560,17 @@ namespace Alicat
             statusConnPanel.Location = new Point(0, 0);
             statusConnPanel.Margin = new Padding(0);
             statusConnPanel.Name = "statusConnPanel";
-            statusConnPanel.Size = new Size(127, 45);
+            statusConnPanel.Size = new Size(137, 50);
             statusConnPanel.TabIndex = 0;
             statusConnPanel.WrapContents = false;
             // 
             // lblStatusDot
             // 
-            lblStatusDot.Font = new Font("Segoe UI", 24F, FontStyle.Bold);
+            lblStatusDot.Font = new Font("Segoe UI", 27.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
             lblStatusDot.Location = new Point(0, 5);
             lblStatusDot.Margin = new Padding(0, 5, 8, 0);
             lblStatusDot.Name = "lblStatusDot";
-            lblStatusDot.Size = new Size(40, 40);
+            lblStatusDot.Size = new Size(50, 45);
             lblStatusDot.TabIndex = 0;
             lblStatusDot.Text = "●";
             lblStatusDot.TextAlign = ContentAlignment.MiddleCenter;
@@ -598,7 +579,7 @@ namespace Alicat
             // 
             lblConnectionStatus.AutoSize = true;
             lblConnectionStatus.Font = new Font("Segoe UI", 9F);
-            lblConnectionStatus.Location = new Point(48, 20);
+            lblConnectionStatus.Location = new Point(58, 20);
             lblConnectionStatus.Margin = new Padding(0, 20, 0, 0);
             lblConnectionStatus.Name = "lblConnectionStatus";
             lblConnectionStatus.Size = new Size(79, 15);
@@ -609,23 +590,13 @@ namespace Alicat
             // 
             lblBaudRate.AutoSize = true;
             lblBaudRate.Font = new Font("Segoe UI", 9F);
-            lblBaudRate.Location = new Point(147, 16);
+            lblBaudRate.Location = new Point(157, 16);
             lblBaudRate.Margin = new Padding(0, 16, 0, 0);
             lblBaudRate.Name = "lblBaudRate";
             lblBaudRate.Size = new Size(70, 15);
             lblBaudRate.TabIndex = 2;
             lblBaudRate.Text = "Baud: 19200";
-            // 
-            // lblLastUpdate
-            // 
-            lblLastUpdate.AutoSize = true;
-            lblLastUpdate.Font = new Font("Segoe UI", 9F);
-            lblLastUpdate.Location = new Point(237, 16);
-            lblLastUpdate.Margin = new Padding(0, 16, 0, 0);
-            lblLastUpdate.Name = "lblLastUpdate";
-            lblLastUpdate.Size = new Size(117, 15);
-            lblLastUpdate.TabIndex = 4;
-            lblLastUpdate.Text = "Last update: 0.5s ago";
+            lblBaudRate.Click += lblBaudRate_Click;
             // 
             // picLogo
             // 
@@ -637,6 +608,17 @@ namespace Alicat
             picLogo.SizeMode = PictureBoxSizeMode.Zoom;
             picLogo.TabIndex = 6;
             picLogo.TabStop = false;
+            // 
+            // lblLastUpdate
+            // 
+            lblLastUpdate.AutoSize = true;
+            lblLastUpdate.Font = new Font("Segoe UI", 9F);
+            lblLastUpdate.Location = new Point(247, 16);
+            lblLastUpdate.Margin = new Padding(0, 16, 0, 0);
+            lblLastUpdate.Name = "lblLastUpdate";
+            lblLastUpdate.Size = new Size(117, 15);
+            lblLastUpdate.TabIndex = 4;
+            lblLastUpdate.Text = "Last update: 0.5s ago";
             // 
             // panelToolbar
             // 
@@ -688,7 +670,6 @@ namespace Alicat
             btnPause.Size = new Size(100, 45);
             btnPause.TabIndex = 1;
             btnPause.Text = "Pause";
-            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // btnPurge
             // 
@@ -700,13 +681,12 @@ namespace Alicat
             btnPurge.Size = new Size(100, 45);
             btnPurge.TabIndex = 2;
             btnPurge.Text = "Purge";
-            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // lblToolbarWindows
             // 
             lblToolbarWindows.AutoSize = true;
             lblToolbarWindows.Font = new Font("Segoe UI", 9F);
-            lblToolbarWindows.Location = new Point(166, 13);
+            lblToolbarWindows.Location = new Point(274, 13);
             lblToolbarWindows.Margin = new Padding(0, 13, 10, 0);
             lblToolbarWindows.Name = "lblToolbarWindows";
             lblToolbarWindows.Size = new Size(59, 15);
@@ -717,37 +697,34 @@ namespace Alicat
             // 
             btnGraph.FlatStyle = FlatStyle.Flat;
             btnGraph.Font = new Font("Segoe UI", 9F);
-            btnGraph.Location = new Point(235, 0);
+            btnGraph.Location = new Point(343, 0);
             btnGraph.Margin = new Padding(0, 0, 6, 0);
             btnGraph.Name = "btnGraph";
             btnGraph.Size = new Size(80, 45);
             btnGraph.TabIndex = 5;
             btnGraph.Text = "Graph";
-            // Click event handler is set in constructor (AlicatForm.cs) to avoid double subscription
             // 
             // btnTable
             // 
             btnTable.FlatStyle = FlatStyle.Flat;
             btnTable.Font = new Font("Segoe UI", 9F);
-            btnTable.Location = new Point(321, 0);
+            btnTable.Location = new Point(429, 0);
             btnTable.Margin = new Padding(0, 0, 6, 0);
             btnTable.Name = "btnTable";
             btnTable.Size = new Size(80, 45);
             btnTable.TabIndex = 6;
             btnTable.Text = "Table";
-            // Click event handler is set in constructor (AlicatForm.cs) to avoid double subscription
             // 
             // btnTerminal
             // 
             btnTerminal.FlatStyle = FlatStyle.Flat;
             btnTerminal.Font = new Font("Segoe UI", 9F);
-            btnTerminal.Location = new Point(407, 0);
+            btnTerminal.Location = new Point(515, 0);
             btnTerminal.Margin = new Padding(0);
             btnTerminal.Name = "btnTerminal";
             btnTerminal.Size = new Size(80, 45);
             btnTerminal.TabIndex = 7;
             btnTerminal.Text = "Terminal";
-            // Click event handler is set in constructor (AlicatForm.cs) to avoid double subscription
             // 
             // layoutContent
             // 
@@ -1025,7 +1002,6 @@ namespace Alicat
             btnGoToTarget.Size = new Size(164, 44);
             btnGoToTarget.TabIndex = 3;
             btnGoToTarget.Text = "🎯  Go to Target";
-            // Click event handler is set in constructor (AlicatForm.cs) to avoid double subscription
             // 
             // lblSetTargetTitle
             // 
@@ -1075,7 +1051,6 @@ namespace Alicat
             btnDecrease.Size = new Size(802, 50);
             btnDecrease.TabIndex = 0;
             btnDecrease.Text = "▼  Decrease (-5.0 PSIG)";
-            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // btnIncrease
             // 
@@ -1088,7 +1063,6 @@ namespace Alicat
             btnIncrease.Size = new Size(802, 50);
             btnIncrease.TabIndex = 1;
             btnIncrease.Text = "▲  Increase (+5.0 PSIG)";
-            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // lblAdjustPressureLabel
             // 
@@ -1133,7 +1107,6 @@ namespace Alicat
             btnIncrementMinus.Size = new Size(40, 34);
             btnIncrementMinus.TabIndex = 0;
             btnIncrementMinus.Text = "−";
-            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // txtIncrement
             // 
@@ -1156,7 +1129,6 @@ namespace Alicat
             btnIncrementPlus.Size = new Size(40, 34);
             btnIncrementPlus.TabIndex = 2;
             btnIncrementPlus.Text = "+";
-            // Click event handler is set in constructor (AlicatForm.cs)
             // 
             // lblIncrementUnit
             // 
@@ -1250,19 +1222,15 @@ namespace Alicat
             systemSettingsStack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             systemSettingsStack.Controls.Add(settingRampSpeed, 0, 0);
             systemSettingsStack.Controls.Add(settingMaxPressure, 0, 1);
-            systemSettingsStack.Controls.Add(settingMinPressure, 0, 2);
-            systemSettingsStack.Controls.Add(settingMaxIncrement, 0, 3);
-            systemSettingsStack.Controls.Add(settingMinIncrement, 0, 4);
+            systemSettingsStack.Controls.Add(settingMaxIncrement, 0, 2);
             systemSettingsStack.Dock = DockStyle.Fill;
             systemSettingsStack.Location = new Point(16, 44);
             systemSettingsStack.Margin = new Padding(0);
             systemSettingsStack.Name = "systemSettingsStack";
-            systemSettingsStack.RowCount = 5;
-            systemSettingsStack.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
-            systemSettingsStack.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
-            systemSettingsStack.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
-            systemSettingsStack.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
-            systemSettingsStack.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
+            systemSettingsStack.RowCount = 3;
+            systemSettingsStack.RowStyles.Add(new RowStyle(SizeType.Percent, 33.3333321F));
+            systemSettingsStack.RowStyles.Add(new RowStyle(SizeType.Percent, 33.3333321F));
+            systemSettingsStack.RowStyles.Add(new RowStyle(SizeType.Percent, 33.3333321F));
             systemSettingsStack.Size = new Size(366, 238);
             systemSettingsStack.TabIndex = 0;
             // 
@@ -1274,7 +1242,7 @@ namespace Alicat
             settingRampSpeed.Location = new Point(0, 0);
             settingRampSpeed.Margin = new Padding(0, 0, 0, 10);
             settingRampSpeed.Name = "settingRampSpeed";
-            settingRampSpeed.Size = new Size(366, 38);
+            settingRampSpeed.Size = new Size(366, 69);
             settingRampSpeed.TabIndex = 0;
             // 
             // settingRampSpeedRow
@@ -1292,7 +1260,7 @@ namespace Alicat
             settingRampSpeedRow.Name = "settingRampSpeedRow";
             settingRampSpeedRow.RowCount = 1;
             settingRampSpeedRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            settingRampSpeedRow.Size = new Size(364, 36);
+            settingRampSpeedRow.Size = new Size(364, 67);
             settingRampSpeedRow.TabIndex = 0;
             // 
             // stripRampSpeed
@@ -1301,7 +1269,7 @@ namespace Alicat
             stripRampSpeed.Location = new Point(0, 0);
             stripRampSpeed.Margin = new Padding(0);
             stripRampSpeed.Name = "stripRampSpeed";
-            stripRampSpeed.Size = new Size(4, 36);
+            stripRampSpeed.Size = new Size(4, 67);
             stripRampSpeed.TabIndex = 0;
             // 
             // lblRampSpeedLabel
@@ -1311,7 +1279,7 @@ namespace Alicat
             lblRampSpeedLabel.Location = new Point(16, 0);
             lblRampSpeedLabel.Margin = new Padding(12, 0, 0, 0);
             lblRampSpeedLabel.Name = "lblRampSpeedLabel";
-            lblRampSpeedLabel.Size = new Size(222, 36);
+            lblRampSpeedLabel.Size = new Size(222, 67);
             lblRampSpeedLabel.TabIndex = 1;
             lblRampSpeedLabel.Text = "Ramp Speed";
             lblRampSpeedLabel.TextAlign = ContentAlignment.MiddleLeft;
@@ -1323,7 +1291,7 @@ namespace Alicat
             lblRampSpeedValue.Location = new Point(238, 0);
             lblRampSpeedValue.Margin = new Padding(0, 0, 12, 0);
             lblRampSpeedValue.Name = "lblRampSpeedValue";
-            lblRampSpeedValue.Size = new Size(114, 36);
+            lblRampSpeedValue.Size = new Size(114, 67);
             lblRampSpeedValue.TabIndex = 2;
             lblRampSpeedValue.Text = "PSIG/s";
             lblRampSpeedValue.TextAlign = ContentAlignment.MiddleRight;
@@ -1333,10 +1301,10 @@ namespace Alicat
             settingMaxPressure.BorderStyle = BorderStyle.FixedSingle;
             settingMaxPressure.Controls.Add(settingMaxPressureRow);
             settingMaxPressure.Dock = DockStyle.Fill;
-            settingMaxPressure.Location = new Point(0, 48);
+            settingMaxPressure.Location = new Point(0, 79);
             settingMaxPressure.Margin = new Padding(0, 0, 0, 10);
             settingMaxPressure.Name = "settingMaxPressure";
-            settingMaxPressure.Size = new Size(366, 38);
+            settingMaxPressure.Size = new Size(366, 69);
             settingMaxPressure.TabIndex = 1;
             // 
             // settingMaxPressureRow
@@ -1354,7 +1322,7 @@ namespace Alicat
             settingMaxPressureRow.Name = "settingMaxPressureRow";
             settingMaxPressureRow.RowCount = 1;
             settingMaxPressureRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            settingMaxPressureRow.Size = new Size(364, 36);
+            settingMaxPressureRow.Size = new Size(364, 67);
             settingMaxPressureRow.TabIndex = 0;
             // 
             // stripMaxPressure
@@ -1363,7 +1331,7 @@ namespace Alicat
             stripMaxPressure.Location = new Point(0, 0);
             stripMaxPressure.Margin = new Padding(0);
             stripMaxPressure.Name = "stripMaxPressure";
-            stripMaxPressure.Size = new Size(4, 36);
+            stripMaxPressure.Size = new Size(4, 67);
             stripMaxPressure.TabIndex = 0;
             // 
             // lblMaxPressureLabel
@@ -1373,7 +1341,7 @@ namespace Alicat
             lblMaxPressureLabel.Location = new Point(16, 0);
             lblMaxPressureLabel.Margin = new Padding(12, 0, 0, 0);
             lblMaxPressureLabel.Name = "lblMaxPressureLabel";
-            lblMaxPressureLabel.Size = new Size(222, 36);
+            lblMaxPressureLabel.Size = new Size(222, 67);
             lblMaxPressureLabel.TabIndex = 1;
             lblMaxPressureLabel.Text = "Max Pressure";
             lblMaxPressureLabel.TextAlign = ContentAlignment.MiddleLeft;
@@ -1385,10 +1353,131 @@ namespace Alicat
             lblMaxPressureValue.Location = new Point(238, 0);
             lblMaxPressureValue.Margin = new Padding(0, 0, 12, 0);
             lblMaxPressureValue.Name = "lblMaxPressureValue";
-            lblMaxPressureValue.Size = new Size(114, 36);
+            lblMaxPressureValue.Size = new Size(114, 67);
             lblMaxPressureValue.TabIndex = 2;
             lblMaxPressureValue.Text = "200 PSIG";
             lblMaxPressureValue.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // settingMaxIncrement
+            // 
+            settingMaxIncrement.BorderStyle = BorderStyle.FixedSingle;
+            settingMaxIncrement.Controls.Add(settingMaxIncrementRow);
+            settingMaxIncrement.Dock = DockStyle.Fill;
+            settingMaxIncrement.Location = new Point(0, 158);
+            settingMaxIncrement.Margin = new Padding(0, 0, 0, 10);
+            settingMaxIncrement.Name = "settingMaxIncrement";
+            settingMaxIncrement.Size = new Size(366, 70);
+            settingMaxIncrement.TabIndex = 3;
+            // 
+            // settingMaxIncrementRow
+            // 
+            settingMaxIncrementRow.ColumnCount = 3;
+            settingMaxIncrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 4F));
+            settingMaxIncrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65F));
+            settingMaxIncrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+            settingMaxIncrementRow.Controls.Add(stripMaxIncrement, 0, 0);
+            settingMaxIncrementRow.Controls.Add(lblMaxIncrementLabel, 1, 0);
+            settingMaxIncrementRow.Controls.Add(lblMaxIncrementValue, 2, 0);
+            settingMaxIncrementRow.Dock = DockStyle.Fill;
+            settingMaxIncrementRow.Location = new Point(0, 0);
+            settingMaxIncrementRow.Margin = new Padding(0);
+            settingMaxIncrementRow.Name = "settingMaxIncrementRow";
+            settingMaxIncrementRow.RowCount = 1;
+            settingMaxIncrementRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            settingMaxIncrementRow.Size = new Size(364, 68);
+            settingMaxIncrementRow.TabIndex = 0;
+            // 
+            // stripMaxIncrement
+            // 
+            stripMaxIncrement.Dock = DockStyle.Fill;
+            stripMaxIncrement.Location = new Point(0, 0);
+            stripMaxIncrement.Margin = new Padding(0);
+            stripMaxIncrement.Name = "stripMaxIncrement";
+            stripMaxIncrement.Size = new Size(4, 68);
+            stripMaxIncrement.TabIndex = 0;
+            // 
+            // lblMaxIncrementLabel
+            // 
+            lblMaxIncrementLabel.Dock = DockStyle.Fill;
+            lblMaxIncrementLabel.Font = new Font("Segoe UI", 10F);
+            lblMaxIncrementLabel.Location = new Point(16, 0);
+            lblMaxIncrementLabel.Margin = new Padding(12, 0, 0, 0);
+            lblMaxIncrementLabel.Name = "lblMaxIncrementLabel";
+            lblMaxIncrementLabel.Size = new Size(222, 68);
+            lblMaxIncrementLabel.TabIndex = 1;
+            lblMaxIncrementLabel.Text = "Max Increment";
+            lblMaxIncrementLabel.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // lblMaxIncrementValue
+            // 
+            lblMaxIncrementValue.Dock = DockStyle.Fill;
+            lblMaxIncrementValue.Font = new Font("Courier New", 10F, FontStyle.Bold);
+            lblMaxIncrementValue.Location = new Point(238, 0);
+            lblMaxIncrementValue.Margin = new Padding(0, 0, 12, 0);
+            lblMaxIncrementValue.Name = "lblMaxIncrementValue";
+            lblMaxIncrementValue.Size = new Size(114, 68);
+            lblMaxIncrementValue.TabIndex = 2;
+            lblMaxIncrementValue.Text = "20 PSIG";
+            lblMaxIncrementValue.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // lblSystemSettingsTitle
+            // 
+            lblSystemSettingsTitle.Dock = DockStyle.Top;
+            lblSystemSettingsTitle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            lblSystemSettingsTitle.Location = new Point(16, 16);
+            lblSystemSettingsTitle.Margin = new Padding(0, 0, 0, 10);
+            lblSystemSettingsTitle.Name = "lblSystemSettingsTitle";
+            lblSystemSettingsTitle.Size = new Size(366, 28);
+            lblSystemSettingsTitle.TabIndex = 1;
+            lblSystemSettingsTitle.Text = "System Settings";
+            lblSystemSettingsTitle.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // spacerRightGap
+            // 
+            spacerRightGap.Dock = DockStyle.Fill;
+            spacerRightGap.Location = new Point(3, 303);
+            spacerRightGap.Name = "spacerRightGap";
+            spacerRightGap.Size = new Size(394, 14);
+            spacerRightGap.TabIndex = 1;
+            // 
+            // panelStatusInfo
+            // 
+            panelStatusInfo.BackColor = Color.FromArgb(227, 242, 253);
+            panelStatusInfo.BorderStyle = BorderStyle.FixedSingle;
+            panelStatusInfo.Controls.Add(lblStatusInfoText);
+            panelStatusInfo.Controls.Add(lblStatusInfoTitle);
+            panelStatusInfo.Dock = DockStyle.Fill;
+            panelStatusInfo.Location = new Point(0, 320);
+            panelStatusInfo.Margin = new Padding(0);
+            panelStatusInfo.Name = "panelStatusInfo";
+            panelStatusInfo.Padding = new Padding(16);
+            panelStatusInfo.Size = new Size(400, 291);
+            panelStatusInfo.TabIndex = 2;
+            // 
+            // lblStatusInfoText
+            // 
+            lblStatusInfoText.BackColor = Color.FromArgb(227, 242, 253);
+            lblStatusInfoText.BorderStyle = BorderStyle.None;
+            lblStatusInfoText.Dock = DockStyle.Fill;
+            lblStatusInfoText.Font = new Font("Segoe UI", 9F);
+            lblStatusInfoText.Location = new Point(16, 42);
+            lblStatusInfoText.Name = "lblStatusInfoText";
+            lblStatusInfoText.ReadOnly = true;
+            lblStatusInfoText.Size = new Size(366, 231);
+            lblStatusInfoText.TabIndex = 0;
+            lblStatusInfoText.Text = "• Controller is running\n• Pressure increasing\n• Systems operational\n• Last update: 0.5s ago";
+            // 
+            // lblStatusInfoTitle
+            // 
+            lblStatusInfoTitle.Dock = DockStyle.Top;
+            lblStatusInfoTitle.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblStatusInfoTitle.Location = new Point(16, 16);
+            lblStatusInfoTitle.Margin = new Padding(0, 0, 0, 8);
+            lblStatusInfoTitle.Name = "lblStatusInfoTitle";
+            lblStatusInfoTitle.Size = new Size(366, 26);
+            lblStatusInfoTitle.TabIndex = 1;
+            lblStatusInfoTitle.Text = "ℹ️  Status Information";
+            lblStatusInfoTitle.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // settingMinPressure
             // 
@@ -1452,68 +1541,6 @@ namespace Alicat
             lblMinPressureValue.Text = "0 PSIG";
             lblMinPressureValue.TextAlign = ContentAlignment.MiddleRight;
             // 
-            // settingMaxIncrement
-            // 
-            settingMaxIncrement.BorderStyle = BorderStyle.FixedSingle;
-            settingMaxIncrement.Controls.Add(settingMaxIncrementRow);
-            settingMaxIncrement.Dock = DockStyle.Fill;
-            settingMaxIncrement.Location = new Point(0, 144);
-            settingMaxIncrement.Margin = new Padding(0, 0, 0, 10);
-            settingMaxIncrement.Name = "settingMaxIncrement";
-            settingMaxIncrement.Size = new Size(366, 38);
-            settingMaxIncrement.TabIndex = 3;
-            // 
-            // settingMaxIncrementRow
-            // 
-            settingMaxIncrementRow.ColumnCount = 3;
-            settingMaxIncrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 4F));
-            settingMaxIncrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65F));
-            settingMaxIncrementRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
-            settingMaxIncrementRow.Controls.Add(stripMaxIncrement, 0, 0);
-            settingMaxIncrementRow.Controls.Add(lblMaxIncrementLabel, 1, 0);
-            settingMaxIncrementRow.Controls.Add(lblMaxIncrementValue, 2, 0);
-            settingMaxIncrementRow.Dock = DockStyle.Fill;
-            settingMaxIncrementRow.Location = new Point(0, 0);
-            settingMaxIncrementRow.Margin = new Padding(0);
-            settingMaxIncrementRow.Name = "settingMaxIncrementRow";
-            settingMaxIncrementRow.RowCount = 1;
-            settingMaxIncrementRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            settingMaxIncrementRow.Size = new Size(364, 36);
-            settingMaxIncrementRow.TabIndex = 0;
-            // 
-            // stripMaxIncrement
-            // 
-            stripMaxIncrement.Dock = DockStyle.Fill;
-            stripMaxIncrement.Location = new Point(0, 0);
-            stripMaxIncrement.Margin = new Padding(0);
-            stripMaxIncrement.Name = "stripMaxIncrement";
-            stripMaxIncrement.Size = new Size(4, 36);
-            stripMaxIncrement.TabIndex = 0;
-            // 
-            // lblMaxIncrementLabel
-            // 
-            lblMaxIncrementLabel.Dock = DockStyle.Fill;
-            lblMaxIncrementLabel.Font = new Font("Segoe UI", 10F);
-            lblMaxIncrementLabel.Location = new Point(16, 0);
-            lblMaxIncrementLabel.Margin = new Padding(12, 0, 0, 0);
-            lblMaxIncrementLabel.Name = "lblMaxIncrementLabel";
-            lblMaxIncrementLabel.Size = new Size(222, 36);
-            lblMaxIncrementLabel.TabIndex = 1;
-            lblMaxIncrementLabel.Text = "Max Increment";
-            lblMaxIncrementLabel.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // lblMaxIncrementValue
-            // 
-            lblMaxIncrementValue.Dock = DockStyle.Fill;
-            lblMaxIncrementValue.Font = new Font("Courier New", 10F, FontStyle.Bold);
-            lblMaxIncrementValue.Location = new Point(238, 0);
-            lblMaxIncrementValue.Margin = new Padding(0, 0, 12, 0);
-            lblMaxIncrementValue.Name = "lblMaxIncrementValue";
-            lblMaxIncrementValue.Size = new Size(114, 36);
-            lblMaxIncrementValue.TabIndex = 2;
-            lblMaxIncrementValue.Text = "20 PSIG";
-            lblMaxIncrementValue.TextAlign = ContentAlignment.MiddleRight;
-            // 
             // settingMinIncrement
             // 
             settingMinIncrement.BorderStyle = BorderStyle.FixedSingle;
@@ -1576,65 +1603,6 @@ namespace Alicat
             lblMinIncrementValue.Text = "0.1 PSIG";
             lblMinIncrementValue.TextAlign = ContentAlignment.MiddleRight;
             // 
-            // lblSystemSettingsTitle
-            // 
-            lblSystemSettingsTitle.Dock = DockStyle.Top;
-            lblSystemSettingsTitle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            lblSystemSettingsTitle.Location = new Point(16, 16);
-            lblSystemSettingsTitle.Margin = new Padding(0, 0, 0, 10);
-            lblSystemSettingsTitle.Name = "lblSystemSettingsTitle";
-            lblSystemSettingsTitle.Size = new Size(366, 28);
-            lblSystemSettingsTitle.TabIndex = 1;
-            lblSystemSettingsTitle.Text = "System Settings";
-            lblSystemSettingsTitle.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // spacerRightGap
-            // 
-            spacerRightGap.Dock = DockStyle.Fill;
-            spacerRightGap.Location = new Point(3, 303);
-            spacerRightGap.Name = "spacerRightGap";
-            spacerRightGap.Size = new Size(394, 14);
-            spacerRightGap.TabIndex = 1;
-            // 
-            // panelStatusInfo
-            // 
-            panelStatusInfo.BackColor = Color.FromArgb(227, 242, 253);
-            panelStatusInfo.BorderStyle = BorderStyle.FixedSingle;
-            panelStatusInfo.Controls.Add(lblStatusInfoText);
-            panelStatusInfo.Controls.Add(lblStatusInfoTitle);
-            panelStatusInfo.Dock = DockStyle.Fill;
-            panelStatusInfo.Location = new Point(0, 320);
-            panelStatusInfo.Margin = new Padding(0);
-            panelStatusInfo.Name = "panelStatusInfo";
-            panelStatusInfo.Padding = new Padding(16);
-            panelStatusInfo.Size = new Size(400, 291);
-            panelStatusInfo.TabIndex = 2;
-            // 
-            // lblStatusInfoText
-            // 
-            lblStatusInfoText.Dock = DockStyle.Fill;
-            lblStatusInfoText.Font = new Font("Segoe UI", 9F);
-            lblStatusInfoText.Location = new Point(16, 42);
-            lblStatusInfoText.Name = "lblStatusInfoText";
-            lblStatusInfoText.Size = new Size(366, 231);
-            lblStatusInfoText.TabIndex = 0;
-            lblStatusInfoText.Text = "• Controller is running\r\n• Pressure increasing\r\n• Systems operational\r\n• Last update: 0.5s ago";
-            lblStatusInfoText.ReadOnly = true;
-            lblStatusInfoText.BorderStyle = BorderStyle.None;
-            lblStatusInfoText.BackColor = Color.FromArgb(227, 242, 253);
-            // 
-            // lblStatusInfoTitle
-            // 
-            lblStatusInfoTitle.Dock = DockStyle.Top;
-            lblStatusInfoTitle.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            lblStatusInfoTitle.Location = new Point(16, 16);
-            lblStatusInfoTitle.Margin = new Padding(0, 0, 0, 8);
-            lblStatusInfoTitle.Name = "lblStatusInfoTitle";
-            lblStatusInfoTitle.Size = new Size(366, 26);
-            lblStatusInfoTitle.TabIndex = 1;
-            lblStatusInfoTitle.Text = "ℹ️  Status Information";
-            lblStatusInfoTitle.TextAlign = ContentAlignment.MiddleLeft;
-            // 
             // AlicatForm
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
@@ -1683,13 +1651,13 @@ namespace Alicat
             settingRampSpeedRow.ResumeLayout(false);
             settingMaxPressure.ResumeLayout(false);
             settingMaxPressureRow.ResumeLayout(false);
-            settingMinPressure.ResumeLayout(false);
-            settingMinPressureRow.ResumeLayout(false);
             settingMaxIncrement.ResumeLayout(false);
             settingMaxIncrementRow.ResumeLayout(false);
+            panelStatusInfo.ResumeLayout(false);
+            settingMinPressure.ResumeLayout(false);
+            settingMinPressureRow.ResumeLayout(false);
             settingMinIncrement.ResumeLayout(false);
             settingMinIncrementRow.ResumeLayout(false);
-            panelStatusInfo.ResumeLayout(false);
             ResumeLayout(false);
         }
 

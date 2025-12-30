@@ -16,6 +16,22 @@ namespace Alicat
         // ✅ Публичный доступ к открытому порту (заменяет рефлексию в главной форме)
         public SerialPort? OpenPort => _port?.IsOpen == true ? _port : null;
 
+        // Публичные свойства для доступа к настройкам коммуникации
+        public string? PortName => cbPortName.SelectedItem as string;
+        public int BaudRate
+        {
+            get
+            {
+                var baudText = cbBaudRate.SelectedItem as string ?? "19200";
+                return int.TryParse(baudText, out var baud) ? baud : 19200;
+            }
+        }
+        public string Parity => cbParity.SelectedItem as string ?? "None";
+        public string StopBits => cbStopBits.SelectedItem as string ?? "One";
+        public int DataBits => (int)nudDataBits.Value;
+        public int ReadTimeout => (int)nudReadTimeout.Value;
+        public int WriteTimeout => (int)nudWriteTimeout.Value;
+
         public FormConnect()
         {
             InitializeComponent();
@@ -36,12 +52,8 @@ namespace Alicat
             cbParity.Items.AddRange(Enum.GetNames(typeof(Parity)));
             cbStopBits.Items.AddRange(Enum.GetNames(typeof(StopBits)));
 
-            cbBaudRate.SelectedItem = "19200";
-            cbParity.SelectedItem = nameof(Parity.None);
-            cbStopBits.SelectedItem = nameof(StopBits.One);
-            nudDataBits.Value = 8;
-            nudReadTimeout.Value = 700;
-            nudWriteTimeout.Value = 700;
+            // Загружаем сохраненные настройки коммуникации
+            LoadCommunicationSettings();
 
             RefreshPorts();
 
@@ -49,16 +61,130 @@ namespace Alicat
             btnDisconnect.Enabled = true;
         }
 
+        private void LoadCommunicationSettings()
+        {
+            try
+            {
+                string settingsPath = GetSettingsFilePath();
+                if (!System.IO.File.Exists(settingsPath)) 
+                {
+                    SetDefaults();
+                    return;
+                }
+
+                string json = System.IO.File.ReadAllText(settingsPath);
+                var settingsData = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(json);
+
+                if (settingsData.TryGetProperty("Communication", out var comm))
+                {
+                    if (comm.TryGetProperty("BaudRate", out var br) && br.ValueKind != System.Text.Json.JsonValueKind.Null)
+                    {
+                        var baud = br.GetInt32();
+                        var baudStr = baud.ToString();
+                        if (cbBaudRate.Items.Contains(baudStr))
+                            cbBaudRate.SelectedItem = baudStr;
+                    }
+
+                    if (comm.TryGetProperty("PortName", out var pn) && pn.ValueKind != System.Text.Json.JsonValueKind.Null)
+                    {
+                        var portName = pn.GetString();
+                        if (!string.IsNullOrEmpty(portName) && cbPortName.Items.Contains(portName))
+                            cbPortName.SelectedItem = portName;
+                    }
+
+                    if (comm.TryGetProperty("Parity", out var par))
+                    {
+                        var parityStr = par.GetString();
+                        if (!string.IsNullOrEmpty(parityStr) && cbParity.Items.Contains(parityStr))
+                            cbParity.SelectedItem = parityStr;
+                    }
+
+                    if (comm.TryGetProperty("StopBits", out var sb))
+                    {
+                        var stopBitsStr = sb.GetString();
+                        if (!string.IsNullOrEmpty(stopBitsStr) && cbStopBits.Items.Contains(stopBitsStr))
+                            cbStopBits.SelectedItem = stopBitsStr;
+                    }
+
+                    if (comm.TryGetProperty("DataBits", out var db) && db.ValueKind != System.Text.Json.JsonValueKind.Null)
+                        nudDataBits.Value = Math.Max(5, Math.Min(8, db.GetInt32()));
+
+                    if (comm.TryGetProperty("ReadTimeout", out var rt) && rt.ValueKind != System.Text.Json.JsonValueKind.Null)
+                        nudReadTimeout.Value = Math.Max(100, rt.GetInt32());
+
+                    if (comm.TryGetProperty("WriteTimeout", out var wt) && wt.ValueKind != System.Text.Json.JsonValueKind.Null)
+                        nudWriteTimeout.Value = Math.Max(100, wt.GetInt32());
+                }
+                else
+                {
+                    SetDefaults();
+                }
+            }
+            catch
+            {
+                SetDefaults();
+            }
+        }
+
+        private void SetDefaults()
+        {
+            cbBaudRate.SelectedItem = "19200";
+            cbParity.SelectedItem = "None";
+            cbStopBits.SelectedItem = "One";
+            nudDataBits.Value = 8;
+            nudReadTimeout.Value = 700;
+            nudWriteTimeout.Value = 700;
+        }
+
+        private static string GetSettingsFilePath()
+        {
+            // Используем ту же логику, что и в AlicatForm.Presenter.cs
+            string? projectDir = null;
+            string? currentDir = System.IO.Directory.GetCurrentDirectory();
+            
+            if (!string.IsNullOrEmpty(currentDir))
+            {
+                var dir = new System.IO.DirectoryInfo(currentDir);
+                while (dir != null)
+                {
+                    if (dir.GetFiles("*.csproj").Length > 0)
+                    {
+                        projectDir = dir.FullName;
+                        break;
+                    }
+                    dir = dir.Parent;
+                }
+            }
+            
+            if (string.IsNullOrEmpty(projectDir))
+            {
+                string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                string? exeDir = System.IO.Path.GetDirectoryName(exePath);
+                
+                if (exeDir != null && exeDir.Contains("bin"))
+                {
+                    var dir = new System.IO.DirectoryInfo(exeDir);
+                    while (dir != null && dir.Name != "Alicat" && dir.GetFiles("*.csproj").Length == 0)
+                    {
+                        dir = dir.Parent;
+                    }
+                    projectDir = dir?.FullName ?? System.IO.Directory.GetCurrentDirectory();
+                }
+                else
+                {
+                    projectDir = System.IO.Directory.GetCurrentDirectory();
+                }
+            }
+            
+            string settingsDir = System.IO.Path.Combine(projectDir, "Settings");
+            return System.IO.Path.Combine(settingsDir, "settings.json");
+        }
+
         private void btnRefreshPorts_Click(object? sender, EventArgs e) => RefreshPorts();
 
         private void btnDefaults_Click(object? sender, EventArgs e)
         {
-            cbBaudRate.SelectedItem = "19200";
-            cbParity.SelectedItem = nameof(Parity.None);
-            cbStopBits.SelectedItem = nameof(StopBits.One);
-            nudDataBits.Value = 8;
-            nudReadTimeout.Value = 700;
-            nudWriteTimeout.Value = 700;
+            SetDefaults();
         }
 
         private void btnConnect_Click(object? sender, EventArgs e)
@@ -128,8 +254,8 @@ namespace Alicat
             var baudText = cbBaudRate.SelectedItem as string ?? "19200";
             if (!int.TryParse(baudText, out var baud)) baud = 19200;
 
-            var parity = Enum.Parse<Parity>(cbParity.SelectedItem as string ?? nameof(Parity.None));
-            var stopBits = Enum.Parse<StopBits>(cbStopBits.SelectedItem as string ?? nameof(StopBits.One));
+            var parity = Enum.Parse<Parity>(cbParity.SelectedItem as string ?? "None");
+            var stopBits = Enum.Parse<StopBits>(cbStopBits.SelectedItem as string ?? "One");
 
             return new SerialPort(portName, baud, parity, (int)nudDataBits.Value, stopBits)
             {

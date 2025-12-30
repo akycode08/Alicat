@@ -155,27 +155,19 @@ namespace Alicat
 
             stripRampSpeed.BackColor = lightAccentBlue;
             stripMaxPressure.BackColor = lightAccentBlue;
-            stripMinPressure.BackColor = lightAccentBlue;
             stripMaxIncrement.BackColor = lightAccentBlue;
-            stripMinIncrement.BackColor = lightAccentBlue;
 
             settingRampSpeed.BackColor = lightBgWindow;
             settingMaxPressure.BackColor = lightBgWindow;
-            settingMinPressure.BackColor = lightBgWindow;
             settingMaxIncrement.BackColor = lightBgWindow;
-            settingMinIncrement.BackColor = lightBgWindow;
 
             lblRampSpeedLabel.ForeColor = lightTextPrimary;
             lblMaxPressureLabel.ForeColor = lightTextPrimary;
-            lblMinPressureLabel.ForeColor = lightTextPrimary;
             lblMaxIncrementLabel.ForeColor = lightTextPrimary;
-            lblMinIncrementLabel.ForeColor = lightTextPrimary;
 
             lblRampSpeedValue.ForeColor = lightAccentBlue;
             lblMaxPressureValue.ForeColor = lightAccentBlue;
-            lblMinPressureValue.ForeColor = lightAccentBlue;
             lblMaxIncrementValue.ForeColor = lightAccentBlue;
-            lblMinIncrementValue.ForeColor = lightAccentBlue;
 
             panelStatusInfo.BackColor = Color.FromArgb(227, 242, 253);
             lblStatusInfoTitle.ForeColor = Color.FromArgb(21, 101, 192);
@@ -270,27 +262,19 @@ namespace Alicat
 
             stripRampSpeed.BackColor = darkAccentBlue;
             stripMaxPressure.BackColor = darkAccentBlue;
-            stripMinPressure.BackColor = darkAccentBlue;
             stripMaxIncrement.BackColor = darkAccentBlue;
-            stripMinIncrement.BackColor = darkAccentBlue;
 
             settingRampSpeed.BackColor = darkBgWindow;
             settingMaxPressure.BackColor = darkBgWindow;
-            settingMinPressure.BackColor = darkBgWindow;
             settingMaxIncrement.BackColor = darkBgWindow;
-            settingMinIncrement.BackColor = darkBgWindow;
 
             lblRampSpeedLabel.ForeColor = darkTextPrimary;
             lblMaxPressureLabel.ForeColor = darkTextPrimary;
-            lblMinPressureLabel.ForeColor = darkTextPrimary;
             lblMaxIncrementLabel.ForeColor = darkTextPrimary;
-            lblMinIncrementLabel.ForeColor = darkTextPrimary;
 
             lblRampSpeedValue.ForeColor = darkAccentBlue;
             lblMaxPressureValue.ForeColor = darkAccentBlue;
-            lblMinPressureValue.ForeColor = darkAccentBlue;
             lblMaxIncrementValue.ForeColor = darkAccentBlue;
-            lblMinIncrementValue.ForeColor = darkAccentBlue;
 
             panelStatusInfo.BackColor = Color.FromArgb(28, 40, 56);
             lblStatusInfoTitle.ForeColor = Color.FromArgb(0, 168, 224);

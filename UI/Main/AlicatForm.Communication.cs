@@ -57,10 +57,104 @@ namespace Alicat
                 DataStore.StartSession();
             }
 
+            // Сохраняем настройки коммуникации после успешного подключения
+            SaveCommunicationSettings(dlg, opened);
+
             // Обновляем статус после подключения (Attach вызывает Connected событие, но обновим явно)
             UI_UpdateConnectionStatus(true, opened.PortName);
-
         }
+
+        private void SaveCommunicationSettings(FormConnect dlg, SerialPort opened)
+        {
+            try
+            {
+                string settingsPath = GetSettingsFilePath();
+                string? directory = System.IO.Path.GetDirectoryName(settingsPath);
+                
+                if (!string.IsNullOrEmpty(directory) && !System.IO.Directory.Exists(directory))
+                {
+                    System.IO.Directory.CreateDirectory(directory);
+                }
+
+                // Загружаем существующие настройки или создаем новые
+                var existingSettings = new
+                {
+                    General = new { PressureUnits = "PSI", TimeUnits = "s", PollingFrequency = 500 },
+                    Device = new { PressureRamp = (double?)null, MaxPressure = (double?)null, MinPressure = (double?)null },
+                    Control = new { MaxIncrement = (double?)null, MinIncrement = (double?)null },
+                    Communication = new { PortName = (string?)null, BaudRate = 19200, Parity = "None", StopBits = "One", DataBits = 8, ReadTimeout = 700, WriteTimeout = 700 },
+                    LastSaved = DateTime.Now
+                };
+
+                if (System.IO.File.Exists(settingsPath))
+                {
+                    try
+                    {
+                        string jsonContent = System.IO.File.ReadAllText(settingsPath);
+                        var settingsData = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(jsonContent);
+                        
+                        // Извлекаем существующие настройки
+                        if (settingsData.TryGetProperty("General", out var gen))
+                        {
+                            existingSettings = new
+                            {
+                                General = new
+                                {
+                                    PressureUnits = gen.TryGetProperty("PressureUnits", out var pu) ? pu.GetString() ?? "PSI" : "PSI",
+                                    TimeUnits = gen.TryGetProperty("TimeUnits", out var tu) ? tu.GetString() ?? "s" : "s",
+                                    PollingFrequency = gen.TryGetProperty("PollingFrequency", out var pf) && pf.ValueKind != System.Text.Json.JsonValueKind.Null ? pf.GetInt32() : 500
+                                },
+                                Device = settingsData.TryGetProperty("Device", out var dev) ? new
+                                {
+                                    PressureRamp = dev.TryGetProperty("PressureRamp", out var pr) && pr.ValueKind != System.Text.Json.JsonValueKind.Null ? pr.GetDouble() : (double?)null,
+                                    MaxPressure = dev.TryGetProperty("MaxPressure", out var mp) && mp.ValueKind != System.Text.Json.JsonValueKind.Null ? mp.GetDouble() : (double?)null,
+                                    MinPressure = dev.TryGetProperty("MinPressure", out var minp) && minp.ValueKind != System.Text.Json.JsonValueKind.Null ? minp.GetDouble() : (double?)null
+                                } : new { PressureRamp = (double?)null, MaxPressure = (double?)null, MinPressure = (double?)null },
+                                Control = settingsData.TryGetProperty("Control", out var ctrl) ? new
+                                {
+                                    MaxIncrement = ctrl.TryGetProperty("MaxIncrement", out var mi) && mi.ValueKind != System.Text.Json.JsonValueKind.Null ? mi.GetDouble() : (double?)null,
+                                    MinIncrement = ctrl.TryGetProperty("MinIncrement", out var mini) && mini.ValueKind != System.Text.Json.JsonValueKind.Null ? mini.GetDouble() : (double?)null
+                                } : new { MaxIncrement = (double?)null, MinIncrement = (double?)null },
+                                Communication = new { PortName = (string?)null, BaudRate = 19200, Parity = "None", StopBits = "One", DataBits = 8, ReadTimeout = 700, WriteTimeout = 700 },
+                                LastSaved = DateTime.Now
+                            };
+                        }
+                    }
+                    catch { }
+                }
+
+                // Обновляем настройки коммуникации
+                var updatedSettings = new
+                {
+                    existingSettings.General,
+                    existingSettings.Device,
+                    existingSettings.Control,
+                    Communication = new
+                    {
+                        PortName = dlg.PortName,
+                        BaudRate = dlg.BaudRate,
+                        Parity = dlg.Parity,
+                        StopBits = dlg.StopBits,
+                        DataBits = dlg.DataBits,
+                        ReadTimeout = dlg.ReadTimeout,
+                        WriteTimeout = dlg.WriteTimeout
+                    },
+                    LastSaved = DateTime.Now
+                };
+
+                string json = System.Text.Json.JsonSerializer.Serialize(updatedSettings, new System.Text.Json.JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
+                System.IO.File.WriteAllText(settingsPath, json);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to save communication settings: {ex.Message}");
+            }
+        }
+
 
         private void Serial_LineReceived(object? sender, string line)
         {
@@ -123,6 +217,8 @@ namespace Alicat
                 UpdateLastUpdateText();
 
                 // 👉 ЗАПИСЫВАЕМ В STORE (всегда, независимо от открытых окон)
+                // Используем старую версию без дополнительных параметров для обратной совместимости
+                // В presenter версии используется новая версия с rampSpeed и pollingFrequency
                 DataStore.RecordSample(_current, _isExhaust ? 0.0 : _setPoint, _unit);
 
                 // 👉 ОБНОВЛЯЕМ ГРАФИК, ЕСЛИ ОКНО ОТКРЫТО

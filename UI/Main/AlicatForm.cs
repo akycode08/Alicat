@@ -53,6 +53,7 @@ namespace Alicat
         private TerminalForm? _terminalForm;
         private GraphForm? _graphForm;
         private TableForm? _tableForm;
+        private Alicat.UI.Features.Test.FormTestPressure? _testPressureForm;
 
         // ====================================================================
         // КОНСТРУКТОР
@@ -69,13 +70,13 @@ namespace Alicat
 
             // Меню
             menuSettingsPreferences.Click += btnOptions_Click_Presenter;
-            menuSettingsAutoSave.Click += menuSettingsAutoSave_Click;
             menuDeviceConnect.Click += btnCommunication_Click_Presenter;
             menuDeviceDisconnect.Click += menuDeviceDisconnect_Click;
             menuDeviceEmergencyStop.Click += menuDeviceEmergencyStop_Click;
             menuDeviceInfo.Click += menuDeviceInfo_Click;
             menuFileNewSession.Click += menuFileNewSession_Click_Presenter;
             menuFileTestMode.Click += menuFileTestMode_Click;
+            menuFileTestPressure.Click += menuFileTestPressure_Click;
             menuFileExit.Click += menuFileExit_Click;
             menuHelpAboutDACTools.Click += menuHelpAboutDACTools_Click;
             menuHelpAboutAlicat.Click += menuHelpAboutAlicat_Click;
@@ -124,13 +125,16 @@ namespace Alicat
 
             // Применяем тему после инициализации (цвета и стили из AlicatForm.Theme.cs)
             ApplyLightTheme();
-            
+
             // Устанавливаем правильный статус подключения ПОСЛЕ применения темы
             // (чтобы тема не перезаписала цвет индикатора)
             UI_UpdateConnectionStatus(false);
 
             // Загружаем сохраненные настройки при старте (если Auto-save был включен)
             LoadSettingsFromFile();
+
+            // Обновляем текст "Last update" при запуске программы
+            UpdateLastUpdateText();
         }
 
         // ====================================================================
@@ -181,9 +185,7 @@ namespace Alicat
 
             // Update System Settings display
             lblMaxPressureValue.Text = $"{_maxPressure:F0} {_unit}";
-            lblMinPressureValue.Text = $"{_minPressure:F0} {_unit}";
             lblMaxIncrementValue.Text = $"{_maxIncrementLimit:F1} {_unit}";
-            lblMinIncrementValue.Text = $"{_minIncrementLimit:F1} {_unit}";
         }
 
         // ====================================================================
@@ -394,26 +396,26 @@ namespace Alicat
         {
             int intervalMs = _pollTimer.Interval;
             string text;
-            
+
             if (intervalMs < 1000)
             {
-                // Меньше секунды - показываем в миллисекундах
+                // Меньше секунды - показываем в миллисекундах с 2 знаками после запятой
                 double seconds = intervalMs / 1000.0;
-                text = $"Last update: {seconds:F1}s ago";
+                text = $"Last update: {seconds.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)}s ago";
             }
             else if (intervalMs < 60000)
             {
                 // Меньше минуты - показываем в секундах
                 double seconds = intervalMs / 1000.0;
-                text = $"Last update: {seconds:F0}s ago";
+                text = $"Last update: {TrimZeros(seconds, 0)}s ago";
             }
             else
             {
                 // Больше минуты - показываем в минутах
                 double minutes = intervalMs / 60000.0;
-                text = $"Last update: {minutes:F1}m ago";
+                text = $"Last update: {TrimZeros(minutes, 1)}m ago";
             }
-            
+
             UI_UpdateLastUpdate(text);
         }
 
@@ -448,18 +450,20 @@ namespace Alicat
 
             // Пытаемся загрузить логотип из файла
             // Проверяем несколько возможных путей (с учетом разных регистров)
+            // Приоритет: Assets (правильное место) -> Images -> корень приложения
             string[] possiblePaths = new[]
             {
-                // В папке приложения
+                // В папке Assets (правильное место для ресурсов)
+                System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Logo.png"),
+                System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "logo.png"),
+                // В папке Images (альтернативное место)
+                System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images", "Logo.png"),
+                System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images", "logo.png"),
+                // В корне приложения (для обратной совместимости)
                 System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logo.png"),
                 System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo.png"),
                 System.IO.Path.Combine(Application.StartupPath, "Logo.png"),
                 System.IO.Path.Combine(Application.StartupPath, "logo.png"),
-                // В папках Assets/Images
-                System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Logo.png"),
-                System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "logo.png"),
-                System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images", "Logo.png"),
-                System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images", "logo.png"),
             };
 
             System.Drawing.Image? logoImage = null;
@@ -494,6 +498,11 @@ namespace Alicat
         }
 
         private void btnGoToTarget_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void lblBaudRate_Click(object sender, EventArgs e)
         {
 
         }

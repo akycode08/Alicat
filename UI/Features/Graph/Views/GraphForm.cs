@@ -360,7 +360,7 @@ namespace Alicat.UI.Features.Graph.Views
                 {
                     Name = "Min",
                     Values = _seriesMin,
-                    Stroke = new SolidColorPaint(new SKColor(240, 180, 0), 2),
+                    Stroke = new SolidColorPaint(new SKColor(76, 175, 80), 2), // Green
                     Fill = null,
                     GeometryStroke = null,
                     GeometrySize = 0
@@ -370,7 +370,7 @@ namespace Alicat.UI.Features.Graph.Views
                 {
                     Name = "Max",
                     Values = _seriesMax,
-                    Stroke = new SolidColorPaint(new SKColor(240, 70, 70), 2),
+                    Stroke = new SolidColorPaint(new SKColor(244, 67, 54), 2), // Red
                     Fill = null,
                     GeometryStroke = null,
                     GeometrySize = 0

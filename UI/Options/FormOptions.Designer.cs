@@ -7,24 +7,16 @@ namespace Alicat
     {
         private System.ComponentModel.IContainer components = null;
 
-        // TabControl
-        private TabControl tabControl;
-        private TabPage tabUnits;
-        private TabPage tabLimits;
-
-        // Units Tab
-        private TableLayoutPanel unitsGrid;
+        // Main content panel (all fields on one page)
+        private TableLayoutPanel mainGrid;
         private Label lblPressureUnits;
         private ComboBox cmbPressureUnits;
         private Label lblTimeUnits;
         private ComboBox cmbTimeUnits;
-        private Label lblPressureRamp;
-        private TextBox txtPressureRamp;
         private Label lblPollingFrequency;
         private ComboBox cmbPollingFrequency;
-
-        // Limits Tab
-        private TableLayoutPanel limitsGrid;
+        private Label lblPressureRamp;
+        private TextBox txtPressureRamp;
         private Label lblMaxPressure;
         private TextBox txtMaxPressure;
         private Label lblMinPressure;
@@ -33,8 +25,6 @@ namespace Alicat
         private TextBox txtMaxIncrement;
         private Label lblMinIncrement;
         private TextBox txtMinIncrement;
-        private Panel safetyNoticePanel;
-        private Label lblSafetyNotice;
 
         // Bottom buttons
         private Panel bottomHost;
@@ -178,59 +168,35 @@ namespace Alicat
             btnRow.Controls.Add(btnApply);
             bottomHost.Controls.Add(btnRow);
 
-            // -------- TabControl --------
-            tabControl = new TabControl
+            // -------- Main content panel (all fields on one page) --------
+            Panel contentPanel = new Panel
             {
                 Dock = DockStyle.Fill,
-                Padding = new Point(0, 0),
-                Appearance = TabAppearance.Normal,
-                Font = new Font("Segoe UI", 9F, FontStyle.Regular)
-            };
-            tabControl.DrawMode = TabDrawMode.OwnerDrawFixed;
-            tabControl.DrawItem += (sender, e) =>
-            {
-                var tab = tabControl.TabPages[e.Index];
-                var rect = tabControl.GetTabRect(e.Index);
-                var isSelected = tabControl.SelectedIndex == e.Index;
-
-                e.Graphics.FillRectangle(
-                    new SolidBrush(isSelected ? Color.White : ModernBg),
-                    rect);
-
-                TextRenderer.DrawText(
-                    e.Graphics,
-                    tab.Text,
-                    new Font("Segoe UI", 9F, FontStyle.Regular),
-                    rect,
-                    isSelected ? ModernText : ModernTextMuted,
-                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
-            };
-
-            // ======== Units Tab ========
-            tabUnits = new TabPage
-            {
-                Text = "Units",
                 Padding = new Padding(24, 20, 24, 20),
                 BackColor = Color.White,
-                UseVisualStyleBackColor = false
+                AutoScroll = true
             };
 
-            unitsGrid = new TableLayoutPanel
+            mainGrid = new TableLayoutPanel
             {
                 Dock = DockStyle.Top,
                 ColumnCount = 2,
-                RowCount = 4,
+                RowCount = 8,
                 AutoSize = true,
                 Padding = new Padding(0),
                 BackColor = Color.White
             };
-            unitsGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 160f)); // labels
-            unitsGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));  // inputs
+            mainGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 160f)); // labels
+            mainGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));  // inputs
 
-            unitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
-            unitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
-            unitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
-            unitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
+            mainGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
+            mainGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
+            mainGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
+            mainGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
+            mainGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
+            mainGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
+            mainGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
+            mainGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
 
             // Pressure Units
             lblPressureUnits = new Label
@@ -283,6 +249,40 @@ namespace Alicat
             cmbTimeUnits.Items.AddRange(new object[] { "ms", "s", "m", "h" });
             toolTips.SetToolTip(cmbTimeUnits, "Select time or speed measurement units.");
 
+            // Polling Frequency
+            lblPollingFrequency = new Label
+            {
+                Text = "Polling Frequency",
+                TextAlign = ContentAlignment.MiddleLeft,
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 16, 0),
+                ForeColor = ModernText,
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular)
+            };
+            cmbPollingFrequency = new ComboBox
+            {
+                Width = 200,
+                Height = 26,
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Margin = new Padding(0),
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
+                FlatStyle = FlatStyle.Flat
+            };
+            cmbPollingFrequency.Items.AddRange(new object[] { "10ms", "50ms", "100ms", "250ms", "500ms", "1000ms", "2000ms", "5000ms" });
+            toolTips.SetToolTip(cmbPollingFrequency, "Frequency of device polling in milliseconds.");
+
+            // Pressure Units
+            mainGrid.Controls.Add(lblPressureUnits, 0, 0);
+            mainGrid.Controls.Add(cmbPressureUnits, 1, 0);
+            
+            // Time / Speed Units
+            mainGrid.Controls.Add(lblTimeUnits, 0, 1);
+            mainGrid.Controls.Add(cmbTimeUnits, 1, 1);
+            
+            // Polling Frequency
+            mainGrid.Controls.Add(lblPollingFrequency, 0, 2);
+            mainGrid.Controls.Add(cmbPollingFrequency, 1, 2);
+
             // Pressure Ramp
             lblPressureRamp = new Label
             {
@@ -306,65 +306,6 @@ namespace Alicat
             txtPressureRamp.PlaceholderText = "e.g. 10.0";
 #endif
             toolTips.SetToolTip(txtPressureRamp, "Rate of setpoint change per time unit.");
-
-            // Polling Frequency
-            lblPollingFrequency = new Label
-            {
-                Text = "Polling Frequency",
-                TextAlign = ContentAlignment.MiddleLeft,
-                Dock = DockStyle.Fill,
-                Margin = new Padding(0, 0, 16, 0),
-                ForeColor = ModernText,
-                Font = new Font("Segoe UI", 9F, FontStyle.Regular)
-            };
-            cmbPollingFrequency = new ComboBox
-            {
-                Width = 200,
-                Height = 26,
-                DropDownStyle = ComboBoxStyle.DropDownList,
-                Margin = new Padding(0),
-                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
-                FlatStyle = FlatStyle.Flat
-            };
-            cmbPollingFrequency.Items.AddRange(new object[] { "10ms", "50ms", "100ms", "250ms", "500ms", "1000ms", "2000ms", "5000ms" });
-            toolTips.SetToolTip(cmbPollingFrequency, "Frequency of device polling in milliseconds.");
-
-            unitsGrid.Controls.Add(lblPressureUnits, 0, 0);
-            unitsGrid.Controls.Add(cmbPressureUnits, 1, 0);
-            unitsGrid.Controls.Add(lblTimeUnits, 0, 1);
-            unitsGrid.Controls.Add(cmbTimeUnits, 1, 1);
-            unitsGrid.Controls.Add(lblPressureRamp, 0, 2);
-            unitsGrid.Controls.Add(txtPressureRamp, 1, 2);
-            unitsGrid.Controls.Add(lblPollingFrequency, 0, 3);
-            unitsGrid.Controls.Add(cmbPollingFrequency, 1, 3);
-
-            tabUnits.Controls.Add(unitsGrid);
-
-            // ======== Limits Tab ========
-            tabLimits = new TabPage
-            {
-                Text = "Limits",
-                Padding = new Padding(24, 20, 24, 20),
-                BackColor = Color.White,
-                UseVisualStyleBackColor = false
-            };
-
-            limitsGrid = new TableLayoutPanel
-            {
-                Dock = DockStyle.Top,
-                ColumnCount = 2,
-                RowCount = 4,
-                AutoSize = true,
-                Padding = new Padding(0),
-                BackColor = Color.White
-            };
-            limitsGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 160f)); // labels
-            limitsGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));  // inputs
-
-            limitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
-            limitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
-            limitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
-            limitsGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
 
             // Maximum Pressure
             lblMaxPressure = new Label
@@ -411,6 +352,12 @@ namespace Alicat
             txtMinPressure.PlaceholderText = "e.g. 0";
 #endif
             toolTips.SetToolTip(txtMinPressure, "Minimum pressure allowed.");
+            mainGrid.Controls.Add(lblPressureRamp, 0, 3);
+            mainGrid.Controls.Add(txtPressureRamp, 1, 3);
+            mainGrid.Controls.Add(lblMaxPressure, 0, 4);
+            mainGrid.Controls.Add(txtMaxPressure, 1, 4);
+            mainGrid.Controls.Add(lblMinPressure, 0, 5);
+            mainGrid.Controls.Add(txtMinPressure, 1, 5);
 
             // Maximum Step (Increment)
             lblMaxIncrement = new Label
@@ -434,6 +381,8 @@ namespace Alicat
             txtMaxIncrement.PlaceholderText = "e.g. 20";
 #endif
             toolTips.SetToolTip(txtMaxIncrement, "Maximum increment step.");
+            mainGrid.Controls.Add(lblMaxIncrement, 0, 6);
+            mainGrid.Controls.Add(txtMaxIncrement, 1, 6);
 
             // Minimum Step (Increment)
             lblMinIncrement = new Label
@@ -457,53 +406,11 @@ namespace Alicat
             txtMinIncrement.PlaceholderText = "e.g. 0.1";
 #endif
             toolTips.SetToolTip(txtMinIncrement, "Minimum increment step.");
+            mainGrid.Controls.Add(lblMinIncrement, 0, 7);
+            mainGrid.Controls.Add(txtMinIncrement, 1, 7);
 
-            limitsGrid.Controls.Add(lblMaxPressure, 0, 0);
-            limitsGrid.Controls.Add(txtMaxPressure, 1, 0);
-            limitsGrid.Controls.Add(lblMinPressure, 0, 1);
-            limitsGrid.Controls.Add(txtMinPressure, 1, 1);
-            limitsGrid.Controls.Add(lblMaxIncrement, 0, 2);
-            limitsGrid.Controls.Add(txtMaxIncrement, 1, 2);
-            limitsGrid.Controls.Add(lblMinIncrement, 0, 3);
-            limitsGrid.Controls.Add(txtMinIncrement, 1, 3);
-
-            // Safety Notice Panel (modern warning banner)
-            safetyNoticePanel = new Panel
-            {
-                Dock = DockStyle.Top,
-                Height = 56,
-                Padding = new Padding(14, 12, 14, 12),
-                BackColor = SafetyYellow,
-                Margin = new Padding(0, 0, 0, 16),
-                BorderStyle = BorderStyle.None
-            };
-            lblSafetyNotice = new Label
-            {
-                Text = "⚠ Safety Notice: Ensure pressure limits are set correctly to prevent equipment damage or personal injury.",
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft,
-                ForeColor = SafetyText,
-                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
-                AutoSize = false
-            };
-            safetyNoticePanel.Controls.Add(lblSafetyNotice);
-            safetyNoticePanel.Paint += (sender, e) =>
-            {
-                var rect = safetyNoticePanel.ClientRectangle;
-                using (var pen = new Pen(SafetyYellowBorder, 1))
-                {
-                    e.Graphics.DrawRectangle(pen, 0, 0, rect.Width - 1, rect.Height - 1);
-                }
-            };
-
-            tabLimits.Controls.Add(safetyNoticePanel);
-            tabLimits.Controls.Add(limitsGrid);
-
-            // Add tabs to TabControl
-            tabControl.TabPages.Add(tabUnits);
-            tabControl.TabPages.Add(tabLimits);
-
-            this.Controls.Add(tabControl);
+            contentPanel.Controls.Add(mainGrid);
+            this.Controls.Add(contentPanel);
 
             this.ResumeLayout(false);
         }

@@ -55,9 +55,7 @@ namespace Alicat
 
             // Update System Settings with new units
             lblMaxPressureValue.Text = $"{_maxPressure:F0} {displayUnits}";
-            lblMinPressureValue.Text = $"{_minPressure:F0} {displayUnits}";
             lblMaxIncrementValue.Text = $"{_maxIncrementLimit:F1} {displayUnits}";
-            lblMinIncrementValue.Text = $"{_minIncrementLimit:F1} {displayUnits}";
 
             // Update ramp speed with new units (preserve value if available)
             if (_rampSpeed > 0.001)

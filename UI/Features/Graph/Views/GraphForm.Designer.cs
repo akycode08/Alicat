@@ -108,6 +108,8 @@
             flowLegend = new FlowLayoutPanel();
             lblLegendCurrent = new Label();
             lblLegendTarget = new Label();
+            lblLegendMin = new Label();
+            lblLegendMax = new Label();
             panelCenter = new Panel();
             lblComPort = new Label();
             lblSessionTime = new Label();
@@ -1247,6 +1249,8 @@
             flowLegend.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             flowLegend.Controls.Add(lblLegendCurrent);
             flowLegend.Controls.Add(lblLegendTarget);
+            flowLegend.Controls.Add(lblLegendMin);
+            flowLegend.Controls.Add(lblLegendMax);
             flowLegend.Dock = DockStyle.Left;
             flowLegend.Location = new Point(0, 0);
             flowLegend.Margin = new Padding(0);
@@ -1276,6 +1280,27 @@
             lblLegendTarget.Size = new Size(55, 15);
             lblLegendTarget.TabIndex = 1;
             lblLegendTarget.Text = "▬ Target";
+            // 
+            // lblLegendMin
+            // 
+            lblLegendMin.AutoSize = true;
+            lblLegendMin.ForeColor = Color.FromArgb(76, 175, 80); // Green
+            lblLegendMin.Location = new Point(154, 10);
+            lblLegendMin.Name = "lblLegendMin";
+            lblLegendMin.Padding = new Padding(0, 0, 16, 0);
+            lblLegendMin.Size = new Size(60, 15);
+            lblLegendMin.TabIndex = 2;
+            lblLegendMin.Text = "▬ Min";
+            // 
+            // lblLegendMax
+            // 
+            lblLegendMax.AutoSize = true;
+            lblLegendMax.ForeColor = Color.FromArgb(244, 67, 54); // Red
+            lblLegendMax.Location = new Point(230, 10);
+            lblLegendMax.Name = "lblLegendMax";
+            lblLegendMax.Size = new Size(60, 15);
+            lblLegendMax.TabIndex = 3;
+            lblLegendMax.Text = "▬ Max";
             // 
             // panelCenter
             // 
@@ -1411,6 +1436,8 @@
         private FlowLayoutPanel flowLegend;
         private Label lblLegendCurrent;
         private Label lblLegendTarget;
+        private Label lblLegendMin;
+        private Label lblLegendMax;
         private FlowLayoutPanel panelChartButtons;
         private Button btnChartReset;
         private Button btnFullscreen;

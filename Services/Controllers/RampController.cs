@@ -21,9 +21,8 @@ namespace Alicat.Services.Controllers
 
             double r = pressureRamp.Value;
             if (r < 0) r = 0;                // простая защита
-            var s = r.ToString("G", CultureInfo.InvariantCulture);
 
-            _serial.Send(AlicatCommands.SetRamp(s));
+            _serial.Send(AlicatCommands.SetRamp(r, 4)); // 4 = секунды
             return true;
         }
     }

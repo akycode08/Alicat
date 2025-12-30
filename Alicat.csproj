@@ -58,7 +58,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Logo.png">
+    <None Update="Assets\Logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Settings\settings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

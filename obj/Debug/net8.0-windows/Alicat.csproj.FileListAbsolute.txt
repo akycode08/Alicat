@@ -14,7 +14,6 @@ C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.Asse
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.AssemblyInfo.cs
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.csproj.CoreCompileInputs.cache
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.sourcelink.json
-C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\Logo.png
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\Alicat.exe
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\Alicat.deps.json
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\Alicat.runtimeconfig.json
@@ -65,3 +64,5 @@ C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\refint\Alic
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.pdb
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.genruntimeconfig.cache
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\ref\Alicat.dll
+C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\Settings\settings.json
+C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\Assets\Logo.png

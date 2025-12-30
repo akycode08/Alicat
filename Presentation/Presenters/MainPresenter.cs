@@ -41,6 +41,10 @@ namespace Alicat.Presentation.Presenters
         private IRampController? _ramp;
         private readonly Timer _pollTimer = new() { Interval = 500 };
         private bool _isWaitingForResponse = false; // Защита от переполнения при малых интервалах
+        
+        // Connection timeout detection - сторожевой таймер
+        private System.Threading.Timer? _watchdogTimer;
+        private const int ConnectionTimeoutMs = 5000; // Таймаут 5 секунд без ответа
 
         // Settings
         private double _maxPressure = 200.0;
@@ -56,6 +60,7 @@ namespace Alicat.Presentation.Presenters
         private TerminalForm? _terminalForm;
         private GraphForm? _graphForm;
         private TableForm? _tableForm;
+        private Alicat.UI.Features.Test.FormTestPressure? _testPressureForm;
 
         public MainPresenter(IMainView view, IDataStore dataStore)
         {
@@ -92,6 +97,9 @@ namespace Alicat.Presentation.Presenters
 
             // Load options
             ApplyOptionsToUi();
+
+            // Обновляем текст "Last update" при запуске программы
+            UpdateLastUpdateText();
         }
 
         // ====================================================================
@@ -132,6 +140,7 @@ namespace Alicat.Presentation.Presenters
             _serial.Connected += (_, __) => _view.BeginInvoke(new Action(() =>
             {
                 _pollTimer.Start();
+                StartWatchdogTimer();
                 _view.UI_UpdateConnectionStatus(true, opened.PortName);
                 
                 // Update GraphForm connection info if open
@@ -143,6 +152,7 @@ namespace Alicat.Presentation.Presenters
             _serial.Disconnected += (_, __) => _view.BeginInvoke(new Action(() =>
             {
                 _pollTimer.Stop();
+                StopWatchdogTimer();
                 _view.UI_UpdateConnectionStatus(false);
                 
                 // Update GraphForm connection info if open
@@ -156,12 +166,18 @@ namespace Alicat.Presentation.Presenters
             {
                 _serial.Attach();
                 _ramp = new RampController(_serial);
-                _serial.Send("ASR");
+                _serial.Send(AlicatCommands.ReadRampSpeed);
 
                 if (!_dataStore.IsRunning)
                 {
                     _dataStore.StartSession();
                 }
+
+                // Запускаем сторожевой таймер
+                StartWatchdogTimer();
+
+                // Сохраняем настройки коммуникации после успешного подключения
+                SaveCommunicationSettings(dlg, opened);
 
                 _view.UI_UpdateConnectionStatus(true, opened.PortName);
                 _view.UI_AppendStatusInfo($"Device connected to {opened.PortName}");
@@ -198,6 +214,9 @@ namespace Alicat.Presentation.Presenters
                 _terminalForm.AppendLog("<< " + line);
             }
 
+            // Сбрасываем сторожевой таймер при получении любого ответа
+            ResetWatchdogTimer();
+
             // 1) Try to parse ASR (Ramp Speed)
             if (TryParseAsr(line, out var ramp, out var rampUnits))
             {
@@ -207,6 +226,12 @@ namespace Alicat.Presentation.Presenters
                 _view.BeginInvoke(new Action(() =>
                 {
                     _view.UI_SetRampSpeedUnits($"{TrimZeros(ramp)} {rampUnits}");
+                    
+                    // Update test pressure form if open
+                    if (_testPressureForm != null && !_testPressureForm.IsDisposed)
+                    {
+                        _testPressureForm.UpdateCurrentRampSpeed(ramp, rampUnits);
+                    }
                 }));
                 return;
             }
@@ -222,6 +247,7 @@ namespace Alicat.Presentation.Presenters
 
             _current = cur;
             if (!_isExhaust) _setPoint = sp;
+            // Единицы всегда берутся из ответов устройства
             if (!string.IsNullOrWhiteSpace(unit)) _unit = unit!;
 
             // Сбрасываем флаг ожидания ответа
@@ -250,13 +276,20 @@ namespace Alicat.Presentation.Presenters
                 UpdateLastUpdateText();
 
                 // Record to store
-                _dataStore.RecordSample(_current, _isExhaust ? 0.0 : _setPoint, _unit);
+                _dataStore.RecordSample(_current, _isExhaust ? 0.0 : _setPoint, _unit, _rampSpeed, _pollTimer.Interval);
 
                 // Update graph if open
                 if (_graphForm != null && !_graphForm.IsDisposed)
                 {
                     double? targetForGraph = _isExhaust ? (double?)null : _setPoint;
                     _graphForm.AddSample(_current, targetForGraph);
+                }
+
+                // Update test pressure form if open
+                if (_testPressureForm != null && !_testPressureForm.IsDisposed)
+                {
+                    _testPressureForm.UpdateCurrentPressure(_isExhaust ? 0.0 : _setPoint, _unit);
+                    _testPressureForm.UpdateCurrentRampSpeed(_rampSpeed, _unit);
                 }
 
                 // TableForm получает данные через события DataStore.OnNewPoint
@@ -444,14 +477,14 @@ namespace Alicat.Presentation.Presenters
                 // Если выхлоп открыт (purge режим), закрываем его перед установкой давления
                 if (_isExhaust)
                 {
-                    _serial.Send("AC");
+                    _serial.Send(AlicatCommands.ControlOn);
                     _isExhaust = false;
                     _lastCurrent = null;
                     _view.UI_SetTrendStatus(_lastCurrent, _current, isExhaust: false, _rampSpeed);
                     _view.UI_AppendStatusInfo("Exhaust closed - returning to control mode");
                 }
 
-                _serial.Send($"AS {targetValue:F1}");
+                _serial.Send(AlicatCommands.SetSetPoint(targetValue));
 
                 _setPoint = targetValue;
                 _view.UI_SetSetPoint(_setPoint, _unit);
@@ -486,6 +519,7 @@ namespace Alicat.Presentation.Presenters
                     // Resume - restore previous setpoint or use current target
                     _isPaused = false;
                     _view.UI_AppendStatusInfo("Ramp resumed");
+                    _dataStore.RecordEvent(_current, _setPoint, _unit, "RESUMED", _rampSpeed, _pollTimer.Interval);
                 }
                 else
                 {
@@ -495,6 +529,7 @@ namespace Alicat.Presentation.Presenters
                     _view.UI_SetSetPoint(_current, _unit);
                     _isPaused = true;
                     _view.UI_AppendStatusInfo($"Ramp paused - setpoint set to current ({_current:F2} {_unit}). Polling continues.");
+                    _dataStore.RecordEvent(_current, _setPoint, _unit, "PAUSED", _rampSpeed, _pollTimer.Interval);
                 }
                 
                 // Update GraphForm pause state
@@ -526,18 +561,21 @@ namespace Alicat.Presentation.Presenters
 
             try
             {
-                _serial.Send("AE");
+                _serial.Send(AlicatCommands.ExhaustHold);
                 _isExhaust = true;
 
                 _view.UI_SetTrendStatus(_lastCurrent, _current, isExhaust: true, _rampSpeed);
                 _view.UI_AppendStatusInfo("Purge started - exhaust open");
 
                 // Устанавливаем setpoint на устройстве в 0.0
-                _serial.Send("AS 0.0");
+                _serial.Send(AlicatCommands.SetSetPoint(0.0));
                 _setPoint = 0.0;
                 _view.UI_SetSetPoint(_setPoint, _unit);
 
                 _serial.Send(AlicatCommands.ReadAls);
+
+                // Записываем событие Purge
+                _dataStore.RecordEvent(_current, _setPoint, _unit, "PURGE_STARTED", _rampSpeed, _pollTimer.Interval);
             }
             catch (Exception ex)
             {
@@ -595,7 +633,7 @@ namespace Alicat.Presentation.Presenters
             // Если выхлоп открыт (purge режим), закрываем его перед установкой давления
             if (_isExhaust)
             {
-                _serial.Send("AC");
+                _serial.Send(AlicatCommands.ControlOn);
                 _isExhaust = false;
                 _lastCurrent = null;
                 _view.UI_SetTrendStatus(_lastCurrent, _current, isExhaust: false, _rampSpeed);
@@ -604,8 +642,11 @@ namespace Alicat.Presentation.Presenters
 
             try
             {
-                _serial.Send($"AS {sp.ToString("F2", CultureInfo.InvariantCulture)}");
+                _serial.Send(AlicatCommands.SetSetPoint(sp));
                 _serial.Send(AlicatCommands.ReadAls);
+
+                // Записываем событие изменения давления
+                _dataStore.RecordEvent(_current, _setPoint, _unit, "TARGET_CHANGED", _rampSpeed, _pollTimer.Interval);
             }
             catch (Exception ex)
             {
@@ -641,22 +682,128 @@ namespace Alicat.Presentation.Presenters
                 // Если выхлоп открыт (purge режим), закрываем его перед установкой давления
                 if (_isExhaust)
                 {
-                    _serial.Send("AC");
+                    _serial.Send(AlicatCommands.ControlOn);
                     _isExhaust = false;
                     _lastCurrent = null;
                     _view.UI_SetTrendStatus(_lastCurrent, _current, isExhaust: false, _rampSpeed);
                     _view.UI_AppendStatusInfo("Exhaust closed - returning to control mode");
                 }
 
-                _serial.Send($"AS {targetValue.ToString("F1", CultureInfo.InvariantCulture)}");
+                _serial.Send(AlicatCommands.SetSetPoint(targetValue));
                 _setPoint = targetValue;
                 _view.UI_SetSetPoint(_setPoint, _unit);
                 _serial.Send(AlicatCommands.ReadAls);
+
+                // Записываем событие изменения давления
+                _dataStore.RecordEvent(_current, _setPoint, _unit, "TARGET_CHANGED", _rampSpeed, _pollTimer.Interval);
             }
             catch (Exception ex)
             {
                 _view.UI_AppendStatusInfo($"Command failed: AS {targetValue:F1} - {ex.Message}");
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// Устанавливает скорость рампа (скорость изменения давления).
+        /// </summary>
+        public void SetRampSpeed(double rampSpeed)
+        {
+            if (_serial == null)
+            {
+                throw new InvalidOperationException("Device is not connected.");
+            }
+
+            if (rampSpeed < 0)
+            {
+                throw new ArgumentException("Ramp speed cannot be negative.", nameof(rampSpeed));
+            }
+
+            try
+            {
+                // Команда: ASR value 4 (где 4 = секунды)
+                _serial.Send($"ASR {rampSpeed.ToString("G", CultureInfo.InvariantCulture)} 4");
+                _rampSpeed = rampSpeed;
+                
+                // Обновляем отображение
+                _view.UI_SetRampSpeedUnits($"{TrimZeros(rampSpeed)} {_unit}/s");
+                
+                // Отправляем команду для получения подтверждения от устройства
+                _serial.Send(AlicatCommands.ReadRampSpeed);
+
+                // Записываем событие изменения скорости рампа
+                _dataStore.RecordEvent(_current, _setPoint, _unit, "RAMP_SPEED_CHANGED", _rampSpeed, _pollTimer.Interval);
+            }
+            catch (Exception ex)
+            {
+                _view.UI_AppendStatusInfo($"Command failed: SetRampSpeed {rampSpeed:F2} - {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Устанавливает скорость рампа с подтверждением (аналогично GoToTarget).
+        /// </summary>
+        public void GoToRampSpeed(string rampSpeedText)
+        {
+            if (_serial == null)
+            {
+                MessageBox.Show("Device is not connected.", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string raw = rampSpeedText?.Trim() ?? string.Empty;
+            if (raw.Length == 0)
+            {
+                MessageBox.Show("Enter ramp speed value.", "Validation",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            if (!double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out double rampSpeed))
+            {
+                MessageBox.Show("Invalid ramp speed value format.", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (rampSpeed < 0)
+            {
+                MessageBox.Show("Ramp speed cannot be negative.", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string displayVal = rampSpeed.ToString("F2", CultureInfo.InvariantCulture);
+
+            var ask = MessageBox.Show(
+                $"Do you want to change the ramp speed to {displayVal} {_unit}/s?",
+                "Confirm action", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (ask != DialogResult.Yes) return;
+
+            try
+            {
+                // Команда: ASR value 4 (где 4 = секунды)
+                _serial.Send($"ASR {rampSpeed.ToString("G", CultureInfo.InvariantCulture)} 4");
+                _rampSpeed = rampSpeed;
+                
+                // Обновляем отображение
+                _view.UI_SetRampSpeedUnits($"{TrimZeros(rampSpeed)} {_unit}/s");
+                
+                // Отправляем команду для получения подтверждения от устройства
+                _serial.Send(AlicatCommands.ReadRampSpeed);
+                
+                _view.UI_AppendStatusInfo($"Ramp speed set to {displayVal} {_unit}/s");
+
+                // Записываем событие изменения скорости рампа
+                _dataStore.RecordEvent(_current, _setPoint, _unit, "RAMP_SPEED_CHANGED", _rampSpeed, _pollTimer.Interval);
+            }
+            catch (Exception ex)
+            {
+                _view.UI_AppendStatusInfo($"Command failed: GoToRampSpeed {rampSpeed:F2} - {ex.Message}");
+                MessageBox.Show("Failed to send command:\n" + ex.Message, "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -764,14 +911,42 @@ namespace Alicat.Presentation.Presenters
             var newUnit = FormOptions.AppOptions.Current.PressureUnits ?? "PSIG";
             if (newUnit != oldUnit)
             {
-                _unit = newUnit;
-                _view.UI_SetPressureUnits(_unit);
-                _view.UI_AppendStatusInfo($"Units changed to {_unit}");
+                // Отправляем команду ADCU на устройство для изменения единиц
+                // НЕ устанавливаем _unit вручную - единицы придут из ответов устройства
+                if (_serial != null && _serial.IsConnected)
+                {
+                    try
+                    {
+                        var unitCode = GetUnitCodeForADCU(newUnit);
+                        Debug.WriteLine($"GetUnitCodeForADCU('{newUnit}') = {unitCode}");
+                        if (unitCode.HasValue)
+                        {
+                            string command = AlicatCommands.SetPressureUnits(unitCode.Value);
+                            Debug.WriteLine($"Sending command: {command}");
+                            _serial.Send(command);
+                            _view.UI_AppendStatusInfo($"Unit change command sent: {command} (waiting for device response)");
+                        }
+                        else
+                        {
+                            _view.UI_AppendStatusInfo($"Unit change command not sent - unknown unit: '{newUnit}'");
+                            Debug.WriteLine($"Unknown unit: '{newUnit}'");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _view.UI_AppendStatusInfo($"Failed to send unit change command: {ex.Message}");
+                        Debug.WriteLine($"Exception in ADCU: {ex}");
+                    }
+                }
+                else
+                {
+                    _view.UI_AppendStatusInfo($"Unit change command not sent - device not connected");
+                    Debug.WriteLine($"Device not connected: _serial={_serial != null}, IsConnected={_serial?.IsConnected}");
+                }
             }
-            else
-            {
-                _view.UI_SetPressureUnits(_unit);
-            }
+            
+            // Единицы всегда обновляются из текущего значения _unit (которое берется из ответов устройства)
+            _view.UI_SetPressureUnits(_unit);
 
             // Обновляем thresholds в GraphForm, если он открыт
             if (_graphForm != null && !_graphForm.IsDisposed)
@@ -791,12 +966,25 @@ namespace Alicat.Presentation.Presenters
                 ApplyOptionsToUi();
                 _view.ApplyOptionsToUi();
 
+                // Применяем Ramp Speed если задано
                 var ramp = FormOptions.AppOptions.Current.PressureRamp;
-                _ramp?.TryApply(ramp);
-
-                if (_serial != null && ramp is double r)
+                if (_serial != null && ramp.HasValue && ramp.Value > 0.001)
                 {
-                    _serial.Send($"SR {r.ToString("G", CultureInfo.InvariantCulture)}");
+                    try
+                    {
+                        SetRampSpeed(ramp.Value);
+                        _view.UI_AppendStatusInfo($"Ramp speed set to {ramp.Value:F2} {_unit}/s");
+                    }
+                    catch (Exception ex)
+                    {
+                        _view.UI_AppendStatusInfo($"Failed to set ramp speed: {ex.Message}");
+                    }
+                }
+                else if (ramp.HasValue && ramp.Value <= 0.001)
+                {
+                    // Если ramp speed = 0 или очень маленький, сбрасываем
+                    _rampSpeed = 0.0;
+                    _view.UI_SetRampSpeedUnits("0 " + _unit + "/s");
                 }
 
                 // Сохраняем настройки, если Auto-save включен
@@ -813,12 +1001,25 @@ namespace Alicat.Presentation.Presenters
                 // Также обновляем внутренние поля View (MinPressure, MinIncrementLimit)
                 _view.ApplyOptionsToUi();
 
+                // Применяем Ramp Speed если задано
                 var ramp = FormOptions.AppOptions.Current.PressureRamp;
-                _ramp?.TryApply(ramp);
-
-                if (_serial != null && ramp is double r)
+                if (_serial != null && ramp.HasValue && ramp.Value > 0.001)
                 {
-                    _serial.Send($"SR {r.ToString("G", CultureInfo.InvariantCulture)}");
+                    try
+                    {
+                        SetRampSpeed(ramp.Value);
+                        _view.UI_AppendStatusInfo($"Ramp speed set to {ramp.Value:F2} {_unit}/s");
+                    }
+                    catch (Exception ex)
+                    {
+                        _view.UI_AppendStatusInfo($"Failed to set ramp speed: {ex.Message}");
+                    }
+                }
+                else if (ramp.HasValue && ramp.Value <= 0.001)
+                {
+                    // Если ramp speed = 0 или очень маленький, сбрасываем
+                    _rampSpeed = 0.0;
+                    _view.UI_SetRampSpeedUnits("0 " + _unit + "/s");
                 }
 
                 // Сохраняем настройки, если Auto-save включен
@@ -922,6 +1123,18 @@ namespace Alicat.Presentation.Presenters
             }
         }
 
+        public void ShowTestPressure(Form parentForm)
+        {
+            if (_testPressureForm == null || _testPressureForm.IsDisposed)
+            {
+                _testPressureForm = new Alicat.UI.Features.Test.FormTestPressure(this);
+                _testPressureForm.FormClosed += (s, e) => _testPressureForm = null;
+            }
+
+            _testPressureForm.Show();
+            _testPressureForm.BringToFront();
+        }
+
         public void ShowTerminal(Form parentForm)
         {
             if (_terminalForm == null || _terminalForm.IsDisposed)
@@ -977,6 +1190,7 @@ namespace Alicat.Presentation.Presenters
                 _serial = null;
                 _ramp = null;
                 _pollTimer.Stop();
+                StopWatchdogTimer();
                 _isWaitingForResponse = false; // Сбрасываем флаг при отключении
                 _view.UI_UpdateConnectionStatus(false);
                 _view.UI_AppendStatusInfo("Device disconnected");
@@ -1018,7 +1232,7 @@ namespace Alicat.Presentation.Presenters
             try
             {
                 // Открываем выхлоп для быстрого сброса давления
-                _serial.Send("AE");
+                _serial.Send(AlicatCommands.ExhaustHold);
                 _isExhaust = true;
                 _setPoint = 0.0;
                 _view.UI_SetSetPoint(0.0, _unit);
@@ -1029,8 +1243,8 @@ namespace Alicat.Presentation.Presenters
                 await Task.Delay(500);
 
                 // Возвращаем в режим управления (закрываем выхлоп)
-                _serial.Send("AC");
-                _serial.Send("AS 0.0");
+                _serial.Send(AlicatCommands.ControlOn);
+                _serial.Send(AlicatCommands.SetSetPoint(0.0));
                 _serial.Send(AlicatCommands.ReadAls);
 
                 _view.UI_AppendStatusInfo("Emergency stop complete - pressure reset to zero");
@@ -1280,6 +1494,79 @@ namespace Alicat.Presentation.Presenters
         public double RampSpeed => _rampSpeed;
         public double MaxPressure => _maxPressure;
         public double CurrentIncrement => _currentIncrement;
+
+        /// <summary>
+        /// Запрашивает актуальные значения у устройства (давление и скорость рампа).
+        /// </summary>
+        public void RequestCurrentValues()
+        {
+            if (_serial == null || !_serial.IsConnected)
+            {
+                return;
+            }
+
+            try
+            {
+                // Запрашиваем текущее давление (ALS)
+                _serial.Send(AlicatCommands.ReadAls);
+                // Запрашиваем текущую скорость рампа (ASR)
+                _serial.Send(AlicatCommands.ReadRampSpeed);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"RequestCurrentValues error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Получает код единицы измерения для команды ADCU.
+        /// Коды единиц согласно документации Alicat (Appendix B-6):
+        /// 2: Pa
+        /// 3: hPa
+        /// 4: kPa
+        /// 5: MPa
+        /// 6: mbar
+        /// 7: bar
+        /// 8: g/cm²
+        /// 9: kg/cm
+        /// 10: PSI
+        /// 11: PSF
+        /// 12: mTorr
+        /// 13: torr
+        /// </summary>
+        private int? GetUnitCodeForADCU(string unit)
+        {
+            if (string.IsNullOrWhiteSpace(unit))
+                return 10; // Default: PSI
+
+            var upper = unit.ToUpperInvariant().Trim();
+
+            // Убираем "G" в конце для сопоставления
+            if (upper.EndsWith("G") && upper != "PSIG" && upper != "PSFG")
+            {
+                upper = upper.Substring(0, upper.Length - 1);
+            }
+
+            var code = upper switch
+            {
+                "PA" => 2,
+                "HPA" => 3,
+                "KPA" => 4,
+                "MPA" => 5,
+                "MBAR" => 6,
+                "BAR" => 7,
+                "G/CM²" or "G/CM2" or "GCM²" or "GCM2" => 8,
+                "KG/CM" or "KGCM" => 9,
+                "PSI" or "PSIG" => 10,
+                "PSF" or "PSFG" => 11,
+                "MTORR" => 12,
+                "TORR" => 13,
+                _ => (int?)null // Unknown unit
+            };
+            
+            Debug.WriteLine($"GetUnitCodeForADCU: unit='{unit}' -> upper='{upper}' -> code={code}");
+            return code;
+        }
         public double MaxIncrementLimit => _maxIncrementLimit;
 
         /// <summary>
@@ -1292,24 +1579,233 @@ namespace Alicat.Presentation.Presenters
             
             if (intervalMs < 1000)
             {
-                // Меньше секунды - показываем в миллисекундах
+                // Меньше секунды - показываем в миллисекундах с 2 знаками после запятой
                 double seconds = intervalMs / 1000.0;
-                text = $"Last update: {seconds:F1}s ago";
+                text = $"Last update: {seconds.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)}s ago";
             }
             else if (intervalMs < 60000)
             {
                 // Меньше минуты - показываем в секундах
                 double seconds = intervalMs / 1000.0;
-                text = $"Last update: {seconds:F0}s ago";
+                text = $"Last update: {TrimZeros(seconds, 0)}s ago";
             }
             else
             {
                 // Больше минуты - показываем в минутах
                 double minutes = intervalMs / 60000.0;
-                text = $"Last update: {minutes:F1}m ago";
+                text = $"Last update: {TrimZeros(minutes, 1)}m ago";
             }
             
             _view.UI_UpdateLastUpdate(text);
+        }
+
+        /// <summary>
+        /// Запускает сторожевой таймер для контроля связи с устройством.
+        /// </summary>
+        private void StartWatchdogTimer()
+        {
+            StopWatchdogTimer(); // Останавливаем предыдущий, если был
+            
+            _watchdogTimer = new System.Threading.Timer(
+                WatchdogTimerCallback,
+                null,
+                ConnectionTimeoutMs,
+                System.Threading.Timeout.Infinite // Одноразовый таймер
+            );
+        }
+
+        /// <summary>
+        /// Сбрасывает сторожевой таймер (перезапускает отсчет).
+        /// Вызывается при получении данных от устройства.
+        /// </summary>
+        private void ResetWatchdogTimer()
+        {
+            if (_watchdogTimer != null && _serial != null && _serial.IsConnected)
+            {
+                // Перезапускаем таймер на новый период
+                _watchdogTimer.Change(ConnectionTimeoutMs, System.Threading.Timeout.Infinite);
+            }
+        }
+
+        /// <summary>
+        /// Останавливает сторожевой таймер.
+        /// </summary>
+        private void StopWatchdogTimer()
+        {
+            if (_watchdogTimer != null)
+            {
+                _watchdogTimer.Dispose();
+                _watchdogTimer = null;
+            }
+        }
+
+        /// <summary>
+        /// Обработчик срабатывания сторожевого таймера.
+        /// Вызывается, если устройство не отвечает в течение таймаута.
+        /// </summary>
+        private void WatchdogTimerCallback(object? state)
+        {
+            if (_serial == null || !_serial.IsConnected)
+            {
+                StopWatchdogTimer();
+                return;
+            }
+
+            // Таймер сработал - значит нет данных больше таймаута
+            _view.BeginInvoke(new Action(() =>
+            {
+                _view.UI_AppendStatusInfo("Connection timeout - device not responding");
+                _view.UI_UpdateConnectionStatus(false);
+                
+                // Останавливаем таймеры
+                _pollTimer.Stop();
+                StopWatchdogTimer();
+                
+                // Закрываем соединение
+                try
+                {
+                    _serial?.Dispose();
+                }
+                catch
+                {
+                    // Игнорируем ошибки при закрытии
+                }
+                
+                _serial = null;
+                _ramp = null;
+                _isWaitingForResponse = false;
+            }));
+        }
+
+        private static string GetSettingsFilePath()
+        {
+            string? projectDir = null;
+            string? currentDir = System.IO.Directory.GetCurrentDirectory();
+            
+            if (!string.IsNullOrEmpty(currentDir))
+            {
+                var dir = new System.IO.DirectoryInfo(currentDir);
+                while (dir != null)
+                {
+                    if (dir.GetFiles("*.csproj").Length > 0)
+                    {
+                        projectDir = dir.FullName;
+                        break;
+                    }
+                    dir = dir.Parent;
+                }
+            }
+            
+            if (string.IsNullOrEmpty(projectDir))
+            {
+                string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                string? exeDir = System.IO.Path.GetDirectoryName(exePath);
+                
+                if (exeDir != null && exeDir.Contains("bin"))
+                {
+                    var dir = new System.IO.DirectoryInfo(exeDir);
+                    while (dir != null && dir.Name != "Alicat" && dir.GetFiles("*.csproj").Length == 0)
+                    {
+                        dir = dir.Parent;
+                    }
+                    projectDir = dir?.FullName ?? System.IO.Directory.GetCurrentDirectory();
+                }
+                else
+                {
+                    projectDir = System.IO.Directory.GetCurrentDirectory();
+                }
+            }
+            
+            string settingsDir = System.IO.Path.Combine(projectDir, "Settings");
+            return System.IO.Path.Combine(settingsDir, "settings.json");
+        }
+
+        private void SaveCommunicationSettings(FormConnect dlg, SerialPort opened)
+        {
+            try
+            {
+                string settingsPath = GetSettingsFilePath();
+                string? directory = System.IO.Path.GetDirectoryName(settingsPath);
+                
+                if (!string.IsNullOrEmpty(directory) && !System.IO.Directory.Exists(directory))
+                {
+                    System.IO.Directory.CreateDirectory(directory);
+                }
+
+                var existingSettings = new
+                {
+                    General = new { PressureUnits = "PSI", TimeUnits = "s", PollingFrequency = 500 },
+                    Device = new { PressureRamp = (double?)null, MaxPressure = (double?)null, MinPressure = (double?)null },
+                    Control = new { MaxIncrement = (double?)null, MinIncrement = (double?)null },
+                    Communication = new { PortName = (string?)null, BaudRate = 19200, Parity = "None", StopBits = "One", DataBits = 8, ReadTimeout = 700, WriteTimeout = 700 },
+                    LastSaved = DateTime.Now
+                };
+
+                if (System.IO.File.Exists(settingsPath))
+                {
+                    try
+                    {
+                        string jsonContent = System.IO.File.ReadAllText(settingsPath);
+                        var settingsData = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(jsonContent);
+                        
+                        if (settingsData.TryGetProperty("General", out var gen))
+                        {
+                            existingSettings = new
+                            {
+                                General = new
+                                {
+                                    PressureUnits = gen.TryGetProperty("PressureUnits", out var pu) ? pu.GetString() ?? "PSI" : "PSI",
+                                    TimeUnits = gen.TryGetProperty("TimeUnits", out var tu) ? tu.GetString() ?? "s" : "s",
+                                    PollingFrequency = gen.TryGetProperty("PollingFrequency", out var pf) && pf.ValueKind != System.Text.Json.JsonValueKind.Null ? pf.GetInt32() : 500
+                                },
+                                Device = settingsData.TryGetProperty("Device", out var dev) ? new
+                                {
+                                    PressureRamp = dev.TryGetProperty("PressureRamp", out var pr) && pr.ValueKind != System.Text.Json.JsonValueKind.Null ? pr.GetDouble() : (double?)null,
+                                    MaxPressure = dev.TryGetProperty("MaxPressure", out var mp) && mp.ValueKind != System.Text.Json.JsonValueKind.Null ? mp.GetDouble() : (double?)null,
+                                    MinPressure = dev.TryGetProperty("MinPressure", out var minp) && minp.ValueKind != System.Text.Json.JsonValueKind.Null ? minp.GetDouble() : (double?)null
+                                } : new { PressureRamp = (double?)null, MaxPressure = (double?)null, MinPressure = (double?)null },
+                                Control = settingsData.TryGetProperty("Control", out var ctrl) ? new
+                                {
+                                    MaxIncrement = ctrl.TryGetProperty("MaxIncrement", out var mi) && mi.ValueKind != System.Text.Json.JsonValueKind.Null ? mi.GetDouble() : (double?)null,
+                                    MinIncrement = ctrl.TryGetProperty("MinIncrement", out var mini) && mini.ValueKind != System.Text.Json.JsonValueKind.Null ? mini.GetDouble() : (double?)null
+                                } : new { MaxIncrement = (double?)null, MinIncrement = (double?)null },
+                                Communication = new { PortName = (string?)null, BaudRate = 19200, Parity = "None", StopBits = "One", DataBits = 8, ReadTimeout = 700, WriteTimeout = 700 },
+                                LastSaved = DateTime.Now
+                            };
+                        }
+                    }
+                    catch { }
+                }
+
+                var updatedSettings = new
+                {
+                    existingSettings.General,
+                    existingSettings.Device,
+                    existingSettings.Control,
+                    Communication = new
+                    {
+                        PortName = dlg.PortName,
+                        BaudRate = dlg.BaudRate,
+                        Parity = dlg.Parity,
+                        StopBits = dlg.StopBits,
+                        DataBits = dlg.DataBits,
+                        ReadTimeout = dlg.ReadTimeout,
+                        WriteTimeout = dlg.WriteTimeout
+                    },
+                    LastSaved = DateTime.Now
+                };
+
+                string json = System.Text.Json.JsonSerializer.Serialize(updatedSettings, new System.Text.Json.JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
+                System.IO.File.WriteAllText(settingsPath, json);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to save communication settings: {ex.Message}");
+            }
         }
     }
 }

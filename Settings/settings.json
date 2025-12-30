@@ -1,0 +1,26 @@
+{
+  "General": {
+    "PressureUnits": "PSI",
+    "TimeUnits": "s",
+    "PollingFrequency": 500
+  },
+  "Device": {
+    "PressureRamp": 5,
+    "MaxPressure": 200,
+    "MinPressure": 0
+  },
+  "Control": {
+    "MaxIncrement": 20,
+    "MinIncrement": 0.1
+  },
+  "Communication": {
+    "PortName": "COM3",
+    "BaudRate": 19200,
+    "Parity": "None",
+    "StopBits": "One",
+    "DataBits": 8,
+    "ReadTimeout": 700,
+    "WriteTimeout": 700
+  },
+  "LastSaved": "2025-12-30T17:09:20.7025415-06:00"
+}

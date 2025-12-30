@@ -7,6 +7,9 @@
     <Compile Update="UI\Features\Graph\Views\GraphForm.Statistics.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Update="UI\Features\Test\FormTestPressure.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="UI\Main\AlicatForm.Presenter.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -98,7 +98,7 @@ namespace Alicat.Services.Data
 
             // Создаём файл и пишем заголовок
             _writer = new StreamWriter(csvFilePath, append: false, Encoding.UTF8);
-            _writer.WriteLine("Timestamp,ElapsedSec,Current,Target,Unit,Event");
+            _writer.WriteLine("Timestamp,Time_s,Current,Target,Unit,RampSpeed_psi_s,PollingFrequency,Event");
             _writer.Flush();
 
             OnSessionStarted?.Invoke();
@@ -110,12 +110,17 @@ namespace Alicat.Services.Data
         // ═══════════════════════════════════════════
         public void RecordSample(double current, double target, string unit)
         {
+            RecordSample(current, target, unit, 0.0, 500);
+        }
+
+        public void RecordSample(double current, double target, string unit, double rampSpeed, int pollingFrequency)
+        {
             if (!_isRunning) return;
 
             var now = DateTime.Now;
             var elapsed = (now - _sessionStart).TotalSeconds;
 
-            var point = new DataPoint(now, elapsed, current, target, unit);
+            var point = new DataPoint(now, elapsed, current, target, unit, rampSpeed, pollingFrequency);
 
             // RAM
             _points.Add(point);
@@ -138,12 +143,17 @@ namespace Alicat.Services.Data
         // ═══════════════════════════════════════════
         public void RecordEvent(double current, double target, string unit, string eventType)
         {
+            RecordEvent(current, target, unit, eventType, 0.0, 500);
+        }
+
+        public void RecordEvent(double current, double target, string unit, string eventType, double rampSpeed, int pollingFrequency)
+        {
             if (!_isRunning) return;
 
             var now = DateTime.Now;
             var elapsed = (now - _sessionStart).TotalSeconds;
 
-            var point = new DataPoint(now, elapsed, current, target, unit, eventType);
+            var point = new DataPoint(now, elapsed, current, target, unit, rampSpeed, pollingFrequency, eventType);
 
             // RAM
             _points.Add(point);
@@ -200,12 +210,14 @@ namespace Alicat.Services.Data
 
             var line = string.Format(
                 CultureInfo.InvariantCulture,
-                "{0:yyyy-MM-dd HH:mm:ss.fff},{1:F3},{2:F2},{3:F2},{4},{5}",
+                "{0:yyyy-MM-dd HH:mm:ss.fff},{1:F3},{2:F2},{3:F2},{4},{5:F2},{6},{7}",
                 point.Timestamp,
                 point.ElapsedSeconds,
                 point.Current,
                 point.Target,
                 point.Unit,
+                point.RampSpeed,
+                point.PollingFrequency,
                 point.Event ?? ""
             );
 
