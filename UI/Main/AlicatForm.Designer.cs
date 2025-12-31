@@ -173,7 +173,7 @@ namespace Alicat
         // =========================
         // THEME FIELDS
         // =========================
-        private bool isDarkTheme = false;
+        private bool isDarkTheme = true; // По умолчанию темная тема
 
         protected override void Dispose(bool disposing)
         {
@@ -453,8 +453,8 @@ namespace Alicat
             // 
             // menuViewLightTheme
             // 
-            menuViewLightTheme.Checked = true;
-            menuViewLightTheme.CheckState = CheckState.Checked;
+            menuViewLightTheme.Checked = false;
+            menuViewLightTheme.CheckState = CheckState.Unchecked;
             menuViewLightTheme.Name = "menuViewLightTheme";
             menuViewLightTheme.Size = new Size(141, 22);
             menuViewLightTheme.Text = "Light Theme";
@@ -462,6 +462,8 @@ namespace Alicat
             // 
             // menuViewDarkTheme
             // 
+            menuViewDarkTheme.Checked = true;
+            menuViewDarkTheme.CheckState = CheckState.Checked;
             menuViewDarkTheme.Name = "menuViewDarkTheme";
             menuViewDarkTheme.Size = new Size(141, 22);
             menuViewDarkTheme.Text = "Dark Theme";

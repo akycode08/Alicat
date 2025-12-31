@@ -118,3 +118,4 @@ while (_currentPoints.Count > 0 && _currentPoints[0].X < xMin)
 4. Сохранить совместимость с текущим кодом
 
 
+

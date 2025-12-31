@@ -1,6 +1,6 @@
 {
   "General": {
-    "PressureUnits": "PSI",
+    "PressureUnits": "PSIG",
     "TimeUnits": "s",
     "PollingFrequency": 500
   },
@@ -22,5 +22,5 @@
     "ReadTimeout": 700,
     "WriteTimeout": 700
   },
-  "LastSaved": "2025-12-30T17:09:20.7025415-06:00"
+  "LastSaved": "2025-12-31T16:13:58.6033469-06:00"
 }

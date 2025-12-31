@@ -35,10 +35,12 @@
             tlpLiveStatus = new TableLayoutPanel();
             tableLayoutPanel1 = new TableLayoutPanel();
             lblTarget = new Label();
+            lblTargetValue = new Label();
             lblDelta = new Label();
             lblRate = new Label();
             tableLayoutPanel2 = new TableLayoutPanel();
             lblETA = new Label();
+            lblETAValue = new Label();
             lblTrend = new Label();
             tableLayoutPanel3 = new TableLayoutPanel();
             lblCurrentPressureLarge = new Label();
@@ -60,6 +62,25 @@
             lblDurationValue = new Label();
             lblSampleRateLabel = new Label();
             lblSampleRateValue = new Label();
+            tlpGoToTarget = new TableLayoutPanel();
+            lblGoToTargetTitle = new Label();
+            dgvTargets = new DataGridView();
+            tlpTargetInputs = new TableLayoutPanel();
+            lblPSILabel = new Label();
+            txtPSI = new TextBox();
+            lblHoldLabel = new Label();
+            txtHold = new TextBox();
+            btnAddTarget = new Button();
+            btnClearAll = new Button();
+            lblProgress = new Label();
+            progressBarProgress = new ProgressBar();
+            lblHoldTimer = new Label();
+            progressBarHold = new ProgressBar();
+            tlpControlButtons = new FlowLayoutPanel();
+            btnPlay = new Button();
+            btnPauseTarget = new Button();
+            btnStop = new Button();
+            btnSkip = new Button();
             btnEmergency = new Button();
             panelRight = new Panel();
             tableSettings = new TableLayoutPanel();
@@ -101,21 +122,26 @@
             lblFooterPoints = new Label();
             lblThemeIndicator = new Label();
             panelHeader = new Panel();
+            btnPause = new Button();
+            btnExport = new Button();
+            headerLayoutPanel = new TableLayoutPanel();
+            headerLeftFlowPanel = new FlowLayoutPanel();
+            headerRightFlowPanel = new FlowLayoutPanel();
+            appIcon = new Panel();
+            lblAppTitle = new Label();
+            lblSessionTime = new Label();
             panelChartHeader = new Panel();
             panelChartButtons = new FlowLayoutPanel();
-            btnChartReset = new Button();
-            btnFullscreen = new Button();
             flowLegend = new FlowLayoutPanel();
             lblLegendCurrent = new Label();
             lblLegendTarget = new Label();
             lblLegendMin = new Label();
             lblLegendMax = new Label();
+            btnChartReset = new Button();
+            btnFullscreen = new Button();
             panelCenter = new Panel();
             lblComPort = new Label();
-            lblSessionTime = new Label();
             lblHotkeys = new Label();
-            btnPause = new Button();
-            btnExport = new Button();
             btnReset = new Button();
             btnFullscreenHeader = new Button();
             lblFooterMax = new Label();
@@ -126,6 +152,10 @@
             tableLayoutPanel2.SuspendLayout();
             tableLayoutPanel3.SuspendLayout();
             tlpSessionStats.SuspendLayout();
+            tlpGoToTarget.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvTargets).BeginInit();
+            tlpTargetInputs.SuspendLayout();
+            tlpControlButtons.SuspendLayout();
             panelRight.SuspendLayout();
             tableSettings.SuspendLayout();
             tlpAlerts.SuspendLayout();
@@ -138,8 +168,11 @@
             tlpTargetControl.SuspendLayout();
             panelBottom.SuspendLayout();
             footerLayout.SuspendLayout();
+            panelHeader.SuspendLayout();
+            headerLayoutPanel.SuspendLayout();
+            headerLeftFlowPanel.SuspendLayout();
+            headerRightFlowPanel.SuspendLayout();
             panelChartHeader.SuspendLayout();
-            panelChartButtons.SuspendLayout();
             flowLegend.SuspendLayout();
             panelCenter.SuspendLayout();
             SuspendLayout();
@@ -151,7 +184,7 @@
             chartPressure.Location = new Point(0, 0);
             chartPressure.Margin = new Padding(0);
             chartPressure.Name = "chartPressure";
-            chartPressure.Size = new Size(554, 373);
+            chartPressure.Size = new Size(900, 660);
             chartPressure.TabIndex = 0;
             // 
             // panelLeft
@@ -161,7 +194,7 @@
             panelLeft.Dock = DockStyle.Left;
             panelLeft.Location = new Point(0, 50);
             panelLeft.Name = "panelLeft";
-            panelLeft.Size = new Size(200, 483);
+            panelLeft.Size = new Size(200, 770);
             panelLeft.TabIndex = 1;
             // 
             // tlpLeft
@@ -170,32 +203,37 @@
             tlpLeft.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             tlpLeft.Controls.Add(tlpLiveStatus, 0, 1);
             tlpLeft.Controls.Add(tlpSessionStats, 0, 2);
-            tlpLeft.Controls.Add(btnEmergency, 0, 3);
+            tlpLeft.Controls.Add(tlpGoToTarget, 0, 3);
+            tlpLeft.Controls.Add(btnEmergency, 0, 4);
             tlpLeft.Dock = DockStyle.Fill;
             tlpLeft.Location = new Point(0, 0);
             tlpLeft.Name = "tlpLeft";
-            tlpLeft.RowCount = 4;
-            tlpLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 4F));
-            tlpLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 46F));
-            tlpLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 40F));
+            tlpLeft.RowCount = 5;
+            tlpLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 2F));
+            tlpLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
+            tlpLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 18F));
+            tlpLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             tlpLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 10F));
             tlpLeft.Size = new Size(200, 483);
             tlpLeft.TabIndex = 0;
             // 
             // tlpLiveStatus
             // 
-            tlpLiveStatus.ColumnCount = 1;
-            tlpLiveStatus.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tlpLiveStatus.Controls.Add(tableLayoutPanel1, 0, 1);
-            tlpLiveStatus.Controls.Add(tableLayoutPanel2, 0, 2);
+            tlpLiveStatus.ColumnCount = 2;
+            tlpLiveStatus.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tlpLiveStatus.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             tlpLiveStatus.Controls.Add(tableLayoutPanel3, 0, 0);
+            tlpLiveStatus.Controls.Add(lblTarget, 0, 1);
+            tlpLiveStatus.Controls.Add(lblTargetValue, 1, 1);
+            tlpLiveStatus.Controls.Add(lblETA, 0, 2);
+            tlpLiveStatus.Controls.Add(lblETAValue, 1, 2);
             tlpLiveStatus.Dock = DockStyle.Fill;
             tlpLiveStatus.Location = new Point(3, 22);
             tlpLiveStatus.Name = "tlpLiveStatus";
             tlpLiveStatus.RowCount = 3;
-            tlpLiveStatus.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tlpLiveStatus.RowStyles.Add(new RowStyle(SizeType.Percent, 40F));
-            tlpLiveStatus.RowStyles.Add(new RowStyle(SizeType.Percent, 10F));
+            tlpLiveStatus.RowStyles.Add(new RowStyle(SizeType.Percent, 60F));
+            tlpLiveStatus.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
+            tlpLiveStatus.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
             tlpLiveStatus.Size = new Size(194, 216);
             tlpLiveStatus.TabIndex = 0;
             // 
@@ -278,12 +316,27 @@
             lblETA.BackColor = Color.FromArgb(21, 23, 28);
             lblETA.Dock = DockStyle.Fill;
             lblETA.ForeColor = Color.FromArgb(120, 125, 140);
-            lblETA.Location = new Point(0, 0);
-            lblETA.Margin = new Padding(0);
+            lblETA.Location = new Point(3, 175);
+            lblETA.Margin = new Padding(5, 5, 0, 0);
             lblETA.Name = "lblETA";
-            lblETA.Size = new Size(94, 16);
-            lblETA.TabIndex = 0;
-            lblETA.Text = "ETA";
+            lblETA.Size = new Size(91, 38);
+            lblETA.TabIndex = 15;
+            lblETA.Text = "ETA:";
+            lblETA.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // lblETAValue
+            // 
+            lblETAValue.AutoSize = true;
+            lblETAValue.BackColor = Color.FromArgb(21, 23, 28);
+            lblETAValue.Dock = DockStyle.Fill;
+            lblETAValue.ForeColor = Color.White;
+            lblETAValue.Location = new Point(99, 175);
+            lblETAValue.Margin = new Padding(5, 5, 0, 0);
+            lblETAValue.Name = "lblETAValue";
+            lblETAValue.Size = new Size(91, 38);
+            lblETAValue.TabIndex = 16;
+            lblETAValue.Text = "--";
+            lblETAValue.TextAlign = ContentAlignment.MiddleRight;
             // 
             // lblTrend
             // 
@@ -302,14 +355,13 @@
             tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             tableLayoutPanel3.Controls.Add(lblCurrentPressureLarge, 0, 0);
             tableLayoutPanel3.Controls.Add(lblCurrentUnit, 0, 1);
-            tableLayoutPanel3.Controls.Add(pnlWarnIndicator, 0, 2);
+            tlpLiveStatus.SetColumnSpan(tableLayoutPanel3, 2);
             tableLayoutPanel3.Dock = DockStyle.Fill;
             tableLayoutPanel3.Location = new Point(3, 3);
             tableLayoutPanel3.Name = "tableLayoutPanel3";
-            tableLayoutPanel3.RowCount = 3;
-            tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
-            tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+            tableLayoutPanel3.RowCount = 2;
+            tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 70F));
+            tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
             tableLayoutPanel3.Size = new Size(188, 102);
             tableLayoutPanel3.TabIndex = 2;
             // 
@@ -346,7 +398,7 @@
             pnlWarnIndicator.Dock = DockStyle.Fill;
             pnlWarnIndicator.Location = new Point(3, 79);
             pnlWarnIndicator.Name = "pnlWarnIndicator";
-            pnlWarnIndicator.Size = new Size(182, 25);
+            pnlWarnIndicator.Size = new Size(182, 20);
             pnlWarnIndicator.TabIndex = 2;
             pnlWarnIndicator.Visible = false;
             // 
@@ -362,26 +414,20 @@
             tlpSessionStats.Controls.Add(lblMaxValue, 1, 2);
             tlpSessionStats.Controls.Add(lblAvgLabel, 0, 3);
             tlpSessionStats.Controls.Add(lblAvgValue, 1, 3);
-            tlpSessionStats.Controls.Add(lblStdDevLabel, 0, 4);
-            tlpSessionStats.Controls.Add(lblStdDevValue, 1, 4);
-            tlpSessionStats.Controls.Add(lblPointsLabel, 0, 5);
-            tlpSessionStats.Controls.Add(lblPointsValue, 1, 5);
-            tlpSessionStats.Controls.Add(lblDurationLabel, 0, 6);
-            tlpSessionStats.Controls.Add(lblDurationValue, 1, 6);
-            tlpSessionStats.Controls.Add(lblSampleRateLabel, 0, 7);
-            tlpSessionStats.Controls.Add(lblSampleRateValue, 1, 7);
+            tlpSessionStats.Controls.Add(lblPointsLabel, 0, 4);
+            tlpSessionStats.Controls.Add(lblPointsValue, 1, 4);
+            tlpSessionStats.Controls.Add(lblDurationLabel, 0, 5);
+            tlpSessionStats.Controls.Add(lblDurationValue, 1, 5);
             tlpSessionStats.Dock = DockStyle.Fill;
             tlpSessionStats.Location = new Point(3, 244);
             tlpSessionStats.Name = "tlpSessionStats";
-            tlpSessionStats.RowCount = 8;
+            tlpSessionStats.RowCount = 6;
             tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Absolute, 25F));
-            tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Percent, 12.5F));
-            tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Percent, 12.5F));
-            tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Percent, 12.5F));
-            tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Percent, 12.5F));
-            tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Percent, 12.5F));
-            tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Percent, 12.5F));
-            tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Percent, 12.5F));
+            tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
+            tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
+            tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
+            tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
+            tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
             tlpSessionStats.Size = new Size(194, 187);
             tlpSessionStats.TabIndex = 3;
             // 
@@ -581,13 +627,300 @@
             lblSampleRateValue.Text = "0 Hz";
             lblSampleRateValue.TextAlign = ContentAlignment.MiddleRight;
             // 
+            // tlpGoToTarget
+            // 
+            tlpGoToTarget.ColumnCount = 1;
+            tlpGoToTarget.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            tlpGoToTarget.Controls.Add(lblGoToTargetTitle, 0, 0);
+            tlpGoToTarget.Controls.Add(dgvTargets, 0, 1);
+            tlpGoToTarget.Controls.Add(tlpTargetInputs, 0, 2);
+            tlpGoToTarget.Controls.Add(btnAddTarget, 0, 3);
+            tlpGoToTarget.Controls.Add(btnClearAll, 0, 4);
+            tlpGoToTarget.Controls.Add(lblProgress, 0, 5);
+            tlpGoToTarget.Controls.Add(progressBarProgress, 0, 6);
+            tlpGoToTarget.Controls.Add(lblHoldTimer, 0, 7);
+            tlpGoToTarget.Controls.Add(progressBarHold, 0, 8);
+            tlpGoToTarget.Controls.Add(tlpControlButtons, 0, 9);
+            tlpGoToTarget.Dock = DockStyle.Fill;
+            tlpGoToTarget.Location = new Point(3, 437);
+            tlpGoToTarget.Name = "tlpGoToTarget";
+            tlpGoToTarget.Padding = new Padding(5);
+            tlpGoToTarget.RowCount = 10;
+            tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Absolute, 25F));
+            tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+            tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
+            tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
+            tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
+            tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Absolute, 15F));
+            tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Absolute, 25F));
+            tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Absolute, 15F));
+            tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
+            tlpGoToTarget.Size = new Size(194, 385);
+            tlpGoToTarget.TabIndex = 4;
+            // 
+            // lblGoToTargetTitle
+            // 
+            lblGoToTargetTitle.AutoSize = true;
+            lblGoToTargetTitle.Dock = DockStyle.Fill;
+            lblGoToTargetTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblGoToTargetTitle.ForeColor = Color.FromArgb(120, 125, 140);
+            lblGoToTargetTitle.Location = new Point(8, 5);
+            lblGoToTargetTitle.Name = "lblGoToTargetTitle";
+            lblGoToTargetTitle.Size = new Size(178, 25);
+            lblGoToTargetTitle.TabIndex = 0;
+            lblGoToTargetTitle.Text = "GO TO TARGET";
+            lblGoToTargetTitle.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // dgvTargets
+            // 
+            dgvTargets.AllowUserToAddRows = false;
+            dgvTargets.AllowUserToDeleteRows = false;
+            dgvTargets.AllowUserToResizeRows = false;
+            dgvTargets.BackgroundColor = Color.FromArgb(21, 23, 28);
+            dgvTargets.BorderStyle = BorderStyle.None;
+            dgvTargets.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvTargets.ColumnHeadersVisible = true;
+            dgvTargets.Dock = DockStyle.Fill;
+            dgvTargets.EnableHeadersVisualStyles = false;
+            dgvTargets.GridColor = Color.FromArgb(42, 45, 53);
+            dgvTargets.Location = new Point(8, 33);
+            dgvTargets.MultiSelect = false;
+            dgvTargets.Name = "dgvTargets";
+            dgvTargets.ReadOnly = true;
+            dgvTargets.RowHeadersVisible = false;
+            dgvTargets.RowTemplate.Height = 25;
+            dgvTargets.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvTargets.Size = new Size(178, 90);
+            dgvTargets.TabIndex = 1;
+            dgvTargets.DefaultCellStyle.BackColor = Color.FromArgb(21, 23, 28);
+            dgvTargets.DefaultCellStyle.ForeColor = Color.White;
+            dgvTargets.DefaultCellStyle.SelectionBackColor = Color.FromArgb(255, 152, 0);
+            dgvTargets.DefaultCellStyle.SelectionForeColor = Color.White;
+            dgvTargets.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(32, 35, 44);
+            dgvTargets.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(120, 125, 140);
+            dgvTargets.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            // 
+            // tlpTargetInputs
+            // 
+            tlpTargetInputs.ColumnCount = 4;
+            tlpTargetInputs.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 45F));
+            tlpTargetInputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tlpTargetInputs.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 75F));
+            tlpTargetInputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tlpTargetInputs.Controls.Add(lblPSILabel, 0, 0);
+            tlpTargetInputs.Controls.Add(txtPSI, 1, 1);
+            tlpTargetInputs.Controls.Add(lblHoldLabel, 2, 0);
+            tlpTargetInputs.Controls.Add(txtHold, 3, 1);
+            tlpTargetInputs.Dock = DockStyle.Fill;
+            tlpTargetInputs.Location = new Point(8, 126);
+            tlpTargetInputs.Name = "tlpTargetInputs";
+            tlpTargetInputs.Padding = new Padding(0, 0, 0, 0);
+            tlpTargetInputs.RowCount = 2;
+            tlpTargetInputs.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            tlpTargetInputs.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
+            tlpTargetInputs.Size = new Size(178, 44);
+            tlpTargetInputs.TabIndex = 2;
+            // 
+            // lblPSILabel
+            // 
+            lblPSILabel.AutoSize = true;
+            lblPSILabel.Dock = DockStyle.Fill;
+            lblPSILabel.ForeColor = Color.FromArgb(120, 125, 140);
+            lblPSILabel.Location = new Point(0, 0);
+            lblPSILabel.Margin = new Padding(0);
+            lblPSILabel.Name = "lblPSILabel";
+            lblPSILabel.Size = new Size(45, 20);
+            lblPSILabel.TabIndex = 0;
+            lblPSILabel.Text = "PSI:";
+            lblPSILabel.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // txtPSI
+            // 
+            txtPSI.BackColor = Color.FromArgb(40, 43, 52);
+            txtPSI.BorderStyle = BorderStyle.FixedSingle;
+            txtPSI.Dock = DockStyle.Fill;
+            txtPSI.ForeColor = Color.White;
+            txtPSI.Location = new Point(45, 20);
+            txtPSI.Margin = new Padding(0);
+            txtPSI.Name = "txtPSI";
+            txtPSI.Size = new Size(29, 24);
+            txtPSI.TabIndex = 1;
+            txtPSI.Text = "0";
+            // 
+            // lblHoldLabel
+            // 
+            lblHoldLabel.AutoSize = true;
+            lblHoldLabel.Dock = DockStyle.Fill;
+            lblHoldLabel.ForeColor = Color.FromArgb(120, 125, 140);
+            lblHoldLabel.Location = new Point(74, 0);
+            lblHoldLabel.Margin = new Padding(0);
+            lblHoldLabel.Name = "lblHoldLabel";
+            lblHoldLabel.Size = new Size(75, 20);
+            lblHoldLabel.TabIndex = 2;
+            lblHoldLabel.Text = "Hold (min):";
+            lblHoldLabel.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // txtHold
+            // 
+            txtHold.BackColor = Color.FromArgb(40, 43, 52);
+            txtHold.BorderStyle = BorderStyle.FixedSingle;
+            txtHold.Dock = DockStyle.Fill;
+            txtHold.ForeColor = Color.White;
+            txtHold.Location = new Point(149, 20);
+            txtHold.Margin = new Padding(0);
+            txtHold.Name = "txtHold";
+            txtHold.Size = new Size(29, 24);
+            txtHold.TabIndex = 3;
+            txtHold.Text = "0";
+            // 
+            // btnAddTarget
+            // 
+            btnAddTarget.BackColor = Color.FromArgb(76, 175, 80);
+            btnAddTarget.Dock = DockStyle.Fill;
+            btnAddTarget.FlatAppearance.BorderSize = 0;
+            btnAddTarget.FlatStyle = FlatStyle.Flat;
+            btnAddTarget.ForeColor = Color.White;
+            btnAddTarget.Location = new Point(8, 176);
+            btnAddTarget.Name = "btnAddTarget";
+            btnAddTarget.Size = new Size(178, 24);
+            btnAddTarget.TabIndex = 3;
+            btnAddTarget.Text = "+ Add";
+            btnAddTarget.UseVisualStyleBackColor = false;
+            // 
+            // btnClearAll
+            // 
+            btnClearAll.BackColor = Color.FromArgb(42, 45, 53);
+            btnClearAll.Dock = DockStyle.Fill;
+            btnClearAll.FlatAppearance.BorderColor = Color.FromArgb(80, 85, 95);
+            btnClearAll.FlatStyle = FlatStyle.Flat;
+            btnClearAll.ForeColor = Color.FromArgb(200, 205, 215);
+            btnClearAll.Location = new Point(8, 206);
+            btnClearAll.Name = "btnClearAll";
+            btnClearAll.Size = new Size(178, 24);
+            btnClearAll.TabIndex = 4;
+            btnClearAll.Text = "🗑️ Clear All";
+            btnClearAll.UseVisualStyleBackColor = false;
+            // 
+            // lblProgress
+            // 
+            lblProgress.AutoSize = true;
+            lblProgress.Dock = DockStyle.Fill;
+            lblProgress.ForeColor = Color.FromArgb(120, 125, 140);
+            lblProgress.Location = new Point(8, 236);
+            lblProgress.Name = "lblProgress";
+            lblProgress.Size = new Size(178, 20);
+            lblProgress.TabIndex = 5;
+            lblProgress.Text = "Progress:        0/2";
+            lblProgress.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // progressBarProgress
+            // 
+            progressBarProgress.Dock = DockStyle.Fill;
+            progressBarProgress.Location = new Point(8, 256);
+            progressBarProgress.Name = "progressBarProgress";
+            progressBarProgress.Size = new Size(178, 9);
+            progressBarProgress.Style = ProgressBarStyle.Continuous;
+            progressBarProgress.TabIndex = 6;
+            progressBarProgress.ForeColor = Color.FromArgb(255, 152, 0);
+            // 
+            // lblHoldTimer
+            // 
+            lblHoldTimer.AutoSize = true;
+            lblHoldTimer.Dock = DockStyle.Fill;
+            lblHoldTimer.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblHoldTimer.ForeColor = Color.FromArgb(255, 152, 0);
+            lblHoldTimer.Location = new Point(8, 271);
+            lblHoldTimer.Name = "lblHoldTimer";
+            lblHoldTimer.Size = new Size(178, 25);
+            lblHoldTimer.TabIndex = 7;
+            lblHoldTimer.Text = "Hold:           34:23";
+            lblHoldTimer.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // progressBarHold
+            // 
+            progressBarHold.Dock = DockStyle.Fill;
+            progressBarHold.Location = new Point(8, 296);
+            progressBarHold.Name = "progressBarHold";
+            progressBarHold.Size = new Size(178, 9);
+            progressBarHold.Style = ProgressBarStyle.Continuous;
+            progressBarHold.TabIndex = 8;
+            progressBarHold.ForeColor = Color.FromArgb(255, 152, 0);
+            // 
+            // tlpControlButtons
+            // 
+            tlpControlButtons.AutoSize = true;
+            tlpControlButtons.Controls.Add(btnPlay);
+            tlpControlButtons.Controls.Add(btnPauseTarget);
+            tlpControlButtons.Controls.Add(btnStop);
+            tlpControlButtons.Controls.Add(btnSkip);
+            tlpControlButtons.Dock = DockStyle.Fill;
+            tlpControlButtons.FlowDirection = FlowDirection.LeftToRight;
+            tlpControlButtons.Location = new Point(8, 311);
+            tlpControlButtons.Name = "tlpControlButtons";
+            tlpControlButtons.Size = new Size(178, 34);
+            tlpControlButtons.TabIndex = 9;
+            tlpControlButtons.WrapContents = false;
+            // 
+            // btnPlay
+            // 
+            btnPlay.BackColor = Color.FromArgb(76, 175, 80);
+            btnPlay.FlatAppearance.BorderSize = 0;
+            btnPlay.FlatStyle = FlatStyle.Flat;
+            btnPlay.ForeColor = Color.White;
+            btnPlay.Location = new Point(3, 3);
+            btnPlay.Name = "btnPlay";
+            btnPlay.Size = new Size(40, 30);
+            btnPlay.TabIndex = 0;
+            btnPlay.Text = "▶";
+            btnPlay.UseVisualStyleBackColor = false;
+            // 
+            // btnPauseTarget
+            // 
+            btnPauseTarget.BackColor = Color.FromArgb(42, 45, 53);
+            btnPauseTarget.FlatAppearance.BorderColor = Color.FromArgb(80, 85, 95);
+            btnPauseTarget.FlatStyle = FlatStyle.Flat;
+            btnPauseTarget.ForeColor = Color.White;
+            btnPauseTarget.Location = new Point(49, 3);
+            btnPauseTarget.Name = "btnPauseTarget";
+            btnPauseTarget.Size = new Size(40, 30);
+            btnPauseTarget.TabIndex = 1;
+            btnPauseTarget.Text = "⏸";
+            btnPauseTarget.UseVisualStyleBackColor = false;
+            // 
+            // btnStop
+            // 
+            btnStop.BackColor = Color.FromArgb(42, 45, 53);
+            btnStop.FlatAppearance.BorderColor = Color.FromArgb(80, 85, 95);
+            btnStop.FlatStyle = FlatStyle.Flat;
+            btnStop.ForeColor = Color.White;
+            btnStop.Location = new Point(95, 3);
+            btnStop.Name = "btnStop";
+            btnStop.Size = new Size(40, 30);
+            btnStop.TabIndex = 2;
+            btnStop.Text = "⏹";
+            btnStop.UseVisualStyleBackColor = false;
+            // 
+            // btnSkip
+            // 
+            btnSkip.BackColor = Color.FromArgb(42, 45, 53);
+            btnSkip.FlatAppearance.BorderColor = Color.FromArgb(80, 85, 95);
+            btnSkip.FlatStyle = FlatStyle.Flat;
+            btnSkip.ForeColor = Color.White;
+            btnSkip.Location = new Point(141, 3);
+            btnSkip.Name = "btnSkip";
+            btnSkip.Size = new Size(40, 30);
+            btnSkip.TabIndex = 3;
+            btnSkip.Text = "⏭";
+            btnSkip.UseVisualStyleBackColor = false;
+            // 
             // btnEmergency
             // 
             btnEmergency.Anchor = AnchorStyles.None;
             btnEmergency.AutoSize = true;
             btnEmergency.BackColor = Color.FromArgb(191, 0, 0);
             btnEmergency.ForeColor = Color.FromArgb(210, 215, 225);
-            btnEmergency.Location = new Point(25, 437);
+            btnEmergency.Location = new Point(25, 828);
             btnEmergency.Name = "btnEmergency";
             btnEmergency.Size = new Size(150, 43);
             btnEmergency.TabIndex = 1;
@@ -603,7 +936,7 @@
             panelRight.Margin = new Padding(4);
             panelRight.Name = "panelRight";
             panelRight.Padding = new Padding(10, 4, 10, 4);
-            panelRight.Size = new Size(200, 483);
+            panelRight.Size = new Size(200, 770);
             panelRight.TabIndex = 2;
             // 
             // tableSettings
@@ -1086,7 +1419,7 @@
             panelBottom.Dock = DockStyle.Bottom;
             panelBottom.Location = new Point(200, 463);
             panelBottom.Name = "panelBottom";
-            panelBottom.Size = new Size(554, 70);
+            panelBottom.Size = new Size(900, 70);
             panelBottom.TabIndex = 3;
             // 
             // footerLayout
@@ -1107,7 +1440,7 @@
             footerLayout.Name = "footerLayout";
             footerLayout.RowCount = 1;
             footerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
-            footerLayout.Size = new Size(554, 70);
+            footerLayout.Size = new Size(900, 70);
             footerLayout.TabIndex = 0;
             // 
             // lblAutoSaveStatus
@@ -1177,12 +1510,163 @@
             // 
             // panelHeader
             // 
-            panelHeader.BackColor = Color.FromArgb(21, 23, 28);
+            panelHeader.BackColor = Color.FromArgb(26, 29, 36);
+            panelHeader.Controls.Add(headerLayoutPanel);
             panelHeader.Dock = DockStyle.Top;
             panelHeader.Location = new Point(0, 0);
             panelHeader.Name = "panelHeader";
-            panelHeader.Size = new Size(954, 50);
+            panelHeader.Size = new Size(1300, 50);
             panelHeader.TabIndex = 4;
+            // 
+            // headerLayoutPanel
+            // 
+            headerLayoutPanel.ColumnCount = 3;
+            headerLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            headerLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            headerLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            headerLayoutPanel.Controls.Add(headerLeftFlowPanel, 0, 0);
+            headerLayoutPanel.Controls.Add(headerRightFlowPanel, 2, 0);
+            headerLayoutPanel.Dock = DockStyle.Fill;
+            headerLayoutPanel.Location = new Point(0, 0);
+            headerLayoutPanel.Margin = new Padding(0);
+            headerLayoutPanel.Name = "headerLayoutPanel";
+            headerLayoutPanel.RowCount = 1;
+            headerLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            headerLayoutPanel.Size = new Size(1300, 50);
+            headerLayoutPanel.TabIndex = 0;
+            // 
+            // headerRightFlowPanel
+            // 
+            headerRightFlowPanel.AutoSize = true;
+            headerRightFlowPanel.Controls.Add(btnPause);
+            headerRightFlowPanel.Controls.Add(btnExport);
+            headerRightFlowPanel.Dock = DockStyle.Fill;
+            headerRightFlowPanel.FlowDirection = FlowDirection.LeftToRight;
+            headerRightFlowPanel.Location = new Point(0, 0);
+            headerRightFlowPanel.Margin = new Padding(0);
+            headerRightFlowPanel.Name = "headerRightFlowPanel";
+            headerRightFlowPanel.Padding = new Padding(0, 0, 12, 0);
+            headerRightFlowPanel.Size = new Size(12, 50);
+            headerRightFlowPanel.TabIndex = 1;
+            headerRightFlowPanel.WrapContents = false;
+            // 
+            // headerLeftFlowPanel
+            // 
+            headerLeftFlowPanel.AutoSize = true;
+            headerLeftFlowPanel.Controls.Add(appIcon);
+            headerLeftFlowPanel.Controls.Add(lblAppTitle);
+            headerLeftFlowPanel.Controls.Add(lblSessionTime);
+            headerLeftFlowPanel.Dock = DockStyle.Fill;
+            headerLeftFlowPanel.FlowDirection = FlowDirection.LeftToRight;
+            headerLeftFlowPanel.Location = new Point(0, 0);
+            headerLeftFlowPanel.Margin = new Padding(0);
+            headerLeftFlowPanel.Name = "headerLeftFlowPanel";
+            headerLeftFlowPanel.Padding = new Padding(12, 0, 0, 0);
+            headerLeftFlowPanel.Size = new Size(12, 50);
+            headerLeftFlowPanel.TabIndex = 0;
+            headerLeftFlowPanel.WrapContents = false;
+            // 
+            // appIcon
+            // 
+            appIcon.BackColor = Color.Transparent;
+            appIcon.Location = new Point(12, 15);
+            appIcon.Margin = new Padding(12, 15, 8, 0);
+            appIcon.Name = "appIcon";
+            appIcon.Size = new Size(20, 20);
+            appIcon.TabIndex = 0;
+            // 
+            // lblAppTitle
+            // 
+            lblAppTitle.AutoSize = true;
+            lblAppTitle.Font = new Font("Segoe UI", 10F);
+            lblAppTitle.ForeColor = Color.White;
+            lblAppTitle.Location = new Point(40, 15);
+            lblAppTitle.Margin = new Padding(0, 15, 12, 0);
+            lblAppTitle.Name = "lblAppTitle";
+            lblAppTitle.Size = new Size(166, 19);
+            lblAppTitle.TabIndex = 1;
+            lblAppTitle.Text = "Alicat Pressure Controller:";
+            // 
+            // lblSessionTime
+            // 
+            lblSessionTime.AutoSize = true;
+            lblSessionTime.Font = new Font("Segoe UI", 10F);
+            lblSessionTime.ForeColor = Color.White;
+            lblSessionTime.Location = new Point(450, 15);
+            lblSessionTime.Margin = new Padding(0, 15, 0, 0);
+            lblSessionTime.Name = "lblSessionTime";
+            lblSessionTime.Size = new Size(115, 19);
+            lblSessionTime.TabIndex = 2;
+            lblSessionTime.Text = "Session: 00:00:00";
+            // 
+            // btnPause
+            // 
+            btnPause.BackColor = Color.FromArgb(42, 45, 53);
+            btnPause.FlatAppearance.BorderColor = Color.FromArgb(80, 85, 95);
+            btnPause.FlatAppearance.MouseDownBackColor = Color.FromArgb(35, 38, 47);
+            btnPause.FlatAppearance.MouseOverBackColor = Color.FromArgb(50, 53, 61);
+            btnPause.FlatStyle = FlatStyle.Flat;
+            btnPause.ForeColor = Color.FromArgb(200, 205, 215);
+            btnPause.Location = new Point(0, 11);
+            btnPause.Margin = new Padding(0, 11, 8, 0);
+            btnPause.Name = "btnPause";
+            btnPause.Padding = new Padding(8, 0, 8, 0);
+            btnPause.Size = new Size(75, 28);
+            btnPause.TabIndex = 0;
+            btnPause.Text = "";
+            btnPause.UseVisualStyleBackColor = false;
+            btnPause.Visible = true;
+            // 
+            // btnExport
+            // 
+            btnExport.BackColor = Color.FromArgb(42, 45, 53);
+            btnExport.FlatAppearance.BorderColor = Color.FromArgb(80, 85, 95);
+            btnExport.FlatAppearance.MouseDownBackColor = Color.FromArgb(35, 38, 47);
+            btnExport.FlatAppearance.MouseOverBackColor = Color.FromArgb(50, 53, 61);
+            btnExport.FlatStyle = FlatStyle.Flat;
+            btnExport.ForeColor = Color.FromArgb(200, 205, 215);
+            btnExport.Location = new Point(83, 11);
+            btnExport.Margin = new Padding(0, 11, 0, 0);
+            btnExport.Name = "btnExport";
+            btnExport.Padding = new Padding(8, 0, 8, 0);
+            btnExport.Size = new Size(75, 28);
+            btnExport.Visible = true;
+            btnExport.TabIndex = 1;
+            btnExport.Text = "";
+            btnExport.UseVisualStyleBackColor = false;
+            // 
+            // appIcon
+            // 
+            appIcon.BackColor = Color.Transparent;
+            appIcon.Location = new Point(12, 15);
+            appIcon.Margin = new Padding(0, 15, 8, 0);
+            appIcon.Name = "appIcon";
+            appIcon.Size = new Size(20, 20);
+            appIcon.TabIndex = 0;
+            // 
+            // lblAppTitle
+            // 
+            lblAppTitle.AutoSize = true;
+            lblAppTitle.Font = new Font("Segoe UI", 10F);
+            lblAppTitle.ForeColor = Color.White;
+            lblAppTitle.Location = new Point(12, 50);
+            lblAppTitle.Margin = new Padding(0, 15, 12, 0);
+            lblAppTitle.Name = "lblAppTitle";
+            lblAppTitle.Size = new Size(166, 19);
+            lblAppTitle.TabIndex = 1;
+            lblAppTitle.Text = "Alicat Pressure Controller:";
+            // 
+            // lblSessionTime
+            // 
+            lblSessionTime.AutoSize = true;
+            lblSessionTime.Font = new Font("Segoe UI", 10F);
+            lblSessionTime.ForeColor = Color.White;
+            lblSessionTime.Location = new Point(12, 84);
+            lblSessionTime.Margin = new Padding(0, 15, 0, 0);
+            lblSessionTime.Name = "lblSessionTime";
+            lblSessionTime.Size = new Size(115, 19);
+            lblSessionTime.TabIndex = 2;
+            lblSessionTime.Text = "Session: 00:00:00";
             // 
             // panelChartHeader
             // 
@@ -1192,18 +1676,77 @@
             panelChartHeader.Dock = DockStyle.Top;
             panelChartHeader.Location = new Point(200, 50);
             panelChartHeader.Name = "panelChartHeader";
-            panelChartHeader.Size = new Size(554, 40);
+            panelChartHeader.Size = new Size(900, 40);
             panelChartHeader.TabIndex = 5;
             // 
             // panelChartButtons
             // 
-            panelChartButtons.Controls.Add(btnChartReset);
-            panelChartButtons.Controls.Add(btnFullscreen);
             panelChartButtons.Dock = DockStyle.Right;
-            panelChartButtons.Location = new Point(354, 0);
+            panelChartButtons.Location = new Point(274, 0);
             panelChartButtons.Name = "panelChartButtons";
-            panelChartButtons.Size = new Size(200, 40);
+            panelChartButtons.Size = new Size(280, 40);
             panelChartButtons.TabIndex = 1;
+            // 
+            // flowLegend
+            // 
+            flowLegend.AutoSize = true;
+            flowLegend.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            flowLegend.Controls.Add(lblLegendCurrent);
+            flowLegend.Controls.Add(lblLegendTarget);
+            flowLegend.Controls.Add(lblLegendMin);
+            flowLegend.Controls.Add(lblLegendMax);
+            flowLegend.Dock = DockStyle.Left;
+            flowLegend.Location = new Point(0, 0);
+            flowLegend.Margin = new Padding(0);
+            flowLegend.Name = "flowLegend";
+            flowLegend.Padding = new Padding(12, 10, 0, 0);
+            flowLegend.Size = new Size(244, 40);
+            flowLegend.TabIndex = 0;
+            flowLegend.WrapContents = false;
+            // 
+            // lblLegendCurrent
+            // 
+            lblLegendCurrent.AutoSize = true;
+            lblLegendCurrent.ForeColor = Color.White;
+            lblLegendCurrent.Location = new Point(15, 10);
+            lblLegendCurrent.Name = "lblLegendCurrent";
+            lblLegendCurrent.Padding = new Padding(16, 0, 0, 0);
+            lblLegendCurrent.Size = new Size(63, 15);
+            lblLegendCurrent.TabIndex = 0;
+            lblLegendCurrent.Text = "Current";
+            // 
+            // lblLegendTarget
+            // 
+            lblLegendTarget.AutoSize = true;
+            lblLegendTarget.ForeColor = Color.White;
+            lblLegendTarget.Location = new Point(84, 10);
+            lblLegendTarget.Name = "lblLegendTarget";
+            lblLegendTarget.Padding = new Padding(16, 0, 0, 0);
+            lblLegendTarget.Size = new Size(56, 15);
+            lblLegendTarget.TabIndex = 1;
+            lblLegendTarget.Text = "Target";
+            // 
+            // lblLegendMin
+            // 
+            lblLegendMin.AutoSize = true;
+            lblLegendMin.ForeColor = Color.White;
+            lblLegendMin.Location = new Point(146, 10);
+            lblLegendMin.Name = "lblLegendMin";
+            lblLegendMin.Padding = new Padding(16, 0, 0, 0);
+            lblLegendMin.Size = new Size(44, 15);
+            lblLegendMin.TabIndex = 2;
+            lblLegendMin.Text = "Min";
+            // 
+            // lblLegendMax
+            // 
+            lblLegendMax.AutoSize = true;
+            lblLegendMax.ForeColor = Color.White;
+            lblLegendMax.Location = new Point(196, 10);
+            lblLegendMax.Name = "lblLegendMax";
+            lblLegendMax.Padding = new Padding(16, 0, 0, 0);
+            lblLegendMax.Size = new Size(45, 15);
+            lblLegendMax.TabIndex = 3;
+            lblLegendMax.Text = "Max";
             // 
             // btnChartReset
             // 
@@ -1243,65 +1786,6 @@
             btnFullscreen.Text = "Fullscreen";
             btnFullscreen.UseVisualStyleBackColor = false;
             // 
-            // flowLegend
-            // 
-            flowLegend.AutoSize = true;
-            flowLegend.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            flowLegend.Controls.Add(lblLegendCurrent);
-            flowLegend.Controls.Add(lblLegendTarget);
-            flowLegend.Controls.Add(lblLegendMin);
-            flowLegend.Controls.Add(lblLegendMax);
-            flowLegend.Dock = DockStyle.Left;
-            flowLegend.Location = new Point(0, 0);
-            flowLegend.Margin = new Padding(0);
-            flowLegend.Name = "flowLegend";
-            flowLegend.Padding = new Padding(12, 10, 0, 0);
-            flowLegend.Size = new Size(157, 40);
-            flowLegend.TabIndex = 0;
-            flowLegend.WrapContents = false;
-            // 
-            // lblLegendCurrent
-            // 
-            lblLegendCurrent.AutoSize = true;
-            lblLegendCurrent.ForeColor = Color.FromArgb(46, 197, 255);
-            lblLegendCurrent.Location = new Point(15, 10);
-            lblLegendCurrent.Name = "lblLegendCurrent";
-            lblLegendCurrent.Padding = new Padding(0, 0, 16, 0);
-            lblLegendCurrent.Size = new Size(78, 15);
-            lblLegendCurrent.TabIndex = 0;
-            lblLegendCurrent.Text = "▬ Current";
-            // 
-            // lblLegendTarget
-            // 
-            lblLegendTarget.AutoSize = true;
-            lblLegendTarget.ForeColor = Color.FromArgb(255, 214, 69);
-            lblLegendTarget.Location = new Point(99, 10);
-            lblLegendTarget.Name = "lblLegendTarget";
-            lblLegendTarget.Size = new Size(55, 15);
-            lblLegendTarget.TabIndex = 1;
-            lblLegendTarget.Text = "▬ Target";
-            // 
-            // lblLegendMin
-            // 
-            lblLegendMin.AutoSize = true;
-            lblLegendMin.ForeColor = Color.FromArgb(76, 175, 80); // Green
-            lblLegendMin.Location = new Point(154, 10);
-            lblLegendMin.Name = "lblLegendMin";
-            lblLegendMin.Padding = new Padding(0, 0, 16, 0);
-            lblLegendMin.Size = new Size(60, 15);
-            lblLegendMin.TabIndex = 2;
-            lblLegendMin.Text = "▬ Min";
-            // 
-            // lblLegendMax
-            // 
-            lblLegendMax.AutoSize = true;
-            lblLegendMax.ForeColor = Color.FromArgb(244, 67, 54); // Red
-            lblLegendMax.Location = new Point(230, 10);
-            lblLegendMax.Name = "lblLegendMax";
-            lblLegendMax.Size = new Size(60, 15);
-            lblLegendMax.TabIndex = 3;
-            lblLegendMax.Text = "▬ Max";
-            // 
             // panelCenter
             // 
             panelCenter.BackColor = Color.FromArgb(21, 23, 28);
@@ -1309,7 +1793,7 @@
             panelCenter.Dock = DockStyle.Fill;
             panelCenter.Location = new Point(200, 90);
             panelCenter.Name = "panelCenter";
-            panelCenter.Size = new Size(554, 373);
+            panelCenter.Size = new Size(900, 700);
             panelCenter.TabIndex = 6;
             // 
             // lblComPort
@@ -1319,33 +1803,12 @@
             lblComPort.Size = new Size(100, 23);
             lblComPort.TabIndex = 0;
             // 
-            // lblSessionTime
-            // 
-            lblSessionTime.Location = new Point(0, 0);
-            lblSessionTime.Name = "lblSessionTime";
-            lblSessionTime.Size = new Size(100, 23);
-            lblSessionTime.TabIndex = 0;
-            // 
             // lblHotkeys
             // 
             lblHotkeys.Location = new Point(0, 0);
             lblHotkeys.Name = "lblHotkeys";
             lblHotkeys.Size = new Size(100, 23);
             lblHotkeys.TabIndex = 0;
-            // 
-            // btnPause
-            // 
-            btnPause.Location = new Point(0, 0);
-            btnPause.Name = "btnPause";
-            btnPause.Size = new Size(75, 23);
-            btnPause.TabIndex = 0;
-            // 
-            // btnExport
-            // 
-            btnExport.Location = new Point(0, 0);
-            btnExport.Name = "btnExport";
-            btnExport.Size = new Size(75, 23);
-            btnExport.TabIndex = 0;
             // 
             // btnReset
             // 
@@ -1373,7 +1836,7 @@
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(17, 19, 23);
-            ClientSize = new Size(954, 533);
+            ClientSize = new Size(1300, 820);
             Controls.Add(panelCenter);
             Controls.Add(panelChartHeader);
             Controls.Add(panelBottom);
@@ -1413,10 +1876,16 @@
             panelBottom.ResumeLayout(false);
             footerLayout.ResumeLayout(false);
             footerLayout.PerformLayout();
+            panelHeader.ResumeLayout(false);
+            panelHeader.PerformLayout();
+            headerLayoutPanel.ResumeLayout(false);
+            headerLayoutPanel.PerformLayout();
+            headerLeftFlowPanel.ResumeLayout(false);
+            headerLeftFlowPanel.PerformLayout();
+            headerRightFlowPanel.ResumeLayout(false);
+            headerRightFlowPanel.PerformLayout();
             panelChartHeader.ResumeLayout(false);
             panelChartHeader.PerformLayout();
-            panelChartButtons.ResumeLayout(false);
-            panelChartButtons.PerformLayout();
             flowLegend.ResumeLayout(false);
             flowLegend.PerformLayout();
             panelCenter.ResumeLayout(false);
@@ -1475,9 +1944,11 @@
         private TableLayoutPanel tableLayoutPanel3;
         private Button btnEmergency;
         private Label lblTarget;
+        private Label lblTargetValue;
         private Label lblDelta;
         private Label lblRate;
         private Label lblETA;
+        private Label lblETAValue;
         private Label lblTrend;
         // Session Stats
         private TableLayoutPanel tlpSessionStats;
@@ -1496,6 +1967,26 @@
         private Label lblDurationValue;
         private Label lblSampleRateLabel;
         private Label lblSampleRateValue;
+        // GO TO TARGET section
+        private TableLayoutPanel tlpGoToTarget;
+        private Label lblGoToTargetTitle;
+        private DataGridView dgvTargets;
+        private TableLayoutPanel tlpTargetInputs;
+        private Label lblPSILabel;
+        private TextBox txtPSI;
+        private Label lblHoldLabel;
+        private TextBox txtHold;
+        private Button btnAddTarget;
+        private Button btnClearAll;
+        private Label lblProgress;
+        private ProgressBar progressBarProgress;
+        private Label lblHoldTimer;
+        private ProgressBar progressBarHold;
+        private FlowLayoutPanel tlpControlButtons;
+        private Button btnPlay;
+        private Button btnPauseTarget;
+        private Button btnStop;
+        private Button btnSkip;
         // Live Status improvements
         private Label lblCurrentPressureLarge;
         private Label lblCurrentUnit;
@@ -1508,6 +1999,13 @@
         private Button btnExport;
         private Button btnReset;
         private Button btnFullscreenHeader;
+        // Header layout panels
+        private TableLayoutPanel headerLayoutPanel;
+        private FlowLayoutPanel headerLeftFlowPanel;
+        private FlowLayoutPanel headerRightFlowPanel;
+        private Panel appIcon;
+        private Label lblAppTitle;
+        // Connection status panel (will be added to headerLeftFlowPanel in SetupHeaderLayout)
         // Footer elements
         private Label lblAutoSaveStatus;
         private Label lblFooterMin;

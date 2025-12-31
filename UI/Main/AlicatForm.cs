@@ -124,7 +124,8 @@ namespace Alicat
 
 
             // Применяем тему после инициализации (цвета и стили из AlicatForm.Theme.cs)
-            ApplyLightTheme();
+            // Всегда используем темную тему по умолчанию
+            ApplyDarkTheme();
 
             // Устанавливаем правильный статус подключения ПОСЛЕ применения темы
             // (чтобы тема не перезаписала цвет индикатора)
@@ -132,9 +133,6 @@ namespace Alicat
 
             // Загружаем сохраненные настройки при старте (если Auto-save был включен)
             LoadSettingsFromFile();
-
-            // Обновляем текст "Last update" при запуске программы
-            UpdateLastUpdateText();
         }
 
         // ====================================================================
@@ -399,9 +397,9 @@ namespace Alicat
 
             if (intervalMs < 1000)
             {
-                // Меньше секунды - показываем в миллисекундах с 2 знаками после запятой
+                // Меньше секунды - показываем в миллисекундах
                 double seconds = intervalMs / 1000.0;
-                text = $"Last update: {seconds.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)}s ago";
+                text = $"Last update: {TrimZeros(seconds, 1)}s ago";
             }
             else if (intervalMs < 60000)
             {

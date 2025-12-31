@@ -27,6 +27,42 @@ namespace Alicat.UI.Features.Graph.Views
             UpdateHeaderConnectionInfo();
         }
 
+        private void ConnectionStatusPanel_Paint(object? sender, PaintEventArgs e)
+        {
+            if (_connectionStatusPanel == null) return;
+
+            var panel = _connectionStatusPanel;
+            
+            // Draw border
+            using (var pen = new Pen(Color.FromArgb(100, 200, 180), 1)) // Light teal border
+            {
+                e.Graphics.DrawRectangle(pen, 0, 0, panel.Width - 1, panel.Height - 1);
+            }
+
+            // Draw green circle
+            using (var brush = new SolidBrush(Color.FromArgb(76, 175, 80))) // Green
+            {
+                e.Graphics.FillEllipse(brush, 8, 8, 10, 10);
+            }
+
+            // Draw connection text
+            string connectionText;
+            if (!string.IsNullOrEmpty(_comPortName) && _baudRate.HasValue)
+            {
+                connectionText = $"Connected {_comPortName} @ {_baudRate.Value}";
+            }
+            else
+            {
+                connectionText = "Not Connected";
+            }
+
+            using (var brush = new SolidBrush(Color.FromArgb(100, 200, 180))) // Light teal text
+            using (var font = new Font("Segoe UI", 9f))
+            {
+                e.Graphics.DrawString(connectionText, font, brush, 22, 6);
+            }
+        }
+
         private void UpdateHeaderConnectionInfo()
         {
             if (InvokeRequired)
@@ -35,18 +71,10 @@ namespace Alicat.UI.Features.Graph.Views
                 return;
             }
 
-            if (lblComPort != null)
+            // Invalidate connection panel to trigger repaint
+            if (_connectionStatusPanel != null)
             {
-                if (!string.IsNullOrEmpty(_comPortName) && _baudRate.HasValue)
-                {
-                    lblComPort.Text = $"{_comPortName} @ {_baudRate.Value}";
-                    lblComPort.ForeColor = Color.Green;
-                }
-                else
-                {
-                    lblComPort.Text = "Not Connected";
-                    lblComPort.ForeColor = Color.Gray;
-                }
+                _connectionStatusPanel.Invalidate();
             }
         }
 
@@ -65,18 +93,12 @@ namespace Alicat.UI.Features.Graph.Views
                 int minutes = duration.Minutes;
                 int seconds = duration.Seconds;
                 
-                if (hours > 0)
-                {
-                    lblSessionTime.Text = $"{hours:D2}:{minutes:D2}:{seconds:D2}";
-                }
-                else
-                {
-                    lblSessionTime.Text = $"{minutes:D2}:{seconds:D2}";
-                }
+                // Format: "Session: 00:09:23"
+                lblSessionTime.Text = $"Session: {hours:D2}:{minutes:D2}:{seconds:D2}";
             }
             else if (lblSessionTime != null)
             {
-                lblSessionTime.Text = "00:00";
+                lblSessionTime.Text = "Session: 00:00:00";
             }
         }
 
@@ -90,115 +112,276 @@ namespace Alicat.UI.Features.Graph.Views
             // Setup header panel layout
             SetupHeaderLayout();
 
+            // Setup chart header legend with colored squares
+            SetupChartHeaderLegend();
+
             // Initialize footer with auto-save status
             UpdateFooterAutoSave();
             UpdateFooterStatistics();
+        }
+
+        // Checkboxes for legend visibility control
+        private CheckBox? _chkLegendTarget;
+        private CheckBox? _chkLegendMin;
+        private CheckBox? _chkLegendMax;
+
+        // Header connection status panel
+        private Panel? _connectionStatusPanel;
+
+        private void SetupChartHeaderLegend()
+        {
+            if (flowLegend == null) return;
+
+            // Store existing labels temporarily
+            var existingLabels = new List<Control>();
+            if (lblLegendCurrent != null) existingLabels.Add(lblLegendCurrent);
+            if (lblLegendTarget != null) existingLabels.Add(lblLegendTarget);
+            if (lblLegendMin != null) existingLabels.Add(lblLegendMin);
+            if (lblLegendMax != null) existingLabels.Add(lblLegendMax);
+
+            // Clear flowLegend to rebuild in correct order
+            flowLegend.Controls.Clear();
+
+            // Update legend labels to show colored squares
+            if (lblLegendCurrent != null)
+            {
+                lblLegendCurrent.Text = "Current";
+                lblLegendCurrent.Paint += (s, e) =>
+                {
+                    using var brush = new SolidBrush(Color.FromArgb(0, 200, 240)); // Light blue
+                    e.Graphics.FillRectangle(brush, 0, 2, 12, 12);
+                };
+                flowLegend.Controls.Add(lblLegendCurrent);
+            }
+
+            // Target: Add checkbox before label
+            if (lblLegendTarget != null)
+            {
+                lblLegendTarget.Text = "Target";
+                lblLegendTarget.Paint += (s, e) =>
+                {
+                    using var brush = new SolidBrush(Color.FromArgb(240, 200, 0)); // Yellow
+                    e.Graphics.FillRectangle(brush, 0, 2, 12, 12);
+                };
+                
+                // Create checkbox for Target
+                _chkLegendTarget = new CheckBox
+                {
+                    AutoSize = true,
+                    Checked = true, // Visible by default
+                    Margin = new Padding(8, 0, 0, 0),
+                    Padding = new Padding(0),
+                    Size = new Size(15, 15),
+                    UseVisualStyleBackColor = false,
+                    BackColor = Color.FromArgb(40, 43, 52),
+                    ForeColor = Color.White
+                };
+                _chkLegendTarget.CheckedChanged += (s, e) =>
+                {
+                    if (_lineSeriesTarget != null)
+                    {
+                        _lineSeriesTarget.IsVisible = _chkLegendTarget.Checked;
+                    }
+                };
+                
+                flowLegend.Controls.Add(_chkLegendTarget);
+                flowLegend.Controls.Add(lblLegendTarget);
+            }
+
+            // Min: Add checkbox before label
+            if (lblLegendMin != null)
+            {
+                lblLegendMin.Text = "Min";
+                lblLegendMin.Paint += (s, e) =>
+                {
+                    using var brush = new SolidBrush(Color.FromArgb(76, 175, 80)); // Green
+                    e.Graphics.FillRectangle(brush, 0, 2, 12, 12);
+                };
+                
+                // Create checkbox for Min
+                _chkLegendMin = new CheckBox
+                {
+                    AutoSize = true,
+                    Checked = true, // Visible by default
+                    Margin = new Padding(8, 0, 0, 0),
+                    Padding = new Padding(0),
+                    Size = new Size(15, 15),
+                    UseVisualStyleBackColor = false,
+                    BackColor = Color.FromArgb(40, 43, 52),
+                    ForeColor = Color.White
+                };
+                _chkLegendMin.CheckedChanged += (s, e) =>
+                {
+                    if (_lineSeriesMin != null)
+                    {
+                        _lineSeriesMin.IsVisible = _chkLegendMin.Checked;
+                    }
+                };
+                
+                flowLegend.Controls.Add(_chkLegendMin);
+                flowLegend.Controls.Add(lblLegendMin);
+            }
+
+            // Max: Add checkbox before label
+            if (lblLegendMax != null)
+            {
+                lblLegendMax.Text = "Max";
+                lblLegendMax.Paint += (s, e) =>
+                {
+                    using var brush = new SolidBrush(Color.FromArgb(244, 67, 54)); // Red
+                    e.Graphics.FillRectangle(brush, 0, 2, 12, 12);
+                };
+                
+                // Create checkbox for Max
+                _chkLegendMax = new CheckBox
+                {
+                    AutoSize = true,
+                    Checked = true, // Visible by default
+                    Margin = new Padding(8, 0, 0, 0),
+                    Padding = new Padding(0),
+                    Size = new Size(15, 15),
+                    UseVisualStyleBackColor = false,
+                    BackColor = Color.FromArgb(40, 43, 52),
+                    ForeColor = Color.White
+                };
+                _chkLegendMax.CheckedChanged += (s, e) =>
+                {
+                    if (_lineSeriesMax != null)
+                    {
+                        _lineSeriesMax.IsVisible = _chkLegendMax.Checked;
+                    }
+                };
+                
+                flowLegend.Controls.Add(_chkLegendMax);
+                flowLegend.Controls.Add(lblLegendMax);
+            }
         }
 
         private void SetupHeaderLayout()
         {
             if (panelHeader == null) return;
 
-            // Clear existing controls
-            panelHeader.Controls.Clear();
-
-            // Left: COM port and session time
-            var leftPanel = new FlowLayoutPanel
+            // Setup app icon paint event
+            if (appIcon != null)
             {
-                Dock = DockStyle.Left,
-                AutoSize = true,
-                Padding = new Padding(10, 0, 0, 0),
-                FlowDirection = FlowDirection.LeftToRight
-            };
-
-            if (lblComPort != null)
-            {
-                lblComPort.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
-                lblComPort.AutoSize = true;
-                lblComPort.Padding = new Padding(0, 12, 10, 0);
-                leftPanel.Controls.Add(lblComPort);
+                appIcon.Paint += (s, e) =>
+                {
+                    // Draw three vertical bars
+                    using (var greenBrush = new SolidBrush(Color.FromArgb(76, 175, 80))) // Green
+                    using (var blueBrush = new SolidBrush(Color.FromArgb(0, 200, 240))) // Light blue
+                    using (var pinkBrush = new SolidBrush(Color.FromArgb(244, 67, 54))) // Red/Pink
+                    {
+                        e.Graphics.FillRectangle(greenBrush, 2, 4, 4, 12);
+                        e.Graphics.FillRectangle(blueBrush, 8, 2, 4, 14);
+                        e.Graphics.FillRectangle(pinkBrush, 14, 6, 4, 10);
+                    }
+                };
             }
 
-            if (lblSessionTime != null)
+            // Connection status panel (created dynamically as it needs Paint event)
+            if (headerLeftFlowPanel != null && _connectionStatusPanel == null)
             {
-                lblSessionTime.Font = new Font("Segoe UI", 9f);
-                lblSessionTime.AutoSize = true;
-                lblSessionTime.Padding = new Padding(0, 12, 10, 0);
-                leftPanel.Controls.Add(lblSessionTime);
+                _connectionStatusPanel = new Panel
+                {
+                    Size = new Size(200, 28),
+                    Margin = new Padding(0, 11, 12, 0),
+                    BackColor = Color.FromArgb(26, 61, 53), // #1A3D35
+                    Padding = new Padding(8, 0, 8, 0)
+                };
+                _connectionStatusPanel.Paint += ConnectionStatusPanel_Paint;
+                
+                // Insert after lblAppTitle
+                int insertIndex = headerLeftFlowPanel.Controls.IndexOf(lblAppTitle) + 1;
+                headerLeftFlowPanel.Controls.Add(_connectionStatusPanel);
+                headerLeftFlowPanel.Controls.SetChildIndex(_connectionStatusPanel, insertIndex);
             }
 
-            // Middle: Hotkeys
-            if (lblHotkeys != null)
-            {
-                lblHotkeys.Text = "ESC Vent | Space Pause | S Save | F Fullscreen";
-                lblHotkeys.Font = new Font("Segoe UI", 8f);
-                lblHotkeys.ForeColor = Color.FromArgb(120, 125, 140);
-                lblHotkeys.Dock = DockStyle.Fill;
-                lblHotkeys.TextAlign = ContentAlignment.MiddleCenter;
-                lblHotkeys.Padding = new Padding(0, 12, 0, 0);
-            }
-
-            // Right: Control buttons
-            var rightPanel = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Right,
-                AutoSize = true,
-                FlowDirection = FlowDirection.RightToLeft,
-                Padding = new Padding(0, 8, 10, 0)
-            };
-
+            // Ensure buttons are visible
             if (btnPause != null)
             {
-                btnPause.Text = "II Pause";
-                btnPause.Size = new Size(80, 30);
-                btnPause.BackColor = Color.FromArgb(30, 33, 40);
-                btnPause.ForeColor = Color.FromArgb(220, 224, 232);
-                btnPause.FlatStyle = FlatStyle.Flat;
-                btnPause.FlatAppearance.BorderSize = 0;
+                btnPause.Visible = true;
+            }
+            if (btnExport != null)
+            {
+                btnExport.Visible = true;
+            }
+
+            // Setup button paint events and click handlers
+            if (btnPause != null)
+            {
+                // Remove existing handlers to avoid duplicates
+                btnPause.Paint -= BtnPause_Paint;
+                btnPause.Click -= btnPause_Click;
+                
+                // Add handlers
+                btnPause.Paint += BtnPause_Paint;
                 btnPause.Click += btnPause_Click;
-                rightPanel.Controls.Add(btnPause);
             }
 
             if (btnExport != null)
             {
-                btnExport.Text = "Export";
-                btnExport.Size = new Size(80, 30);
-                btnExport.BackColor = Color.FromArgb(0, 150, 0);
-                btnExport.ForeColor = Color.White;
-                btnExport.FlatStyle = FlatStyle.Flat;
-                btnExport.FlatAppearance.BorderSize = 0;
+                // Remove existing handlers to avoid duplicates
+                btnExport.Paint -= BtnExport_Paint;
+                btnExport.Click -= btnExport_Click;
+                
+                // Add handlers
+                btnExport.Paint += BtnExport_Paint;
                 btnExport.Click += btnExport_Click;
-                rightPanel.Controls.Add(btnExport);
             }
-
-            if (btnReset != null)
-            {
-                btnReset.Text = "Reset";
-                btnReset.Size = new Size(80, 30);
-                btnReset.BackColor = Color.FromArgb(30, 33, 40);
-                btnReset.ForeColor = Color.FromArgb(220, 224, 232);
-                btnReset.FlatStyle = FlatStyle.Flat;
-                btnReset.FlatAppearance.BorderSize = 0;
-                btnReset.Click += (_, __) => ResetGraph();
-                rightPanel.Controls.Add(btnReset);
-            }
-
-            if (btnFullscreenHeader != null)
-            {
-                btnFullscreenHeader.Text = "Fullscreen";
-                btnFullscreenHeader.Size = new Size(100, 30);
-                btnFullscreenHeader.BackColor = Color.FromArgb(30, 33, 40);
-                btnFullscreenHeader.ForeColor = Color.FromArgb(220, 224, 232);
-                btnFullscreenHeader.FlatStyle = FlatStyle.Flat;
-                btnFullscreenHeader.FlatAppearance.BorderSize = 0;
-                btnFullscreenHeader.Click += btnFullscreenHeader_Click;
-                rightPanel.Controls.Add(btnFullscreenHeader);
-            }
-
-            panelHeader.Controls.Add(leftPanel);
-            if (lblHotkeys != null) panelHeader.Controls.Add(lblHotkeys);
-            panelHeader.Controls.Add(rightPanel);
         }
+
+        // Button paint event handlers
+        private void BtnPause_Paint(object? sender, PaintEventArgs e)
+        {
+            if (btnPause == null) return;
+            
+            // Draw pause icon (two vertical bars)
+            using (var brush = new SolidBrush(btnPause.ForeColor))
+            {
+                e.Graphics.FillRectangle(brush, 12, 8, 3, 12);
+                e.Graphics.FillRectangle(brush, 18, 8, 3, 12);
+            }
+
+            // Draw "Pause" text
+            using (var font = new Font("Segoe UI", 9f))
+            using (var brush = new SolidBrush(btnPause.ForeColor))
+            {
+                e.Graphics.DrawString("Pause", font, brush, 28, 6);
+            }
+        }
+
+        private void BtnExport_Paint(object? sender, PaintEventArgs e)
+        {
+            if (btnExport == null) return;
+            
+            // Draw document icon (blue rectangle with red arrow)
+            using (var blueBrush = new SolidBrush(Color.FromArgb(66, 133, 244))) // Blue
+            using (var redBrush = new SolidBrush(Color.FromArgb(244, 67, 54))) // Red
+            {
+                // Document rectangle
+                e.Graphics.FillRectangle(blueBrush, 12, 6, 12, 16);
+                
+                // Red arrow pointing up-right
+                var arrowPoints = new Point[]
+                {
+                    new Point(22, 8),
+                    new Point(24, 8),
+                    new Point(24, 10),
+                    new Point(26, 10),
+                    new Point(24, 12),
+                    new Point(22, 10)
+                };
+                e.Graphics.FillPolygon(redBrush, arrowPoints);
+            }
+
+            // Draw "Export" text
+            using (var font = new Font("Segoe UI", 9f))
+            using (var brush = new SolidBrush(btnExport.ForeColor))
+            {
+                e.Graphics.DrawString("Export", font, brush, 28, 6);
+            }
+        }
+
 
         private void ResetGraph()
         {
@@ -311,6 +494,7 @@ namespace Alicat.UI.Features.Graph.Views
 
         // Target handler delegate
         private Action<double>? _targetHandler;
+        private Action<double>? _targetHandlerSilent;
         
         /// <summary>
         /// Устанавливает обработчик для кнопки GO TARGET
@@ -318,6 +502,14 @@ namespace Alicat.UI.Features.Graph.Views
         public void SetTargetHandler(Action<double> handler)
         {
             _targetHandler = handler;
+        }
+
+        /// <summary>
+        /// Устанавливает обработчик для GO TO TARGET секции (без подтверждения)
+        /// </summary>
+        public void SetTargetHandlerSilent(Action<double> handler)
+        {
+            _targetHandlerSilent = handler;
         }
         
         private void btnGoTarget_Click(object? sender, EventArgs e)

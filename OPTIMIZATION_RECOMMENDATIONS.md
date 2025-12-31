@@ -352,3 +352,4 @@ if ((DateTime.Now - _lastGraphUpdate).TotalMilliseconds >= GraphUpdateIntervalMs
 
 
 
+

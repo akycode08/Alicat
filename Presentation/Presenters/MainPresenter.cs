@@ -1079,6 +1079,8 @@ namespace Alicat.Presentation.Presenters
                 
                 // Set target handler
                 _graphForm.SetTargetHandler((target) => GoToTarget(target.ToString("F1", CultureInfo.InvariantCulture)));
+                // Устанавливаем обработчик для GO TO TARGET секции (без подтверждения)
+                _graphForm.SetTargetHandlerSilent((target) => SetTargetSilent(target));
                 
                 // Set emergency vent handler
                 _graphForm.SetEmergencyVentHandler(async () => await EmergencyStop());

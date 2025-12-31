@@ -23,6 +23,11 @@ namespace Alicat.UI.Features.Graph.Views
         private ObservableCollection<ObservablePoint> _seriesTarget = null!;
         private ObservableCollection<ObservablePoint> _seriesMin = null!;
         private ObservableCollection<ObservablePoint> _seriesMax = null!;
+        
+        // Series references for visibility control (accessible from partial classes)
+        internal LineSeries<ObservablePoint>? _lineSeriesTarget;
+        internal LineSeries<ObservablePoint>? _lineSeriesMin;
+        internal LineSeries<ObservablePoint>? _lineSeriesMax;
 
         // time in seconds (X)
         private double _timeSeconds = 0;
@@ -119,6 +124,8 @@ namespace Alicat.UI.Features.Graph.Views
             chartPressure.MouseDoubleClick += ChartPressure_MouseDoubleClick;
             chartPressure.MouseMove += ChartPressure_MouseMove;
             chartPressure.MouseLeave += ChartPressure_MouseLeave;
+            chartPressure.MouseDown += ChartPressure_MouseDown;
+            chartPressure.MouseUp += ChartPressure_MouseUp;
 
             ApplySmoothing();
 
@@ -134,22 +141,30 @@ namespace Alicat.UI.Features.Graph.Views
             // Initialize header and footer
             InitializeHeaderFooter();
 
+            // Initialize toolbar (after header is ready)
+            InitializeToolbar();
+
+            // Initialize GO TO TARGET section
+            InitializeGoToTarget();
+            
+            // Устанавливаем обработчик для установки целевого давления
+            // (будет установлен извне через SetTargetHandler)
+
+            // Setup mouse wheel zoom and pan
+            SetupMouseWheelZoom();
+            
+            // Setup keyboard shortcuts (Escape to cancel zoom/pan mode)
+            KeyDown += GraphForm_KeyDown;
+            KeyPreview = true; // Enable key preview for form-level key handling
+
             // Setup Emergency Vent button
             if (btnEmergency != null)
             {
                 btnEmergency.Click += BtnEmergency_Click;
             }
 
-            // Setup chart header buttons
-            if (btnChartReset != null)
-            {
-                btnChartReset.Click += (_, __) => ResetGraph();
-            }
-
-            if (btnFullscreen != null)
-            {
-                btnFullscreen.Click += BtnFullscreen_Click;
-            }
+            // Setup chart header buttons (visual only, no logic)
+            // Reset and Fullscreen buttons remain for design, but handlers are removed
 
             // Setup LIVE STATUS panel border
             if (tlpLiveStatus != null)
@@ -332,6 +347,39 @@ namespace Alicat.UI.Features.Graph.Views
             var axisColor = new SKColor(50, 55, 65);
             var labelColor = new SKColor(120, 125, 135);
 
+            // Target line
+            _lineSeriesTarget = new LineSeries<ObservablePoint>
+            {
+                Name = "Target",
+                Values = _seriesTarget,
+                Stroke = new SolidColorPaint(new SKColor(240, 200, 0), 2),
+                Fill = null,
+                GeometryStroke = null,
+                GeometrySize = 0
+            };
+            
+            // Min threshold
+            _lineSeriesMin = new LineSeries<ObservablePoint>
+            {
+                Name = "Min",
+                Values = _seriesMin,
+                Stroke = new SolidColorPaint(new SKColor(76, 175, 80), 2), // Green
+                Fill = null,
+                GeometryStroke = null,
+                GeometrySize = 0
+            };
+            
+            // Max threshold
+            _lineSeriesMax = new LineSeries<ObservablePoint>
+            {
+                Name = "Max",
+                Values = _seriesMax,
+                Stroke = new SolidColorPaint(new SKColor(244, 67, 54), 2), // Red
+                Fill = null,
+                GeometryStroke = null,
+                GeometrySize = 0
+            };
+
             chartPressure.Series = new ISeries[]
             {
                 // Current pressure line
@@ -346,35 +394,11 @@ namespace Alicat.UI.Features.Graph.Views
                     LineSmoothness = 0 // Will be changed by ApplySmoothing()
                 },
                 // Target line
-                new LineSeries<ObservablePoint>
-                {
-                    Name = "Target",
-                    Values = _seriesTarget,
-                    Stroke = new SolidColorPaint(new SKColor(240, 200, 0), 2),
-                    Fill = null,
-                    GeometryStroke = null,
-                    GeometrySize = 0
-                },
+                _lineSeriesTarget,
                 // Min threshold
-                new LineSeries<ObservablePoint>
-                {
-                    Name = "Min",
-                    Values = _seriesMin,
-                    Stroke = new SolidColorPaint(new SKColor(76, 175, 80), 2), // Green
-                    Fill = null,
-                    GeometryStroke = null,
-                    GeometrySize = 0
-                },
+                _lineSeriesMin,
                 // Max threshold
-                new LineSeries<ObservablePoint>
-                {
-                    Name = "Max",
-                    Values = _seriesMax,
-                    Stroke = new SolidColorPaint(new SKColor(244, 67, 54), 2), // Red
-                    Fill = null,
-                    GeometryStroke = null,
-                    GeometrySize = 0
-                },
+                _lineSeriesMax,
                 // Cursor marker
                 new ScatterSeries<ObservablePoint>
                 {
@@ -897,11 +921,32 @@ namespace Alicat.UI.Features.Graph.Views
         }
 
         // =========================
+        // Mouse down (for zoom/pan integration)
+        // =========================
+        private void ChartPressure_MouseDown(object? sender, MouseEventArgs e)
+        {
+            // Call toolbar handlers if zoom/pan is active
+            HandleMouseDownForZoomPan(e);
+        }
+
+        // =========================
+        // Mouse up (for zoom/pan integration)
+        // =========================
+        private void ChartPressure_MouseUp(object? sender, MouseEventArgs e)
+        {
+            // Call toolbar handlers if zoom/pan is active
+            HandleMouseUpForZoomPan(e);
+        }
+
+        // =========================
         // Mouse move (fast + throttled) (LiveCharts2)
         // =========================
         private void ChartPressure_MouseMove(object? sender, MouseEventArgs e)
         {
-            // throttle
+            // Handle zoom/pan first if active
+            HandleMouseMoveForZoomPan(e);
+
+            // throttle for cursor tracking
             long now = Environment.TickCount64;
             if (now - _lastCursorTick < CursorThrottleMs) return;
             _lastCursorTick = now;
@@ -1078,20 +1123,7 @@ namespace Alicat.UI.Features.Graph.Views
             }
         }
 
-        private void BtnFullscreen_Click(object? sender, EventArgs e)
-        {
-            // Toggle fullscreen
-            if (WindowState == FormWindowState.Maximized && FormBorderStyle == FormBorderStyle.None)
-            {
-                WindowState = FormWindowState.Normal;
-                FormBorderStyle = FormBorderStyle.Sizable;
-            }
-            else
-            {
-                WindowState = FormWindowState.Maximized;
-                FormBorderStyle = FormBorderStyle.None;
-            }
-        }
+        // BtnFullscreen_Click removed - replaced with toolbar icon
 
         private void TlpLiveStatus_Paint(object? sender, PaintEventArgs e)
         {
@@ -1105,5 +1137,15 @@ namespace Alicat.UI.Features.Graph.Views
         }
 
         // btnGoTarget_Click is implemented in GraphForm.HeaderFooter.cs
+        
+        private void GraphForm_KeyDown(object? sender, KeyEventArgs e)
+        {
+            // Escape key: Cancel zoom/pan mode (expert recommendation)
+            if (e.KeyCode == Keys.Escape)
+            {
+                CancelZoomPanMode();
+                e.Handled = true;
+            }
+        }
     }
 }

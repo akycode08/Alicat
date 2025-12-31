@@ -57,7 +57,8 @@ namespace Alicat.UI.Features.Graph.Views
             if (lblMinValue != null) lblMinValue.Text = min.ToString("F2");
             if (lblMaxValue != null) lblMaxValue.Text = max.ToString("F2");
             if (lblAvgValue != null) lblAvgValue.Text = avg.ToString("F2");
-            if (lblStdDevValue != null) lblStdDevValue.Text = stdDev.ToString("F2");
+            // Std Dev removed from UI
+            // if (lblStdDevValue != null) lblStdDevValue.Text = stdDev.ToString("F2");
             if (lblPointsValue != null) lblPointsValue.Text = points.ToString();
 
             // Format duration
@@ -66,11 +67,11 @@ namespace Alicat.UI.Features.Graph.Views
                 : $"{duration.Minutes:D2}:{duration.Seconds:D2}";
             if (lblDurationValue != null) lblDurationValue.Text = durationStr;
 
-            // Format sample rate
-            string sampleRateStr = sampleRate > 0 
-                ? $"~{sampleRate:F1} Hz" 
-                : "0 Hz";
-            if (lblSampleRateValue != null) lblSampleRateValue.Text = sampleRateStr;
+            // Format sample rate (removed - no longer displayed)
+            // string sampleRateStr = sampleRate > 0 
+            //     ? $"~{sampleRate:F1} Hz" 
+            //     : "0 Hz";
+            // if (lblSampleRateValue != null) lblSampleRateValue.Text = sampleRateStr;
 
             // Update footer statistics
             UpdateFooterStatistics();
@@ -96,31 +97,22 @@ namespace Alicat.UI.Features.Graph.Views
                 lblCurrentUnit.Text = unit;
             }
 
-            // Update Target, Delta, Rate (existing labels)
-            if (lblTarget != null && targetPressure.HasValue)
+            // Update Target value (simplified - only Target and ETA)
+            if (lblTargetValue != null && targetPressure.HasValue)
             {
-                lblTarget.Text = $"Target: {targetPressure.Value:F2}";
+                lblTargetValue.Text = targetPressure.Value.ToString("F2");
             }
-
-            if (lblDelta != null && targetPressure.HasValue)
+            else if (lblTargetValue != null)
             {
-                double delta = currentPressure - targetPressure.Value;
-                lblDelta.Text = $"Delta: {delta:+#0.00;-#0.00;0.00}";
-                lblDelta.ForeColor = Math.Abs(delta) < 0.1 ? System.Drawing.Color.Green : System.Drawing.Color.Orange;
-            }
-
-            if (lblRate != null)
-            {
-                lblRate.Text = $"Rate: {rate:+#0.00;-#0.00;0.00} /s";
-                lblRate.ForeColor = rate > 0 ? System.Drawing.Color.OrangeRed : (rate < 0 ? System.Drawing.Color.RoyalBlue : System.Drawing.Color.Gray);
+                lblTargetValue.Text = "--";
             }
 
             // Determine and update status indicator
             StatusLevel status = DetermineStatusLevel(currentPressure, targetPressure);
             UpdateStatusIndicator(status);
 
-            // Update ETA and Trend
-            if (lblETA != null)
+            // Update ETA value (simplified)
+            if (lblETAValue != null)
             {
                 if (targetPressure.HasValue && !isExhaust)
                 {
@@ -130,40 +122,16 @@ namespace Alicat.UI.Features.Graph.Views
                         double etaSeconds = Math.Abs(delta / rate);
                         int etaMins = (int)(etaSeconds / 60);
                         int etaSecs = (int)(etaSeconds % 60);
-                        lblETA.Text = $"ETA: {etaMins}:{etaSecs:D2}";
+                        lblETAValue.Text = $"{etaMins}:{etaSecs:D2}";
                     }
                     else
                     {
-                        lblETA.Text = Math.Abs(delta) < 0.1 ? "Done" : "Stable";
+                        lblETAValue.Text = Math.Abs(delta) < 0.1 ? "Done" : "Stable";
                     }
                 }
                 else
                 {
-                    lblETA.Text = isExhaust ? "Purging" : "No Target";
-                }
-            }
-
-            if (lblTrend != null)
-            {
-                if (isExhaust)
-                {
-                    lblTrend.Text = "↓ Exhaust";
-                    lblTrend.ForeColor = System.Drawing.Color.Red;
-                }
-                else if (rate > 0.1)
-                {
-                    lblTrend.Text = "↗ Rising";
-                    lblTrend.ForeColor = System.Drawing.Color.OrangeRed;
-                }
-                else if (rate < -0.1)
-                {
-                    lblTrend.Text = "↘ Falling";
-                    lblTrend.ForeColor = System.Drawing.Color.RoyalBlue;
-                }
-                else
-                {
-                    lblTrend.Text = "→ Stable";
-                    lblTrend.ForeColor = System.Drawing.Color.Gray;
+                    lblETAValue.Text = isExhaust ? "Purging" : "--";
                 }
             }
         }
