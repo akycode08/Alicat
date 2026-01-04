@@ -1115,6 +1115,8 @@ namespace Alicat.Presentation.Presenters
                     ?? throw new InvalidOperationException("DataStore must be SessionDataStore instance");
                 _tableForm = new TableForm(sessionDataStore);
                 _tableForm.StartPosition = FormStartPosition.CenterParent;
+                // Синхронизируем тему с главной формой
+                _tableForm.ApplyTheme(_view.IsDarkTheme);
                 _tableForm.Show(parentForm);
             }
             else

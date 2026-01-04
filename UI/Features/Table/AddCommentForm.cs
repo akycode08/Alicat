@@ -10,16 +10,16 @@ using System.Windows.Forms;
 
 namespace Alicat.UI.Features.Table
 {
-    public partial class addComment : Form
+    public partial class AddCommentForm : Form
     {
         public string CommentText { get; private set; } = "";
 
-        public addComment()
+        public AddCommentForm()
         {
             InitializeComponent();
         }
 
-        public addComment(string infoText, string? existingComment = null)
+        public AddCommentForm(string infoText, string? existingComment = null)
             : this()
         {
             lblinfo.Text = infoText;

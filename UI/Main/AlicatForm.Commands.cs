@@ -318,6 +318,8 @@ namespace Alicat
             {
                 _tableForm = new TableForm(DataStore);
                 _tableForm.StartPosition = FormStartPosition.CenterParent;
+                // Синхронизируем тему с главной формой
+                _tableForm.ApplyTheme(isDarkTheme);
                 _tableForm.Show(this);
             }
             else

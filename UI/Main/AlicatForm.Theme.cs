@@ -63,6 +63,13 @@ namespace Alicat
             {
                 graphForm.ApplyTheme(false);
             }
+            
+            // Update TableForm theme if open
+            var tableForm = ((IMainView)this).TableForm;
+            if (tableForm != null && !tableForm.IsDisposed)
+            {
+                tableForm.ApplyTheme(false);
+            }
         }
 
         private void MenuViewDarkTheme_Click(object sender, EventArgs e)
@@ -76,6 +83,13 @@ namespace Alicat
             if (graphForm != null && !graphForm.IsDisposed)
             {
                 graphForm.ApplyTheme(true);
+            }
+            
+            // Update TableForm theme if open
+            var tableForm = ((IMainView)this).TableForm;
+            if (tableForm != null && !tableForm.IsDisposed)
+            {
+                tableForm.ApplyTheme(true);
             }
         }
 

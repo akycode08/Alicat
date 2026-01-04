@@ -1,6 +1,6 @@
 ﻿namespace Alicat.UI.Features.Table
 {
-    partial class addComment
+    partial class AddCommentForm
     {
         /// <summary>
         /// Required designer variable.
@@ -87,7 +87,7 @@
             panelMain.Size = new Size(400, 150);
             panelMain.TabIndex = 4;
             // 
-            // addComment
+            // AddCommentForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -96,7 +96,7 @@
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
-            Name = "addComment";
+            Name = "AddCommentForm";
             ShowIcon = false;
             StartPosition = FormStartPosition.CenterParent;
             Text = "Add comment";
