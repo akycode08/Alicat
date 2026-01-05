@@ -462,6 +462,12 @@ namespace Alicat.Services.Sequence
             _holdDurationSeconds = target.HoldMinutes * 60;
             _holdTimerStarted = false;
 
+            // Запускаем таймер для проверки давления и отсчета Hold
+            if (_holdTimer != null && !_holdTimer.Enabled)
+            {
+                _holdTimer.Start();
+            }
+
             OnTargetChanged?.Invoke(_currentTargetIndex, target);
             OnSequenceStateChanged?.Invoke();
         }

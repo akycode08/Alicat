@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Alicat")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d907aaef25f1753fd463ab547aaab08daa01d507")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+12d00c1d6b7ad9e22b87afb2f6f5bb75364d7e6a")]
 [assembly: System.Reflection.AssemblyProductAttribute("Alicat")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Alicat")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

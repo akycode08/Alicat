@@ -17,18 +17,8 @@ namespace Alicat
         private Random? _testRandom;
         private bool _isTestRunning = false;
 
-        private void menuFileTestMode_Click(object? sender, EventArgs e)
-        {
-            if (!_isTestRunning)
-            {
-                StartTestMode();
-            }
-            else
-            {
-                StopTestMode();
-            }
-        }
-
+        // NOTE: menuFileTestMode removed - test mode functionality moved or removed
+        // This file is kept for other test-related functionality if needed
         private void StartTestMode()
         {
             _testRandom = new Random();
@@ -37,8 +27,7 @@ namespace Alicat
             _testTimer.Start();
             _isTestRunning = true;
 
-            // Обновляем текст меню
-            menuFileTestMode.Text = "Stop Test Mode";
+            // NOTE: menuFileTestMode removed - test mode functionality moved/removed
 
             MessageBox.Show(
                 "Test mode started!\n\nRandom target (0-1700) every 2 minutes.",
@@ -55,8 +44,7 @@ namespace Alicat
             _testTimer = null;
             _isTestRunning = false;
 
-            // Обновляем текст меню
-            menuFileTestMode.Text = "Start Test Mode";
+            // NOTE: menuFileTestMode removed - text update removed
 
             MessageBox.Show(
                 "Test mode stopped.",

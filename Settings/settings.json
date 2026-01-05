@@ -22,6 +22,22 @@
     "ReadTimeout": 700,
     "WriteTimeout": 700
   },
-  "LastSaved": "2026-01-05T13:20:54.778454-06:00",
-  "SequenceTargets": []
+  "LastSaved": "2026-01-05T16:45:46.6640026-06:00",
+  "SequenceTargets": [
+    {
+      "PSI": 240,
+      "HoldMinutes": 1,
+      "Status": "Completed"
+    },
+    {
+      "PSI": 285,
+      "HoldMinutes": 1,
+      "Status": "Completed"
+    },
+    {
+      "PSI": 142,
+      "HoldMinutes": 1,
+      "Status": "Completed"
+    }
+  ]
 }

@@ -54,6 +54,10 @@
               "target": "Package",
               "version": "[2.0.0-beta.830, )"
             },
+            "QuestPDF": {
+              "target": "Package",
+              "version": "[2025.12.1, )"
+            },
             "System.IO.Ports": {
               "target": "Package",
               "version": "[9.0.10, )"

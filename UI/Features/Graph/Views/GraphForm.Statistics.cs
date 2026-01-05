@@ -97,21 +97,26 @@ namespace Alicat.UI.Features.Graph.Views
                 lblCurrentUnit.Text = unit;
             }
 
-            // Update Target value (simplified - only Target and ETA)
-            if (lblTargetValue != null && targetPressure.HasValue)
+            // Update Target value
+            if (lblTargetValue != null)
             {
-                lblTargetValue.Text = targetPressure.Value.ToString("F2");
-            }
-            else if (lblTargetValue != null)
-            {
-                lblTargetValue.Text = "--";
+                if (targetPressure.HasValue)
+                {
+                    lblTargetValue.Text = targetPressure.Value.ToString("F2");
+                    lblTargetValue.ForeColor = Color.FromArgb(245, 158, 11);  // Золотой цвет
+                }
+                else
+                {
+                    lblTargetValue.Text = "--";
+                    lblTargetValue.ForeColor = Color.FromArgb(107, 114, 128);  // Серый когда нет значения
+                }
             }
 
             // Determine and update status indicator
             StatusLevel status = DetermineStatusLevel(currentPressure, targetPressure);
             UpdateStatusIndicator(status);
 
-            // Update ETA value (simplified)
+            // Update ETA value
             if (lblETAValue != null)
             {
                 if (targetPressure.HasValue && !isExhaust)
@@ -123,15 +128,20 @@ namespace Alicat.UI.Features.Graph.Views
                         int etaMins = (int)(etaSeconds / 60);
                         int etaSecs = (int)(etaSeconds % 60);
                         lblETAValue.Text = $"{etaMins}:{etaSecs:D2}";
+                        lblETAValue.ForeColor = Color.FromArgb(16, 185, 129);  // Зелёный цвет
                     }
                     else
                     {
                         lblETAValue.Text = Math.Abs(delta) < 0.1 ? "Done" : "Stable";
+                        lblETAValue.ForeColor = Math.Abs(delta) < 0.1 
+                            ? Color.FromArgb(16, 185, 129)  // Зелёный для "Done"
+                            : Color.FromArgb(107, 114, 128);  // Серый для "Stable"
                     }
                 }
                 else
                 {
                     lblETAValue.Text = isExhaust ? "Purging" : "--";
+                    lblETAValue.ForeColor = Color.FromArgb(107, 114, 128);  // Серый когда нет значения
                 }
             }
         }

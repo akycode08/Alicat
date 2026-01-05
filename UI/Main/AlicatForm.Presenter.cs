@@ -231,10 +231,8 @@ namespace Alicat
             }
         }
 
-        private void menuFileTestPressure_Click(object? sender, EventArgs e)
-        {
-            _presenter?.ShowTestPressure(this);
-        }
+        // NOTE: menuFileTestPressure removed from File menu
+        // Test Pressure functionality can be accessed via other means if needed
 
         // ====================================================================
         // Settings Menu Handlers

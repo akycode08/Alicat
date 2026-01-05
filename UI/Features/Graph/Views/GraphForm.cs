@@ -207,9 +207,9 @@ namespace Alicat.UI.Features.Graph.Views
             // Reset and Fullscreen buttons remain for design, but handlers are removed
 
             // Setup LIVE STATUS panel border
-            if (tlpLiveStatus != null)
+            if (pnlLiveStatus != null)
             {
-                tlpLiveStatus.Paint += TlpLiveStatus_Paint;
+                pnlLiveStatus.Paint += PnlLiveStatus_Paint;
             }
 
             // Initialize update timer for batching
@@ -1299,15 +1299,15 @@ namespace Alicat.UI.Features.Graph.Views
 
         // BtnFullscreen_Click removed - replaced with toolbar icon
 
-        private void TlpLiveStatus_Paint(object? sender, PaintEventArgs e)
+        private void PnlLiveStatus_Paint(object? sender, PaintEventArgs e)
         {
-            var panel = sender as TableLayoutPanel;
+            var panel = sender as Panel;
             if (panel == null) return;
 
-            // Draw border around LIVE STATUS panel
-            using var pen = new Pen(_isDarkTheme ? Color.FromArgb(60, 65, 75) : Color.FromArgb(200, 200, 210), 2);
-            var rect = new Rectangle(0, 0, panel.Width - 1, panel.Height - 1);
-            e.Graphics.DrawRectangle(pen, rect);
+            // Draw border around LIVE STATUS panel (опционально, если нужна рамка)
+            // using var pen = new Pen(_isDarkTheme ? Color.FromArgb(60, 65, 75) : Color.FromArgb(200, 200, 210), 1);
+            // var rect = new Rectangle(0, 0, panel.Width - 1, panel.Height - 1);
+            // e.Graphics.DrawRectangle(pen, rect);
         }
 
         // btnGoTarget_Click is implemented in GraphForm.HeaderFooter.cs

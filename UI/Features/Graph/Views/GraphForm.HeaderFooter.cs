@@ -498,10 +498,10 @@ namespace Alicat.UI.Features.Graph.Views
                 if (panelHeader != null) panelHeader.BackColor = Color.FromArgb(21, 23, 28);
                 if (panelBottom != null) panelBottom.BackColor = Color.FromArgb(21, 23, 28);
                 
-                // LIVE STATUS panel - dark background
-                if (tlpLiveStatus != null)
+                // LIVE STATUS panel - dark background (same as TIME WINDOW)
+                if (pnlLiveStatus != null)
                 {
-                    tlpLiveStatus.BackColor = Color.FromArgb(22, 24, 30);
+                    pnlLiveStatus.BackColor = Color.FromArgb(32, 35, 44);
                 }
                 
                 // SESSION STATS panel - dark background
@@ -555,9 +555,9 @@ namespace Alicat.UI.Features.Graph.Views
                 if (panelBottom != null) panelBottom.BackColor = Color.FromArgb(250, 250, 255);
                 
                 // LIVE STATUS panel - light background
-                if (tlpLiveStatus != null)
+                if (pnlLiveStatus != null)
                 {
-                    tlpLiveStatus.BackColor = Color.FromArgb(255, 255, 255);
+                    pnlLiveStatus.BackColor = Color.FromArgb(255, 255, 255);
                 }
                 
                 // SESSION STATS panel - light background
@@ -603,9 +603,9 @@ namespace Alicat.UI.Features.Graph.Views
             }
             
             // Force repaint of LIVE STATUS panel border
-            if (tlpLiveStatus != null)
+            if (pnlLiveStatus != null)
             {
-                tlpLiveStatus.Invalidate();
+                pnlLiveStatus.Invalidate();
             }
         }
 

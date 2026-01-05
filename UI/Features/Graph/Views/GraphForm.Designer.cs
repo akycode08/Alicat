@@ -34,14 +34,16 @@
             chartPressure = new LiveChartsCore.SkiaSharpView.WinForms.CartesianChart();
             panelLeft = new Panel();
             tlpLeft = new TableLayoutPanel();
-            tlpLiveStatus = new TableLayoutPanel();
-            tableLayoutPanel3 = new TableLayoutPanel();
+            pnlLiveStatus = new Panel();
             lblCurrentPressureLarge = new Label();
             lblCurrentUnit = new Label();
-            lblTarget = new Label();
+            lblTargetLabel = new Label();
             lblTargetValue = new Label();
-            lblETA = new Label();
+            pnlLiveStatusDivider = new Panel();
+            lblETALabel = new Label();
             lblETAValue = new Label();
+            lblTarget = new Label();
+            lblETA = new Label();
             tlpSessionStats = new TableLayoutPanel();
             lblSessionStatsTitle = new Label();
             lblMinLabel = new Label();
@@ -149,8 +151,7 @@
             lblFooterMax = new Label();
             panelLeft.SuspendLayout();
             tlpLeft.SuspendLayout();
-            tlpLiveStatus.SuspendLayout();
-            tableLayoutPanel3.SuspendLayout();
+            pnlLiveStatus.SuspendLayout();
             tlpSessionStats.SuspendLayout();
             tlpGoToTarget.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvTargets).BeginInit();
@@ -200,7 +201,7 @@
             // 
             tlpLeft.ColumnCount = 1;
             tlpLeft.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tlpLeft.Controls.Add(tlpLiveStatus, 0, 1);
+            tlpLeft.Controls.Add(pnlLiveStatus, 0, 1);
             tlpLeft.Controls.Add(tlpSessionStats, 0, 2);
             tlpLeft.Controls.Add(tlpGoToTarget, 0, 3);
             tlpLeft.Controls.Add(btnEmergency, 0, 4);
@@ -216,48 +217,31 @@
             tlpLeft.Size = new Size(189, 704);
             tlpLeft.TabIndex = 0;
             // 
-            // tlpLiveStatus
+            // pnlLiveStatus
             // 
-            tlpLiveStatus.ColumnCount = 2;
-            tlpLiveStatus.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tlpLiveStatus.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tlpLiveStatus.Controls.Add(tableLayoutPanel3, 0, 0);
-            tlpLiveStatus.Controls.Add(lblTargetValue, 1, 1);
-            tlpLiveStatus.Controls.Add(lblETAValue, 1, 2);
-            tlpLiveStatus.Dock = DockStyle.Fill;
-            tlpLiveStatus.Location = new Point(3, 17);
-            tlpLiveStatus.Name = "tlpLiveStatus";
-            tlpLiveStatus.RowCount = 3;
-            tlpLiveStatus.RowStyles.Add(new RowStyle(SizeType.Percent, 60F));
-            tlpLiveStatus.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
-            tlpLiveStatus.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
-            tlpLiveStatus.Size = new Size(183, 134);
-            tlpLiveStatus.TabIndex = 0;
-            // 
-            // tableLayoutPanel3
-            // 
-            tableLayoutPanel3.ColumnCount = 1;
-            tlpLiveStatus.SetColumnSpan(tableLayoutPanel3, 2);
-            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tableLayoutPanel3.Controls.Add(lblCurrentPressureLarge, 0, 0);
-            tableLayoutPanel3.Controls.Add(lblCurrentUnit, 0, 1);
-            tableLayoutPanel3.Dock = DockStyle.Fill;
-            tableLayoutPanel3.Location = new Point(3, 3);
-            tableLayoutPanel3.Name = "tableLayoutPanel3";
-            tableLayoutPanel3.RowCount = 2;
-            tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 70F));
-            tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
-            tableLayoutPanel3.Size = new Size(177, 74);
-            tableLayoutPanel3.TabIndex = 2;
+            pnlLiveStatus.BackColor = Color.FromArgb(32, 35, 44);
+            pnlLiveStatus.Controls.Add(lblCurrentPressureLarge);
+            pnlLiveStatus.Controls.Add(lblCurrentUnit);
+            pnlLiveStatus.Controls.Add(lblTargetLabel);
+            pnlLiveStatus.Controls.Add(lblTargetValue);
+            pnlLiveStatus.Controls.Add(pnlLiveStatusDivider);
+            pnlLiveStatus.Controls.Add(lblETALabel);
+            pnlLiveStatus.Controls.Add(lblETAValue);
+            pnlLiveStatus.Dock = DockStyle.Fill;
+            pnlLiveStatus.Location = new Point(3, 17);
+            pnlLiveStatus.Name = "pnlLiveStatus";
+            pnlLiveStatus.Size = new Size(183, 140);
+            pnlLiveStatus.TabIndex = 0;
+            pnlLiveStatus.Paint += PnlLiveStatus_Paint;
             // 
             // lblCurrentPressureLarge
             // 
-            lblCurrentPressureLarge.Dock = DockStyle.Fill;
-            lblCurrentPressureLarge.Font = new Font("Segoe UI", 36F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lblCurrentPressureLarge.ForeColor = Color.White;
-            lblCurrentPressureLarge.Location = new Point(3, 0);
+            lblCurrentPressureLarge.BackColor = Color.Transparent;
+            lblCurrentPressureLarge.Font = new Font("Consolas", 32F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            lblCurrentPressureLarge.ForeColor = Color.FromArgb(228, 231, 235);
+            lblCurrentPressureLarge.Location = new Point(0, 25);
             lblCurrentPressureLarge.Name = "lblCurrentPressureLarge";
-            lblCurrentPressureLarge.Size = new Size(171, 51);
+            lblCurrentPressureLarge.Size = new Size(183, 45);
             lblCurrentPressureLarge.TabIndex = 0;
             lblCurrentPressureLarge.Text = "0.00";
             lblCurrentPressureLarge.TextAlign = ContentAlignment.MiddleCenter;
@@ -265,65 +249,70 @@
             // 
             // lblCurrentUnit
             // 
-            lblCurrentUnit.AutoSize = true;
-            lblCurrentUnit.Dock = DockStyle.Fill;
-            lblCurrentUnit.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            lblCurrentUnit.ForeColor = Color.FromArgb(120, 125, 140);
-            lblCurrentUnit.Location = new Point(3, 51);
+            lblCurrentUnit.BackColor = Color.Transparent;
+            lblCurrentUnit.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            lblCurrentUnit.ForeColor = Color.FromArgb(107, 114, 128);
+            lblCurrentUnit.Location = new Point(0, 70);
             lblCurrentUnit.Name = "lblCurrentUnit";
-            lblCurrentUnit.Size = new Size(171, 23);
+            lblCurrentUnit.Size = new Size(183, 20);
             lblCurrentUnit.TabIndex = 1;
             lblCurrentUnit.Text = "PSIG";
             lblCurrentUnit.TextAlign = ContentAlignment.MiddleCenter;
             lblCurrentUnit.Click += lblCurrentUnit_Click;
             // 
-            // lblTarget
+            // lblTargetLabel
             // 
-            lblTarget.AutoSize = true;
-            lblTarget.Dock = DockStyle.Fill;
-            lblTarget.Font = new Font("Segoe UI", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lblTarget.ForeColor = Color.FromArgb(120, 125, 140);
-            lblTarget.LiveSetting = System.Windows.Forms.Automation.AutomationLiveSetting.Polite;
-            lblTarget.Location = new Point(5, 5);
-            lblTarget.Margin = new Padding(5, 5, 0, 0);
-            lblTarget.Name = "lblTarget";
-            lblTarget.Size = new Size(89, 21);
-            lblTarget.TabIndex = 13;
-            lblTarget.Text = "Target";
-            lblTarget.Click += label1_Click;
+            lblTargetLabel.BackColor = Color.Transparent;
+            lblTargetLabel.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            lblTargetLabel.ForeColor = Color.FromArgb(107, 114, 128);
+            lblTargetLabel.Location = new Point(10, 98);
+            lblTargetLabel.Name = "lblTargetLabel";
+            lblTargetLabel.Size = new Size(50, 18);
+            lblTargetLabel.TabIndex = 2;
+            lblTargetLabel.Text = "Target:";
+            lblTargetLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // lblTargetValue
             // 
-            lblTargetValue.Location = new Point(94, 80);
+            lblTargetValue.BackColor = Color.Transparent;
+            lblTargetValue.Font = new Font("Consolas", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            lblTargetValue.ForeColor = Color.FromArgb(245, 158, 11);
+            lblTargetValue.Location = new Point(60, 98);
             lblTargetValue.Name = "lblTargetValue";
-            lblTargetValue.Size = new Size(86, 23);
-            lblTargetValue.TabIndex = 14;
+            lblTargetValue.Size = new Size(113, 18);
+            lblTargetValue.TabIndex = 3;
+            lblTargetValue.Text = "--";
+            lblTargetValue.TextAlign = ContentAlignment.MiddleRight;
             // 
-            // lblETA
+            // pnlLiveStatusDivider
             // 
-            lblETA.AutoSize = true;
-            lblETA.BackColor = Color.FromArgb(21, 23, 28);
-            lblETA.Dock = DockStyle.Fill;
-            lblETA.ForeColor = Color.FromArgb(120, 125, 140);
-            lblETA.Location = new Point(5, 5);
-            lblETA.Margin = new Padding(5, 5, 0, 0);
-            lblETA.Name = "lblETA";
-            lblETA.Size = new Size(89, 11);
-            lblETA.TabIndex = 15;
-            lblETA.Text = "ETA:";
-            lblETA.TextAlign = ContentAlignment.MiddleLeft;
+            pnlLiveStatusDivider.BackColor = Color.FromArgb(38, 45, 62);
+            pnlLiveStatusDivider.Location = new Point(10, 118);
+            pnlLiveStatusDivider.Name = "pnlLiveStatusDivider";
+            pnlLiveStatusDivider.Size = new Size(163, 1);
+            pnlLiveStatusDivider.TabIndex = 4;
+            // 
+            // lblETALabel
+            // 
+            lblETALabel.BackColor = Color.Transparent;
+            lblETALabel.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            lblETALabel.ForeColor = Color.FromArgb(107, 114, 128);
+            lblETALabel.Location = new Point(10, 122);
+            lblETALabel.Name = "lblETALabel";
+            lblETALabel.Size = new Size(35, 18);
+            lblETALabel.TabIndex = 5;
+            lblETALabel.Text = "ETA:";
+            lblETALabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // lblETAValue
             // 
-            lblETAValue.AutoSize = true;
-            lblETAValue.BackColor = Color.FromArgb(21, 23, 28);
-            lblETAValue.Dock = DockStyle.Fill;
-            lblETAValue.ForeColor = Color.White;
-            lblETAValue.Location = new Point(96, 111);
-            lblETAValue.Margin = new Padding(5, 5, 0, 0);
+            lblETAValue.BackColor = Color.Transparent;
+            lblETAValue.Font = new Font("Consolas", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            lblETAValue.ForeColor = Color.FromArgb(16, 185, 129);
+            lblETAValue.Location = new Point(60, 122);
             lblETAValue.Name = "lblETAValue";
-            lblETAValue.Size = new Size(87, 23);
-            lblETAValue.TabIndex = 16;
+            lblETAValue.Size = new Size(113, 18);
+            lblETAValue.TabIndex = 6;
             lblETAValue.Text = "--";
             lblETAValue.TextAlign = ContentAlignment.MiddleRight;
             // 
@@ -1833,10 +1822,7 @@
             panelLeft.ResumeLayout(false);
             tlpLeft.ResumeLayout(false);
             tlpLeft.PerformLayout();
-            tlpLiveStatus.ResumeLayout(false);
-            tlpLiveStatus.PerformLayout();
-            tableLayoutPanel3.ResumeLayout(false);
-            tableLayoutPanel3.PerformLayout();
+            pnlLiveStatus.ResumeLayout(false);
             tlpSessionStats.ResumeLayout(false);
             tlpSessionStats.PerformLayout();
             tlpGoToTarget.ResumeLayout(false);
@@ -1926,16 +1912,18 @@
         private CheckBox chkAtMax;
         private Panel panelAlertsIcon;
         private TableLayoutPanel tlpLeft;
-        private TableLayoutPanel tlpLiveStatus;
+        private Panel pnlLiveStatus;
+        private Panel pnlLiveStatusDivider;
         private TableLayoutPanel tableLayoutPanel1;
         private TableLayoutPanel tableLayoutPanel2;
-        private TableLayoutPanel tableLayoutPanel3;
         private Button btnEmergency;
         private Label lblTarget;
+        private Label lblTargetLabel;
         private Label lblTargetValue;
         private Label lblDelta;
         private Label lblRate;
         private Label lblETA;
+        private Label lblETALabel;
         private Label lblETAValue;
         private Label lblTrend;
         // Session Stats

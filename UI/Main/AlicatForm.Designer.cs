@@ -26,9 +26,25 @@ namespace Alicat
         private MenuStrip menuMain;
         private ToolStripMenuItem menuFile;
         private ToolStripMenuItem menuFileNewSession;
-        private ToolStripMenuItem menuFileTestMode;
-        private ToolStripMenuItem menuFileTestPressure;
+        private ToolStripMenuItem menuFileOpenSession;
         private ToolStripSeparator menuFileSeparator1;
+        private ToolStripMenuItem menuFileSaveSession;
+        private ToolStripMenuItem menuFileSaveSessionAs;
+        private ToolStripSeparator menuFileSeparator2;
+        private ToolStripMenuItem menuFileExport;
+        private ToolStripMenuItem menuFileExportTable;
+        private ToolStripMenuItem menuFileExportGraphImage;
+        private ToolStripMenuItem menuFileExportSessionReport;
+        private ToolStripSeparator menuFileSeparator3;
+        private ToolStripMenuItem menuFileRecentSessions;
+        private ToolStripMenuItem menuFileRecentSessionsItem1;
+        private ToolStripMenuItem menuFileRecentSessionsItem2;
+        private ToolStripMenuItem menuFileRecentSessionsItem3;
+        private ToolStripSeparator menuFileRecentSessionsSeparator;
+        private ToolStripMenuItem menuFileRecentSessionsClearList;
+        private ToolStripSeparator menuFileSeparator4;
+        private ToolStripMenuItem menuFileSessionConfiguration;
+        private ToolStripSeparator menuFileSeparator5;
         private ToolStripMenuItem menuFileExit;
         private ToolStripMenuItem menuSettings;
         private ToolStripMenuItem menuSettingsPreferences;
@@ -188,9 +204,25 @@ namespace Alicat
             menuMain = new MenuStrip();
             menuFile = new ToolStripMenuItem();
             menuFileNewSession = new ToolStripMenuItem();
-            menuFileTestMode = new ToolStripMenuItem();
-            menuFileTestPressure = new ToolStripMenuItem();
+            menuFileOpenSession = new ToolStripMenuItem();
             menuFileSeparator1 = new ToolStripSeparator();
+            menuFileSaveSession = new ToolStripMenuItem();
+            menuFileSaveSessionAs = new ToolStripMenuItem();
+            menuFileSeparator2 = new ToolStripSeparator();
+            menuFileExport = new ToolStripMenuItem();
+            menuFileExportTable = new ToolStripMenuItem();
+            menuFileExportGraphImage = new ToolStripMenuItem();
+            menuFileExportSessionReport = new ToolStripMenuItem();
+            menuFileSeparator3 = new ToolStripSeparator();
+            menuFileRecentSessions = new ToolStripMenuItem();
+            menuFileRecentSessionsItem1 = new ToolStripMenuItem();
+            menuFileRecentSessionsItem2 = new ToolStripMenuItem();
+            menuFileRecentSessionsItem3 = new ToolStripMenuItem();
+            menuFileRecentSessionsSeparator = new ToolStripSeparator();
+            menuFileRecentSessionsClearList = new ToolStripMenuItem();
+            menuFileSeparator4 = new ToolStripSeparator();
+            menuFileSessionConfiguration = new ToolStripMenuItem();
+            menuFileSeparator5 = new ToolStripSeparator();
             menuFileExit = new ToolStripMenuItem();
             menuSettings = new ToolStripMenuItem();
             menuSettingsPreferences = new ToolStripMenuItem();
@@ -345,7 +377,21 @@ namespace Alicat
             // 
             // menuFile
             // 
-            menuFile.DropDownItems.AddRange(new ToolStripItem[] { menuFileNewSession, menuFileTestMode, menuFileTestPressure, menuFileSeparator1, menuFileExit });
+            menuFile.DropDownItems.AddRange(new ToolStripItem[] {
+                menuFileNewSession,
+                menuFileOpenSession,
+                menuFileSeparator1,
+                menuFileSaveSession,
+                menuFileSaveSessionAs,
+                menuFileSeparator2,
+                menuFileExport,
+                menuFileSeparator3,
+                menuFileRecentSessions,
+                menuFileSeparator4,
+                menuFileSessionConfiguration,
+                menuFileSeparator5,
+                menuFileExit
+            });
             menuFile.Name = "menuFile";
             menuFile.Size = new Size(37, 23);
             menuFile.Text = "File";
@@ -353,31 +399,143 @@ namespace Alicat
             // menuFileNewSession
             // 
             menuFileNewSession.Name = "menuFileNewSession";
-            menuFileNewSession.Size = new Size(198, 22);
-            menuFileNewSession.Text = "New Session...";
+            menuFileNewSession.ShortcutKeys = Keys.Control | Keys.N;
+            menuFileNewSession.Size = new Size(220, 22);
+            menuFileNewSession.Text = "New Session";
             // 
-            // menuFileTestMode
+            // menuFileOpenSession
             // 
-            menuFileTestMode.Name = "menuFileTestMode";
-            menuFileTestMode.Size = new Size(198, 22);
-            menuFileTestMode.Text = "Start Test Mode";
-            // 
-            // menuFileTestPressure
-            // 
-            menuFileTestPressure.Name = "menuFileTestPressure";
-            menuFileTestPressure.Size = new Size(198, 22);
-            menuFileTestPressure.Text = "Test Pressure Window...";
+            menuFileOpenSession.Name = "menuFileOpenSession";
+            menuFileOpenSession.ShortcutKeys = Keys.Control | Keys.O;
+            menuFileOpenSession.Size = new Size(220, 22);
+            menuFileOpenSession.Text = "Open Session...";
             // 
             // menuFileSeparator1
             // 
             menuFileSeparator1.Name = "menuFileSeparator1";
-            menuFileSeparator1.Size = new Size(195, 6);
+            menuFileSeparator1.Size = new Size(217, 6);
+            // 
+            // menuFileSaveSession
+            // 
+            menuFileSaveSession.Name = "menuFileSaveSession";
+            menuFileSaveSession.ShortcutKeys = Keys.Control | Keys.S;
+            menuFileSaveSession.Size = new Size(220, 22);
+            menuFileSaveSession.Text = "Save Session";
+            // 
+            // menuFileSaveSessionAs
+            // 
+            menuFileSaveSessionAs.Name = "menuFileSaveSessionAs";
+            menuFileSaveSessionAs.ShortcutKeys = Keys.Control | Keys.Shift | Keys.S;
+            menuFileSaveSessionAs.Size = new Size(220, 22);
+            menuFileSaveSessionAs.Text = "Save Session As...";
+            // 
+            // menuFileSeparator2
+            // 
+            menuFileSeparator2.Name = "menuFileSeparator2";
+            menuFileSeparator2.Size = new Size(217, 6);
+            // 
+            // menuFileExport
+            // 
+            menuFileExport.DropDownItems.AddRange(new ToolStripItem[] {
+                menuFileExportTable,
+                menuFileExportGraphImage,
+                menuFileExportSessionReport
+            });
+            menuFileExport.Name = "menuFileExport";
+            menuFileExport.Size = new Size(220, 22);
+            menuFileExport.Text = "Export";
+            // 
+            // menuFileExportTable
+            // 
+            menuFileExportTable.Name = "menuFileExportTable";
+            menuFileExportTable.ShortcutKeys = Keys.Control | Keys.E;
+            menuFileExportTable.Size = new Size(200, 22);
+            menuFileExportTable.Text = "Table (CSV)...";
+            // 
+            // menuFileExportGraphImage
+            // 
+            menuFileExportGraphImage.Name = "menuFileExportGraphImage";
+            menuFileExportGraphImage.Size = new Size(200, 22);
+            menuFileExportGraphImage.Text = "Graph Image (PNG)...";
+            // 
+            // menuFileExportSessionReport
+            // 
+            menuFileExportSessionReport.Name = "menuFileExportSessionReport";
+            menuFileExportSessionReport.Size = new Size(200, 22);
+            menuFileExportSessionReport.Text = "Session Report (PDF)...";
+            // 
+            // menuFileSeparator3
+            // 
+            menuFileSeparator3.Name = "menuFileSeparator3";
+            menuFileSeparator3.Size = new Size(217, 6);
+            // 
+            // menuFileRecentSessions
+            // 
+            menuFileRecentSessions.DropDownItems.AddRange(new ToolStripItem[] {
+                menuFileRecentSessionsItem1,
+                menuFileRecentSessionsItem2,
+                menuFileRecentSessionsItem3,
+                menuFileRecentSessionsSeparator,
+                menuFileRecentSessionsClearList
+            });
+            menuFileRecentSessions.Name = "menuFileRecentSessions";
+            menuFileRecentSessions.Size = new Size(220, 22);
+            menuFileRecentSessions.Text = "Recent Sessions";
+            // 
+            // menuFileRecentSessionsItem1
+            // 
+            menuFileRecentSessionsItem1.Name = "menuFileRecentSessionsItem1";
+            menuFileRecentSessionsItem1.Size = new Size(200, 22);
+            menuFileRecentSessionsItem1.Text = "Session_2025-01-05_14-30.als";
+            menuFileRecentSessionsItem1.Visible = false;
+            // 
+            // menuFileRecentSessionsItem2
+            // 
+            menuFileRecentSessionsItem2.Name = "menuFileRecentSessionsItem2";
+            menuFileRecentSessionsItem2.Size = new Size(200, 22);
+            menuFileRecentSessionsItem2.Text = "Session_2025-01-05_10-15.als";
+            menuFileRecentSessionsItem2.Visible = false;
+            // 
+            // menuFileRecentSessionsItem3
+            // 
+            menuFileRecentSessionsItem3.Name = "menuFileRecentSessionsItem3";
+            menuFileRecentSessionsItem3.Size = new Size(200, 22);
+            menuFileRecentSessionsItem3.Text = "Session_2025-01-04_16-45.als";
+            menuFileRecentSessionsItem3.Visible = false;
+            // 
+            // menuFileRecentSessionsSeparator
+            // 
+            menuFileRecentSessionsSeparator.Name = "menuFileRecentSessionsSeparator";
+            menuFileRecentSessionsSeparator.Size = new Size(197, 6);
+            // 
+            // menuFileRecentSessionsClearList
+            // 
+            menuFileRecentSessionsClearList.Name = "menuFileRecentSessionsClearList";
+            menuFileRecentSessionsClearList.Size = new Size(200, 22);
+            menuFileRecentSessionsClearList.Text = "Clear Recent List";
+            // 
+            // menuFileSeparator4
+            // 
+            menuFileSeparator4.Name = "menuFileSeparator4";
+            menuFileSeparator4.Size = new Size(217, 6);
+            // 
+            // menuFileSessionConfiguration
+            // 
+            menuFileSessionConfiguration.Name = "menuFileSessionConfiguration";
+            menuFileSessionConfiguration.ShortcutKeys = Keys.Alt | Keys.Enter;
+            menuFileSessionConfiguration.Size = new Size(220, 22);
+            menuFileSessionConfiguration.Text = "Session Configuration...";
+            // 
+            // menuFileSeparator5
+            // 
+            menuFileSeparator5.Name = "menuFileSeparator5";
+            menuFileSeparator5.Size = new Size(217, 6);
             // 
             // menuFileExit
             // 
             menuFileExit.Name = "menuFileExit";
             menuFileExit.ShortcutKeys = Keys.Alt | Keys.F4;
-            menuFileExit.Size = new Size(198, 22);
+            menuFileExit.Size = new Size(220, 22);
             menuFileExit.Text = "Exit";
             // 
             // menuSettings
