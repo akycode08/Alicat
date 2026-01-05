@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using System.Data;
 using System.Linq;
 using System.Globalization;
+using System.Text.Json.Nodes;
 
 namespace Alicat.UI.Features.Graph.Views
 {
@@ -34,13 +35,123 @@ namespace Alicat.UI.Features.Graph.Views
     public partial class GraphForm
     {
         // Данные для GO TO TARGET
+        // Используем SequenceService для выполнения последовательности в фоне
+        private Alicat.Services.Sequence.SequenceService? _sequenceService;
+        
         private List<TargetItem> _targets = new List<TargetItem>();
         private int _currentTargetIndex = -1;
         private SequenceState _sequenceState = SequenceState.Stopped;
         private System.Windows.Forms.Timer? _holdTimer;
         private DateTime _holdStartTime;
         private int _holdDurationSeconds = 0;
+        private bool _holdTimerStarted = false; // Флаг: начал ли Hold timer отсчет
         // Используем _targetHandler из GraphForm.HeaderFooter.cs
+
+        /// <summary>
+        /// Устанавливает SequenceService для синхронизации с фоновым выполнением
+        /// </summary>
+        public void SetSequenceService(Alicat.Services.Sequence.SequenceService service)
+        {
+            _sequenceService = service;
+            
+            // Подписываемся на события сервиса
+            if (_sequenceService != null)
+            {
+                _sequenceService.OnSequenceStateChanged += OnSequenceServiceStateChanged;
+                _sequenceService.OnTargetChanged += OnSequenceServiceTargetChanged;
+                
+                // Синхронизируем targets из сервиса только если DataGridView уже инициализирован
+                if (dgvTargets != null && dgvTargets.Columns.Count > 0)
+                {
+                    SyncTargetsFromService();
+                    
+                    // Запускаем таймер для обновления UI, если последовательность активна
+                    if (_sequenceService.State == SequenceState.Playing && _holdTimer != null && !_holdTimer.Enabled)
+                    {
+                        _holdTimer.Start();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Синхронизирует targets из SequenceService
+        /// </summary>
+        private void SyncTargetsFromService()
+        {
+            if (_sequenceService == null) return;
+            
+            // Проверяем, что DataGridView инициализирован
+            if (dgvTargets == null || dgvTargets.Columns.Count == 0) return;
+
+            _targets.Clear();
+            foreach (var target in _sequenceService.Targets)
+            {
+                _targets.Add(new TargetItem
+                {
+                    Number = target.Number,
+                    PSI = target.PSI,
+                    HoldMinutes = target.HoldMinutes,
+                    Status = target.Status
+                });
+            }
+
+            _currentTargetIndex = _sequenceService.CurrentTargetIndex;
+            _sequenceState = _sequenceService.State;
+
+            // Управляем таймером UI в зависимости от состояния последовательности
+            if (_holdTimer != null)
+            {
+                if (_sequenceState == SequenceState.Playing && !_holdTimer.Enabled)
+                {
+                    _holdTimer.Start();
+                }
+                else if (_sequenceState == SequenceState.Stopped && _holdTimer.Enabled)
+                {
+                    _holdTimer.Stop();
+                }
+            }
+
+            UpdateTargetsTable();
+            UpdateProgress();
+            UpdateControlButtons();
+        }
+
+        /// <summary>
+        /// Обработчик изменения состояния последовательности в сервисе
+        /// </summary>
+        private void OnSequenceServiceStateChanged()
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(OnSequenceServiceStateChanged));
+                return;
+            }
+
+            SyncTargetsFromService();
+        }
+
+        /// <summary>
+        /// Обработчик изменения target в сервисе
+        /// </summary>
+        private void OnSequenceServiceTargetChanged(int index, TargetItem target)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => OnSequenceServiceTargetChanged(index, target)));
+                return;
+            }
+
+            SyncTargetsFromService();
+        }
+
+        /// <summary>
+        /// Обновляет состояние последовательности в UI (вызывается извне)
+        /// </summary>
+        public void RefreshSequenceState()
+        {
+            SyncTargetsFromService();
+        }
 
         private void InitializeGoToTarget()
         {
@@ -89,32 +200,20 @@ namespace Alicat.UI.Features.Graph.Views
                 Resizable = DataGridViewTriState.False
             };
 
-            // Колонка DELETE (с иконкой корзины)
-            var colDelete = new DataGridViewButtonColumn
-            {
-                Name = "colDelete",
-                HeaderText = "DELETE",
-                Width = 50,
-                Text = "🗑️",
-                UseColumnTextForButtonValue = true,
-                Resizable = DataGridViewTriState.False
-            };
-
+            // Колонка DELETE удалена - доступна только в модальном окне Sequence Editor
             dgvTargets.Columns.AddRange(new DataGridViewColumn[] 
             { 
                 colNumber, 
                 colPSI, 
                 colHold, 
-                colStatus, 
-                colDelete 
+                colStatus
             });
 
             // Настройка стилей для строк
             dgvTargets.RowsDefaultCellStyle.BackColor = Color.FromArgb(21, 23, 28);
             dgvTargets.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(25, 27, 32);
 
-            // Обработчик клика по кнопке DELETE (определен ниже)
-            dgvTargets.CellContentClick += DgvTargets_CellContentClick;
+            // Обработчик клика по кнопке DELETE удален - удаление доступно только в модальном окне
 
             // Обработчик отрисовки ячеек для Status (круг)
             dgvTargets.CellFormatting += DgvTargets_CellFormatting;
@@ -126,6 +225,9 @@ namespace Alicat.UI.Features.Graph.Views
             
             if (btnClearAll != null)
                 btnClearAll.Click += BtnClearAll_Click;
+            
+            if (btnEdit != null)
+                btnEdit.Click += BtnEdit_Click;
             
             if (btnPlay != null)
                 btnPlay.Click += BtnPlay_Click;
@@ -143,9 +245,44 @@ namespace Alicat.UI.Features.Graph.Views
             _holdTimer = new System.Windows.Forms.Timer { Interval = 1000 }; // 1 секунда
             _holdTimer.Tick += HoldTimer_Tick;
 
+            // Если SequenceService установлен, синхронизируем с ним (не загружаем из файла)
+            if (_sequenceService != null)
+            {
+                SyncTargetsFromService();
+                
+                // Запускаем таймер для обновления UI, если последовательность активна
+                if (_sequenceService.State == SequenceState.Playing && !_holdTimer.Enabled)
+                {
+                    _holdTimer.Start();
+                }
+            }
+            else
+            {
+                // Загружаем сохраненные targets из файла настроек (старый способ)
+                LoadTargetsFromFile();
+                RestoreSequenceState();
+            }
+
             // Обновляем UI
             UpdateTargetsTable();
             UpdateProgress();
+            
+            // Отключаем автоматическое выделение строк (чтобы не было золотой подсветки)
+            if (dgvTargets != null)
+            {
+                dgvTargets.ClearSelection();
+                dgvTargets.CurrentCell = null;
+            }
+            
+            // Initialize Hold timer to 00:00
+            if (lblHoldTimer != null)
+            {
+                lblHoldTimer.Text = "Hold:           00:00";
+            }
+            if (progressBarHold != null)
+            {
+                progressBarHold.Value = 0;
+            }
         }
 
         // SetTargetHandler уже определен в GraphForm.HeaderFooter.cs
@@ -153,22 +290,32 @@ namespace Alicat.UI.Features.Graph.Views
 
         private void DgvTargets_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
         {
-            if (e.RowIndex < 0) return;
+            if (e.RowIndex < 0 || e.RowIndex >= _targets.Count) return;
 
             var column = dgvTargets.Columns[e.ColumnIndex];
             if (column.Name == "colStatus")
             {
-                // Устанавливаем текст для Status (● или ○)
-                var row = dgvTargets.Rows[e.RowIndex];
-                if (row.Index == 0) // Первая строка - активная
+                // Используем реальный статус из _targets
+                var target = _targets[e.RowIndex];
+                
+                // Устанавливаем символ и цвет статуса согласно CSS схеме
+                switch (target.Status)
                 {
-                    e.Value = "●";
-                    e.CellStyle.ForeColor = Color.FromArgb(255, 152, 0); // Оранжевый
-                }
-                else
-                {
-                    e.Value = "○";
-                    e.CellStyle.ForeColor = Color.White;
+                    case TargetStatus.Completed:
+                        e.Value = "✓";
+                        // --accent-green: #10b981
+                        e.CellStyle.ForeColor = Color.FromArgb(16, 185, 129);
+                        break;
+                    case TargetStatus.Active:
+                        e.Value = "●";
+                        // --accent-gold: #f59e0b
+                        e.CellStyle.ForeColor = Color.FromArgb(245, 158, 11);
+                        break;
+                    default: // Waiting
+                        e.Value = "○";
+                        // --text-muted: #6b7280
+                        e.CellStyle.ForeColor = Color.FromArgb(107, 114, 128);
+                        break;
                 }
                 e.FormattingApplied = true;
             }
@@ -176,17 +323,17 @@ namespace Alicat.UI.Features.Graph.Views
 
         private void DgvTargets_CellPainting(object? sender, DataGridViewCellPaintingEventArgs e)
         {
-            if (e.RowIndex < 0) return;
+            if (e.RowIndex < 0 || e.RowIndex >= _targets.Count) return;
 
-            // Подсветка активной строки (первая строка - оранжевый фон)
-            if (e.RowIndex == 0)
+            // Все строки имеют одинаковый темный фон - подсветка фона удалена
+            // НЕ перезаписываем ForeColor здесь, чтобы не перезаписать цвета статусов из CellFormatting
+            e.CellStyle.BackColor = Color.FromArgb(21, 23, 28);
+            
+            // Устанавливаем ForeColor только для ячеек, которые НЕ являются колонкой Status
+            // (цвета Status устанавливаются в CellFormatting)
+            var column = dgvTargets.Columns[e.ColumnIndex];
+            if (column.Name != "colStatus")
             {
-                e.CellStyle.BackColor = Color.FromArgb(255, 152, 0);
-                e.CellStyle.ForeColor = Color.White;
-            }
-            else
-            {
-                e.CellStyle.BackColor = Color.FromArgb(21, 23, 28);
                 e.CellStyle.ForeColor = Color.White;
             }
         }
@@ -224,6 +371,17 @@ namespace Alicat.UI.Features.Graph.Views
             };
 
             _targets.Add(newTarget);
+            
+            // Обновляем SequenceService, если он установлен
+            if (_sequenceService != null)
+            {
+                _sequenceService.SetTargets(_targets);
+            }
+            else
+            {
+                SaveTargetsToFile(); // Сохраняем в файл настроек (старый способ)
+            }
+            
             UpdateTargetsTable();
             UpdateProgress();
 
@@ -247,6 +405,71 @@ namespace Alicat.UI.Features.Graph.Views
                 StopSequence();
                 _targets.Clear();
                 _currentTargetIndex = -1;
+                
+                // Обновляем SequenceService, если он установлен
+                if (_sequenceService != null)
+                {
+                    _sequenceService.SetTargets(_targets);
+                    _sequenceService.Stop();
+                }
+                else
+                {
+                    SaveTargetsToFile(); // Сохраняем в файл настроек (старый способ)
+                }
+                
+                UpdateTargetsTable();
+                UpdateProgress();
+            }
+        }
+
+        private void BtnEdit_Click(object? sender, EventArgs e)
+        {
+            // Останавливаем последовательность перед редактированием (безопасность)
+            if (_sequenceState != SequenceState.Stopped)
+            {
+                var result = MessageBox.Show(
+                    "Sequence is active. Stop the sequence before editing?",
+                    "Stop Sequence",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (result == DialogResult.Yes)
+                {
+                    StopSequence();
+                }
+                else
+                {
+                    return; // Пользователь отменил
+                }
+            }
+
+            // Получаем тему из GraphForm (используем internal поле)
+            bool isDarkTheme = _isDarkTheme;
+
+            // Открываем модальное окно
+            using var modal = new SequenceEditorModal(_targets, isDarkTheme);
+            if (modal.ShowDialog(this) == DialogResult.OK && modal.DialogResultApplied)
+            {
+                // Применяем изменения
+                _targets = modal.Points;
+                
+                // Обновляем номера
+                for (int i = 0; i < _targets.Count; i++)
+                {
+                    _targets[i].Number = i + 1;
+                    _targets[i].Status = TargetStatus.Waiting; // Все точки сбрасываются в Waiting
+                }
+
+                // Обновляем SequenceService, если он установлен
+                if (_sequenceService != null)
+                {
+                    _sequenceService.SetTargets(_targets);
+                }
+                else
+                {
+                    SaveTargetsToFile(); // Сохраняем в файл настроек (старый способ)
+                }
+                
                 UpdateTargetsTable();
                 UpdateProgress();
             }
@@ -261,44 +484,78 @@ namespace Alicat.UI.Features.Graph.Views
                 return;
             }
 
-            if (_sequenceState == SequenceState.Stopped)
+            // Используем SequenceService, если он установлен
+            if (_sequenceService != null)
             {
-                // Начинаем с первой цели
-                _currentTargetIndex = 0;
-                StartCurrentTarget();
+                _sequenceService.SetTargets(_targets);
+                _sequenceService.Start();
+                SyncTargetsFromService();
             }
-            else if (_sequenceState == SequenceState.Paused)
+            else
             {
-                // Продолжаем с текущей цели
-                ResumeCurrentTarget();
-            }
+                // Старый способ (если сервис не установлен)
+                if (_sequenceState == SequenceState.Stopped)
+                {
+                    _currentTargetIndex = 0;
+                    StartCurrentTarget();
+                }
+                else if (_sequenceState == SequenceState.Paused)
+                {
+                    ResumeCurrentTarget();
+                }
 
-            _sequenceState = SequenceState.Playing;
-            UpdateControlButtons();
+                _sequenceState = SequenceState.Playing;
+                UpdateControlButtons();
+            }
         }
 
         private void BtnPauseTarget_Click(object? sender, EventArgs e)
         {
-            if (_sequenceState == SequenceState.Playing)
+            if (_sequenceService != null)
             {
-                _sequenceState = SequenceState.Paused;
-                if (_holdTimer != null)
-                    _holdTimer.Stop();
-                UpdateControlButtons();
+                _sequenceService.Pause();
+                SyncTargetsFromService();
+            }
+            else
+            {
+                // Старый способ
+                if (_sequenceState == SequenceState.Playing)
+                {
+                    _sequenceState = SequenceState.Paused;
+                    if (_holdTimer != null)
+                        _holdTimer.Stop();
+                    UpdateControlButtons();
+                }
             }
         }
 
         private void BtnStop_Click(object? sender, EventArgs e)
         {
-            StopSequence();
+            if (_sequenceService != null)
+            {
+                _sequenceService.Stop();
+                SyncTargetsFromService();
+            }
+            else
+            {
+                StopSequence();
+            }
         }
 
         private void BtnSkip_Click(object? sender, EventArgs e)
         {
-            if (_sequenceState == SequenceState.Playing || _sequenceState == SequenceState.Paused)
+            if (_sequenceService != null)
             {
-                // Пропускаем текущую цель и переходим к следующей
-                MoveToNextTarget();
+                _sequenceService.Skip();
+                SyncTargetsFromService();
+            }
+            else
+            {
+                // Старый способ
+                if (_sequenceState == SequenceState.Playing || _sequenceState == SequenceState.Paused)
+                {
+                    MoveToNextTarget();
+                }
             }
         }
 
@@ -312,6 +569,7 @@ namespace Alicat.UI.Features.Graph.Views
 
             var target = _targets[_currentTargetIndex];
             target.Status = TargetStatus.Active;
+            SaveTargetsToFile(); // Сохраняем статус
 
             // Устанавливаем целевое давление через обработчик без подтверждения
             if (_targetHandlerSilent != null)
@@ -324,9 +582,10 @@ namespace Alicat.UI.Features.Graph.Views
                 _targetHandler(target.PSI);
             }
 
-            // Запускаем таймер Hold
+            // Запускаем таймер Hold (но он начнет отсчет только после достижения цели)
             _holdDurationSeconds = target.HoldMinutes * 60;
-            _holdStartTime = DateTime.Now;
+            _holdStartTime = DateTime.Now; // Будет сброшен при достижении цели
+            _holdTimerStarted = false; // Таймер начнет отсчет только после достижения цели
             
             if (_holdTimer != null)
             {
@@ -369,6 +628,8 @@ namespace Alicat.UI.Features.Graph.Views
             }
 
             _currentTargetIndex = -1;
+            _holdTimerStarted = false;
+            SaveTargetsToFile(); // Сохраняем изменения
             UpdateTargetsTable();
             UpdateProgress();
             UpdateControlButtons();
@@ -381,6 +642,7 @@ namespace Alicat.UI.Features.Graph.Views
 
             // Помечаем текущую цель как завершенную
             _targets[_currentTargetIndex].Status = TargetStatus.Completed;
+            SaveTargetsToFile(); // Сохраняем статус
 
             // Переходим к следующей цели
             _currentTargetIndex++;
@@ -405,6 +667,15 @@ namespace Alicat.UI.Features.Graph.Views
 
         private void HoldTimer_Tick(object? sender, EventArgs e)
         {
+            // Если используется SequenceService, только обновляем UI
+            if (_sequenceService != null)
+            {
+                SyncTargetsFromService();
+                UpdateHoldTimerFromService();
+                return;
+            }
+
+            // Старый способ (если сервис не установлен)
             if (_currentTargetIndex < 0 || _currentTargetIndex >= _targets.Count)
             {
                 if (_holdTimer != null)
@@ -412,6 +683,39 @@ namespace Alicat.UI.Features.Graph.Views
                 return;
             }
 
+            var target = _targets[_currentTargetIndex];
+            
+            // Получаем текущее давление из DataStore
+            double currentPressure = GetCurrentPressure();
+            
+            // Проверяем, достигли ли мы целевого давления (tolerance ±2 PSI)
+            const double tolerance = 2.0;
+            bool atTarget = Math.Abs(currentPressure - target.PSI) <= tolerance;
+
+            // Если ещё не достигли цели, не запускаем Hold timer
+            if (!atTarget)
+            {
+                _holdTimerStarted = false;
+                // Обновляем таймер с текстом "Approaching..."
+                if (lblHoldTimer != null)
+                {
+                    lblHoldTimer.Text = "Hold:      Approaching...";
+                }
+                if (progressBarHold != null)
+                {
+                    progressBarHold.Value = 0;
+                }
+                return;
+            }
+
+            // Достигли цели - запускаем Hold timer (если ещё не запущен)
+            if (!_holdTimerStarted)
+            {
+                _holdTimerStarted = true;
+                _holdStartTime = DateTime.Now; // Начинаем отсчет с момента достижения цели
+            }
+
+            // Продолжаем Hold timer
             var elapsed = (DateTime.Now - _holdStartTime).TotalSeconds;
             var remaining = _holdDurationSeconds - elapsed;
 
@@ -426,6 +730,290 @@ namespace Alicat.UI.Features.Graph.Views
             else
             {
                 UpdateHoldTimer();
+            }
+        }
+
+        /// <summary>
+        /// Обновляет Hold Timer UI из SequenceService
+        /// </summary>
+        private void UpdateHoldTimerFromService()
+        {
+            if (_sequenceService == null || _sequenceService.CurrentTargetIndex < 0)
+            {
+                if (lblHoldTimer != null)
+                    lblHoldTimer.Text = "Hold:           00:00";
+                if (progressBarHold != null)
+                    progressBarHold.Value = 0;
+                return;
+            }
+
+            // Проверяем, достигли ли цели
+            bool isAtTarget = _sequenceService.IsAtTarget;
+
+            if (!isAtTarget)
+            {
+                // Ещё не достигли цели
+                if (lblHoldTimer != null)
+                    lblHoldTimer.Text = "Hold:      Approaching...";
+                if (progressBarHold != null)
+                    progressBarHold.Value = 0;
+            }
+            else
+            {
+                // Достигли цели - показываем реальное время
+                double remaining = _sequenceService.HoldRemainingSeconds;
+                int totalSeconds = _sequenceService.HoldDurationSeconds;
+
+                if (totalSeconds > 0)
+                {
+                    int minutes = (int)(remaining / 60);
+                    int seconds = (int)(remaining % 60);
+                    
+                    if (lblHoldTimer != null)
+                        lblHoldTimer.Text = $"Hold:         {minutes:D2}:{seconds:D2}";
+
+                    // Обновляем progress bar
+                    if (progressBarHold != null)
+                    {
+                        double progress = (totalSeconds - remaining) / totalSeconds;
+                        int progressValue = (int)(progress * 100);
+                        progressBarHold.Value = Math.Max(0, Math.Min(100, progressValue));
+                    }
+                }
+                else
+                {
+                    if (lblHoldTimer != null)
+                        lblHoldTimer.Text = "Hold:      Holding...";
+                    if (progressBarHold != null)
+                        progressBarHold.Value = 0;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Получает текущее давление из DataStore
+        /// </summary>
+        private double GetCurrentPressure()
+        {
+            // Используем _dataStore из GraphForm (partial class)
+            if (_dataStore?.Points != null && _dataStore.Points.Count > 0)
+            {
+                return _dataStore.Points.Last().Current;
+            }
+            return 0.0;
+        }
+
+        // ====================================================================
+        // СОХРАНЕНИЕ И ЗАГРУЗКА TARGETS
+        // ====================================================================
+
+        /// <summary>
+        /// Получает путь к файлу настроек (используем тот же, что и для других настроек)
+        /// </summary>
+        private static string GetSettingsFilePath()
+        {
+            // Используем папку проекта для хранения настроек
+            string? projectDir = null;
+            string? currentDir = System.IO.Directory.GetCurrentDirectory();
+            
+            if (!string.IsNullOrEmpty(currentDir))
+            {
+                var dir = new System.IO.DirectoryInfo(currentDir);
+                while (dir != null)
+                {
+                    if (dir.GetFiles("*.csproj").Length > 0)
+                    {
+                        projectDir = dir.FullName;
+                        break;
+                    }
+                    dir = dir.Parent;
+                }
+            }
+            
+            if (string.IsNullOrEmpty(projectDir))
+            {
+                string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                string? exeDir = System.IO.Path.GetDirectoryName(exePath);
+                
+                if (exeDir != null && exeDir.Contains("bin"))
+                {
+                    var dir = new System.IO.DirectoryInfo(exeDir);
+                    while (dir != null && dir.Name != "Alicat" && dir.GetFiles("*.csproj").Length == 0)
+                    {
+                        dir = dir.Parent;
+                    }
+                    projectDir = dir?.FullName ?? System.IO.Directory.GetCurrentDirectory();
+                }
+                else
+                {
+                    projectDir = System.IO.Directory.GetCurrentDirectory();
+                }
+            }
+            
+            string settingsDir = System.IO.Path.Combine(projectDir, "Settings");
+            return System.IO.Path.Combine(settingsDir, "settings.json");
+        }
+
+        /// <summary>
+        /// Загружает сохраненные targets из файла настроек
+        /// Восстанавливает статусы, чтобы продолжить выполнение последовательности
+        /// </summary>
+        private void LoadTargetsFromFile()
+        {
+            _targets.Clear();
+            
+            try
+            {
+                string settingsPath = GetSettingsFilePath();
+                if (!System.IO.File.Exists(settingsPath)) return;
+
+                string json = System.IO.File.ReadAllText(settingsPath);
+                var settingsData = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(json);
+
+                if (settingsData.TryGetProperty("SequenceTargets", out var targetsElement))
+                {
+                    if (targetsElement.ValueKind == System.Text.Json.JsonValueKind.Array)
+                    {
+                        foreach (var targetElement in targetsElement.EnumerateArray())
+                        {
+                            double psi = 0;
+                            int holdMinutes = 0;
+                            TargetStatus status = TargetStatus.Waiting;
+
+                            if (targetElement.TryGetProperty("PSI", out var psiElement))
+                                psi = psiElement.GetDouble();
+                            
+                            if (targetElement.TryGetProperty("HoldMinutes", out var holdElement))
+                                holdMinutes = holdElement.GetInt32();
+
+                            // Восстанавливаем статус (если есть)
+                            if (targetElement.TryGetProperty("Status", out var statusElement))
+                            {
+                                string statusStr = statusElement.GetString() ?? "Waiting";
+                                status = statusStr switch
+                                {
+                                    "Active" => TargetStatus.Active,
+                                    "Completed" => TargetStatus.Completed,
+                                    _ => TargetStatus.Waiting
+                                };
+                            }
+
+                            if (psi > 0 && holdMinutes > 0)
+                            {
+                                _targets.Add(new TargetItem
+                                {
+                                    Number = _targets.Count + 1,
+                                    PSI = psi,
+                                    HoldMinutes = holdMinutes,
+                                    Status = status // Восстанавливаем статус
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Не критично, просто не загружаем targets
+                System.Diagnostics.Debug.WriteLine($"Failed to load targets from file: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Сохраняет текущие targets в файл настроек
+        /// Сохраняем PSI, HoldMinutes и Status, чтобы продолжить выполнение после перезапуска
+        /// </summary>
+        private void SaveTargetsToFile()
+        {
+            try
+            {
+                string settingsPath = GetSettingsFilePath();
+                string? directory = System.IO.Path.GetDirectoryName(settingsPath);
+                
+                if (!string.IsNullOrEmpty(directory) && !System.IO.Directory.Exists(directory))
+                {
+                    System.IO.Directory.CreateDirectory(directory);
+                }
+
+                // Читаем существующий файл настроек (если есть) или создаем новый
+                JsonObject? rootObject = null;
+                if (System.IO.File.Exists(settingsPath))
+                {
+                    string existingJson = System.IO.File.ReadAllText(settingsPath);
+                    var parsed = JsonNode.Parse(existingJson);
+                    rootObject = parsed?.AsObject();
+                }
+                
+                if (rootObject == null)
+                {
+                    rootObject = new JsonObject();
+                }
+
+                // Обновляем или добавляем SequenceTargets с сохранением статусов
+                var targetsArray = new JsonArray();
+                foreach (var target in _targets)
+                {
+                    string statusStr = target.Status switch
+                    {
+                        TargetStatus.Active => "Active",
+                        TargetStatus.Completed => "Completed",
+                        _ => "Waiting"
+                    };
+                    
+                    targetsArray.Add(new JsonObject
+                    {
+                        ["PSI"] = target.PSI,
+                        ["HoldMinutes"] = target.HoldMinutes,
+                        ["Status"] = statusStr
+                    });
+                }
+                
+                rootObject["SequenceTargets"] = targetsArray;
+
+                // Сериализуем и сохраняем
+                string json = rootObject.ToJsonString(new System.Text.Json.JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
+                System.IO.File.WriteAllText(settingsPath, json);
+            }
+            catch (Exception ex)
+            {
+                // Не критично, просто не сохраняем
+                System.Diagnostics.Debug.WriteLine($"Failed to save targets to file: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Восстанавливает состояние последовательности после загрузки targets
+        /// Если есть Active target, продолжает выполнение
+        /// </summary>
+        private void RestoreSequenceState()
+        {
+            // Ищем активный target
+            int activeIndex = -1;
+            for (int i = 0; i < _targets.Count; i++)
+            {
+                if (_targets[i].Status == TargetStatus.Active)
+                {
+                    activeIndex = i;
+                    break;
+                }
+            }
+
+            // Если нашли активный target, продолжаем выполнение
+            if (activeIndex >= 0)
+            {
+                _currentTargetIndex = activeIndex;
+                _sequenceState = SequenceState.Playing;
+                
+                // Запускаем таймер, если он еще не запущен
+                if (_holdTimer != null && !_holdTimer.Enabled)
+                {
+                    _holdTimer.Start();
+                    _holdTimerStarted = false; // Таймер еще не начал отсчет (ждем достижения цели)
+                }
             }
         }
 
@@ -454,28 +1042,27 @@ namespace Alicat.UI.Features.Graph.Views
                     target.Number.ToString(),
                     target.PSI.ToString("F1"),
                     holdText,
-                    statusSymbol,
-                    "" // DELETE button
+                    statusSymbol
                 );
 
-                // Устанавливаем оранжевый фон для активной строки
-                if (target.Status == TargetStatus.Active)
+                // Все строки имеют одинаковый темный фон - подсветка фона удалена
+                // Цвет символов статуса устанавливается в DgvTargets_CellFormatting
+                foreach (DataGridViewCell cell in dgvTargets.Rows[i].Cells)
                 {
-                    foreach (DataGridViewCell cell in dgvTargets.Rows[i].Cells)
+                    cell.Style.BackColor = Color.FromArgb(21, 23, 28);
+                    
+                    // Устанавливаем ForeColor только для ячеек, которые НЕ являются колонкой Status
+                    // (цвета Status устанавливаются в CellFormatting)
+                    if (dgvTargets.Columns[cell.ColumnIndex].Name != "colStatus")
                     {
-                        cell.Style.BackColor = Color.FromArgb(255, 152, 0);
-                        cell.Style.ForeColor = Color.White;
-                    }
-                }
-                else
-                {
-                    foreach (DataGridViewCell cell in dgvTargets.Rows[i].Cells)
-                    {
-                        cell.Style.BackColor = Color.FromArgb(21, 23, 28);
                         cell.Style.ForeColor = Color.White;
                     }
                 }
             }
+            
+            // Отключаем автоматическое выделение строк после обновления
+            dgvTargets.ClearSelection();
+            dgvTargets.CurrentCell = null;
         }
 
         private void UpdateProgress()
@@ -544,45 +1131,7 @@ namespace Alicat.UI.Features.Graph.Views
         // ОБРАБОТЧИКИ ТАБЛИЦЫ
         // ====================================================================
 
-        private void DgvTargets_CellContentClick(object? sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
-
-            var column = dgvTargets.Columns[e.ColumnIndex];
-            if (column.Name == "colDelete")
-            {
-                // Нельзя удалять активную цель
-                if (e.RowIndex == _currentTargetIndex && _sequenceState == SequenceState.Playing)
-                {
-                    MessageBox.Show("Cannot delete active target. Stop the sequence first.", "Warning",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                // Удаляем цель
-                _targets.RemoveAt(e.RowIndex);
-                
-                // Обновляем номера
-                for (int i = 0; i < _targets.Count; i++)
-                {
-                    _targets[i].Number = i + 1;
-                }
-
-                // Если удалили текущую цель, останавливаем последовательность
-                if (e.RowIndex == _currentTargetIndex)
-                {
-                    StopSequence();
-                }
-                else if (e.RowIndex < _currentTargetIndex)
-                {
-                    // Если удалили цель до текущей, уменьшаем индекс
-                    _currentTargetIndex--;
-                }
-
-                UpdateTargetsTable();
-                UpdateProgress();
-            }
-        }
+        // Обработчик удаления удален - удаление доступно только в модальном окне Sequence Editor
     }
 }
 

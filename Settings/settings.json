@@ -1,12 +1,12 @@
 {
   "General": {
-    "PressureUnits": "PSIG",
+    "PressureUnits": "PSI",
     "TimeUnits": "s",
     "PollingFrequency": 500
   },
   "Device": {
-    "PressureRamp": 5,
-    "MaxPressure": 200,
+    "PressureRamp": 10,
+    "MaxPressure": 600,
     "MinPressure": 0
   },
   "Control": {
@@ -22,5 +22,6 @@
     "ReadTimeout": 700,
     "WriteTimeout": 700
   },
-  "LastSaved": "2025-12-31T16:13:58.6033469-06:00"
+  "LastSaved": "2026-01-05T13:20:54.778454-06:00",
+  "SequenceTargets": []
 }

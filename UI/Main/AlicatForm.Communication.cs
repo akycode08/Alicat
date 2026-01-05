@@ -30,6 +30,12 @@ namespace Alicat
                     _pollTimer.Stop();
                     _isWaitingForResponse = false; // Сбрасываем флаг при отключении
                     UI_UpdateConnectionStatus(false);
+                    
+                    // Reset graph values to zero on disconnect
+                    if (_graphForm != null && !_graphForm.IsDisposed)
+                    {
+                        _graphForm.ResetToZero();
+                    }
                 }
                 return;
             }
@@ -46,6 +52,12 @@ namespace Alicat
             {
                 _pollTimer.Stop();
                 UI_UpdateConnectionStatus(false);
+                
+                // Reset graph values to zero on disconnect
+                if (_graphForm != null && !_graphForm.IsDisposed)
+                {
+                    _graphForm.ResetToZero();
+                }
             }));
 
             _serial.Attach();

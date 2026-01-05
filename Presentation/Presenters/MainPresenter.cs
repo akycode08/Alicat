@@ -10,6 +10,7 @@ using Alicat.Services.Controllers;
 using Alicat.Services.Data;
 using Alicat.Services.Protocol;
 using Alicat.Services.Serial;
+using Alicat.Services.Sequence;
 using Alicat.UI.Features.Graph.Views;
 using Alicat.UI.Features.Table.Views;
 using Alicat.UI.Features.Terminal.Views;
@@ -41,6 +42,9 @@ namespace Alicat.Presentation.Presenters
         private IRampController? _ramp;
         private readonly Timer _pollTimer = new() { Interval = 500 };
         private bool _isWaitingForResponse = false; // Защита от переполнения при малых интервалах
+        
+        // Sequence service - работает независимо от UI
+        private SequenceService? _sequenceService;
         
         // Connection timeout detection - сторожевой таймер
         private System.Threading.Timer? _watchdogTimer;
@@ -76,6 +80,57 @@ namespace Alicat.Presentation.Presenters
                 {
                     _isWaitingForResponse = true;
                     _serial.Send(AlicatCommands.ReadAls);
+                }
+            };
+
+            // Инициализируем SequenceService - работает независимо от UI
+            InitializeSequenceService();
+        }
+
+        /// <summary>
+        /// Очищает данные последовательности при закрытии программы
+        /// </summary>
+        public void ClearSequenceOnExit()
+        {
+            _sequenceService?.ClearTargetsOnExit();
+        }
+
+        /// <summary>
+        /// Инициализирует SequenceService для работы последовательности в фоне
+        /// </summary>
+        private void InitializeSequenceService()
+        {
+            // Функция для получения текущего давления
+            double GetCurrentPressure()
+            {
+                if (_dataStore is SessionDataStore sessionStore && sessionStore.Points.Count > 0)
+                {
+                    return sessionStore.Points.Last().Current;
+                }
+                return _current;
+            }
+
+            // Функция для установки целевого давления
+            void SetTargetPressure(double target)
+            {
+                SetTargetSilent(target);
+            }
+
+            _sequenceService = new SequenceService(GetCurrentPressure, SetTargetPressure);
+            
+            // Загружаем сохраненные targets при старте
+            _sequenceService.LoadTargetsFromFile();
+            
+            // Подписываемся на события для обновления UI
+            _sequenceService.OnSequenceStateChanged += () =>
+            {
+                // Обновляем GraphForm, если он открыт
+                if (_graphForm != null && !_graphForm.IsDisposed)
+                {
+                    _view.BeginInvoke(() =>
+                    {
+                        _graphForm.RefreshSequenceState();
+                    });
                 }
             };
         }
@@ -148,6 +203,12 @@ namespace Alicat.Presentation.Presenters
                 {
                     _graphForm.SetConnectionInfo(serialClient.PortName, serialClient.BaudRate);
                 }
+                
+                // Update TableForm connection info if open
+                if (_tableForm != null && !_tableForm.IsDisposed && _serial is SerialClient serialClient2)
+                {
+                    _tableForm.SetConnectionInfo(serialClient2.PortName, serialClient2.BaudRate);
+                }
             }));
             _serial.Disconnected += (_, __) => _view.BeginInvoke(new Action(() =>
             {
@@ -159,6 +220,12 @@ namespace Alicat.Presentation.Presenters
                 if (_graphForm != null && !_graphForm.IsDisposed)
                 {
                     _graphForm.SetConnectionInfo(null, null);
+                }
+                
+                // Update TableForm connection info if open
+                if (_tableForm != null && !_tableForm.IsDisposed)
+                {
+                    _tableForm.SetConnectionInfo(null, null);
                 }
             }));
 
@@ -186,6 +253,12 @@ namespace Alicat.Presentation.Presenters
                 if (_graphForm != null && !_graphForm.IsDisposed)
                 {
                     _graphForm.SetConnectionInfo(opened.PortName, opened.BaudRate);
+                }
+                
+                // Update TableForm connection info if open
+                if (_tableForm != null && !_tableForm.IsDisposed)
+                {
+                    _tableForm.SetConnectionInfo(opened.PortName, opened.BaudRate);
                 }
             }
             catch (Exception ex)
@@ -1082,6 +1155,12 @@ namespace Alicat.Presentation.Presenters
                 // Устанавливаем обработчик для GO TO TARGET секции (без подтверждения)
                 _graphForm.SetTargetHandlerSilent((target) => SetTargetSilent(target));
                 
+                // Передаем SequenceService в GraphForm для синхронизации
+                if (_sequenceService != null)
+                {
+                    _graphForm.SetSequenceService(_sequenceService);
+                }
+                
                 // Set emergency vent handler
                 _graphForm.SetEmergencyVentHandler(async () => await EmergencyStop());
                 
@@ -1115,6 +1194,13 @@ namespace Alicat.Presentation.Presenters
                     ?? throw new InvalidOperationException("DataStore must be SessionDataStore instance");
                 _tableForm = new TableForm(sessionDataStore);
                 _tableForm.StartPosition = FormStartPosition.CenterParent;
+                
+                // Set connection info if device is connected
+                if (_serial != null && _serial is SerialClient serialClient)
+                {
+                    _tableForm.SetConnectionInfo(serialClient.PortName, serialClient.BaudRate);
+                }
+                
                 // Синхронизируем тему с главной формой
                 _tableForm.ApplyTheme(_view.IsDarkTheme);
                 _tableForm.Show(parentForm);
@@ -1203,6 +1289,12 @@ namespace Alicat.Presentation.Presenters
                 if (_graphForm != null && !_graphForm.IsDisposed)
                 {
                     _graphForm.SetConnectionInfo(null, null);
+                }
+                
+                // Update TableForm connection info if open
+                if (_tableForm != null && !_tableForm.IsDisposed)
+                {
+                    _tableForm.SetConnectionInfo(null, null);
                 }
             }
             catch (Exception ex)

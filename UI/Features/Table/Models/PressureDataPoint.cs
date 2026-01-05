@@ -16,3 +16,5 @@ namespace Alicat.UI.Features.Table.Models
         public string Comment { get; set; } = "";
     }
 }
+
+

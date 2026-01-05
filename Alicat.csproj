@@ -55,6 +55,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <EmbeddedResource Remove="UI\Features\Graph\Views\GraphForm.HeaderFooter.resx" />
   </ItemGroup>
 
   <ItemGroup>

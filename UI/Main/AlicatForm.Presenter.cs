@@ -224,6 +224,9 @@ namespace Alicat
 
             if (result == DialogResult.Yes)
             {
+                // Очищаем данные последовательности при закрытии программы
+                _presenter?.ClearSequenceOnExit();
+                
                 Application.Exit();
             }
         }

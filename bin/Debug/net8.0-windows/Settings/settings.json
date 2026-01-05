@@ -5,8 +5,8 @@
     "PollingFrequency": 500
   },
   "Device": {
-    "PressureRamp": 5,
-    "MaxPressure": 200,
+    "PressureRamp": 10,
+    "MaxPressure": 600,
     "MinPressure": 0
   },
   "Control": {
@@ -22,5 +22,17 @@
     "ReadTimeout": 700,
     "WriteTimeout": 700
   },
-  "LastSaved": "2025-12-30T16:41:17.2595609-06:00"
+  "LastSaved": "2026-01-05T13:20:54.778454-06:00",
+  "SequenceTargets": [
+    {
+      "PSI": 150,
+      "HoldMinutes": 1,
+      "Status": "Waiting"
+    },
+    {
+      "PSI": 140,
+      "HoldMinutes": 1,
+      "Status": "Waiting"
+    }
+  ]
 }

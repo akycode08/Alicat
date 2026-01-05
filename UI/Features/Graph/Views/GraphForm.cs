@@ -92,19 +92,45 @@ namespace Alicat.UI.Features.Graph.Views
             CreateCursorInfoPanel();
 
             // handlers (duration / grid / thresholds)
-            cmbDuration.SelectedIndexChanged += CmbDuration_SelectedIndexChanged;
-            cmbYStep.SelectedIndexChanged += (_, __) => ApplyGridSettings();
-            chkShowGrid.CheckedChanged += (_, __) => ApplyGridSettings();
-
-            // smoothing (если чекбокс есть на форме)
-            // если у тебя chkSmoothing называется иначе — поменяй имя здесь
-            if (Controls.Find("chkSmoothing", true).Length > 0 && chkSmoothing != null)
+            if (cmbDuration != null)
+                cmbDuration.SelectedIndexChanged += CmbDuration_SelectedIndexChanged;
+            
+            // Right panel handlers
+            if (cmbYStep != null)
+                cmbYStep.SelectedIndexChanged += CmbYStep_SelectedIndexChanged;
+            
+            if (chkShowGrid != null)
+                chkShowGrid.CheckedChanged += ChkShowGrid_CheckedChanged;
+            
+            if (txtMaxThreshold != null)
             {
-                chkSmoothing.CheckedChanged += (_, __) => ApplySmoothing();
+                txtMaxThreshold.TextChanged += Thresholds_TextChanged;
+                txtMaxThreshold.Leave += Thresholds_TextChanged;
             }
-
-            nudMaximum.ValueChanged += Thresholds_ValueChanged;
-            numericUpDown2.ValueChanged += Thresholds_ValueChanged;
+            
+            if (txtMinThreshold != null)
+            {
+                txtMinThreshold.TextChanged += Thresholds_TextChanged;
+                txtMinThreshold.Leave += Thresholds_TextChanged;
+            }
+            
+            if (chkShowTarget != null)
+                chkShowTarget.CheckedChanged += ChkShowTarget_CheckedChanged;
+            
+            if (chkShowMax != null)
+                chkShowMax.CheckedChanged += ChkShowMax_CheckedChanged;
+            
+            if (chkShowMin != null)
+                chkShowMin.CheckedChanged += ChkShowMin_CheckedChanged;
+            
+            if (chkSound != null)
+                chkSound.CheckedChanged += ChkSound_CheckedChanged;
+            
+            if (chkAtTarget != null)
+                chkAtTarget.CheckedChanged += ChkAtTarget_CheckedChanged;
+            
+            if (chkAtMax != null)
+                chkAtMax.CheckedChanged += ChkAtMax_CheckedChanged;
 
             // Load thresholds from settings
             LoadThresholdsFromSettings();
@@ -119,6 +145,7 @@ namespace Alicat.UI.Features.Graph.Views
             ApplyThresholdLines();
             UpdateTargetLine();        // <- target flat line
             UpdateCustomLabelsX();     // <- X labels
+            UpdateSeriesVisibility();  // <- update series visibility based on checkboxes
 
             // cursor events
             chartPressure.MouseDoubleClick += ChartPressure_MouseDoubleClick;
@@ -127,7 +154,7 @@ namespace Alicat.UI.Features.Graph.Views
             chartPressure.MouseDown += ChartPressure_MouseDown;
             chartPressure.MouseUp += ChartPressure_MouseUp;
 
-            ApplySmoothing();
+            // ApplySmoothing(); // Удален chkSmoothing
 
             // Загрузить историю из Store
             LoadHistoryFromStore();
@@ -138,6 +165,9 @@ namespace Alicat.UI.Features.Graph.Views
             // Initialize statistics
             CalculateAndUpdateStatistics();
 
+            // Initialize with zero values
+            UpdateLiveStatus(0, null, "PSIG", false, 0);
+
             // Initialize header and footer
             InitializeHeaderFooter();
 
@@ -146,6 +176,16 @@ namespace Alicat.UI.Features.Graph.Views
 
             // Initialize GO TO TARGET section
             InitializeGoToTarget();
+            
+            // Initialize Hold timer to 00:00
+            if (lblHoldTimer != null)
+            {
+                lblHoldTimer.Text = "Hold:           00:00";
+            }
+            if (progressBarHold != null)
+            {
+                progressBarHold.Value = 0;
+            }
             
             // Устанавливаем обработчик для установки целевого давления
             // (будет установлен извне через SetTargetHandler)
@@ -188,18 +228,13 @@ namespace Alicat.UI.Features.Graph.Views
                 cmbDuration.Items.Add(d.Name);
             cmbDuration.SelectedIndex = 0;
 
-            // X step AUTO (disabled)
-            cmbXStep.Items.Clear();
-            cmbXStep.Items.Add("AUTO (10s)");
-            cmbXStep.SelectedIndex = 0;
-            cmbXStep.Enabled = false;
-
-            // Y step
-            cmbYStep.Items.Clear();
-            cmbYStep.Items.AddRange(new object[] { "10", "20", "50", "100" });
-            cmbYStep.SelectedIndex = 1;
-
-            chkShowGrid.Checked = true;
+            // Y Step dropdown
+            if (cmbYStep != null)
+            {
+                cmbYStep.Items.Clear();
+                cmbYStep.Items.AddRange(new object[] { "10", "20", "50", "100" });
+                cmbYStep.SelectedIndex = 1; // Default: 20
+            }
         }
 
         private double GetDurationSeconds(int index)
@@ -225,9 +260,10 @@ namespace Alicat.UI.Features.Graph.Views
 
         private void UpdateGridStepXDisplay()
         {
-            cmbXStep.Items.Clear();
-            cmbXStep.Items.Add($"AUTO ({FormatGridStep(_gridStepXSeconds)})");
-            cmbXStep.SelectedIndex = 0;
+            // Удален cmbXStep
+            // cmbXStep.Items.Clear();
+            // cmbXStep.Items.Add($"AUTO ({FormatGridStep(_gridStepXSeconds)})");
+            // cmbXStep.SelectedIndex = 0;
         }
 
         // =========================
@@ -452,20 +488,21 @@ namespace Alicat.UI.Features.Graph.Views
 
         private void ApplySmoothing()
         {
-            // если чекбокса нет — просто ничего
-            if (Controls.Find("chkSmoothing", true).Length == 0 || chkSmoothing == null) return;
-
-            bool smooth = chkSmoothing.Checked;
+            // Удален chkSmoothing
+            return;
+            // if (Controls.Find("chkSmoothing", true).Length == 0 || chkSmoothing == null) return;
+            // bool smooth = chkSmoothing.Checked;
 
             // Update LineSmoothness for current series
-            if (chartPressure.Series != null && chartPressure.Series.Any())
-            {
-                var currentSeries = chartPressure.Series.FirstOrDefault() as LineSeries<ObservablePoint>;
-                if (currentSeries != null)
-                {
-                    currentSeries.LineSmoothness = smooth ? 0.2 : 0; // 0..1 (меньше = спокойнее)
-                }
-            }
+            // Smoothing functionality removed - chkSmoothing was deleted
+            // if (chartPressure.Series != null && chartPressure.Series.Any())
+            // {
+            //     var currentSeries = chartPressure.Series.FirstOrDefault() as LineSeries<ObservablePoint>;
+            //     if (currentSeries != null)
+            //     {
+            //         currentSeries.LineSmoothness = smooth ? 0.2 : 0; // 0..1 (меньше = спокойнее)
+            //     }
+            // }
         }
 
         // =========================
@@ -506,6 +543,71 @@ namespace Alicat.UI.Features.Graph.Views
                 : "PSIG";
 
             UpdateLiveStatus(currentPressure, targetPressure, unit, false, rate);
+        }
+
+        // =========================
+        // Reset all values to zero (called on disconnect)
+        // =========================
+        public void ResetToZero()
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(ResetToZero));
+                return;
+            }
+
+            if (chartPressure.IsDisposed) return;
+
+            // Clear all series
+            _seriesCurrent.Clear();
+            _seriesTarget.Clear();
+            _seriesMin.Clear();
+            _seriesMax.Clear();
+            _cursorMarker.Clear();
+
+            // Reset time
+            _timeSeconds = 0;
+
+            // Clear update buffer
+            lock (_updateBuffer)
+            {
+                _updateBuffer.Clear();
+            }
+
+            // Reset target value cache
+            _lastTargetValue = null;
+
+            // Update UI with zero values
+            UpdateLiveStatus(0, null, "PSIG", false, 0);
+            
+            // Update statistics with zero values
+            CalculateAndUpdateStatistics();
+
+            // Update target line (will be empty now)
+            UpdateTargetLine();
+
+            // Update threshold lines
+            ApplyThresholdLines();
+            
+            // Reset Hold timer
+            if (lblHoldTimer != null)
+            {
+                lblHoldTimer.Text = "Hold:           00:00";
+            }
+            if (progressBarHold != null)
+            {
+                progressBarHold.Value = 0;
+            }
+            
+            // Reset threshold text boxes to 0
+            if (txtMaxThreshold != null)
+            {
+                txtMaxThreshold.Text = "0";
+            }
+            if (txtMinThreshold != null)
+            {
+                txtMinThreshold.Text = "0";
+            }
         }
 
         // =========================
@@ -684,7 +786,8 @@ namespace Alicat.UI.Features.Graph.Views
             var yAxis = chartPressure.YAxes.FirstOrDefault();
             if (xAxis == null || yAxis == null) return;
 
-            bool showGrid = chkShowGrid.Checked;
+            // Get grid visibility from checkbox
+            bool showGrid = chkShowGrid?.Checked ?? true;
 
             // Update grid visibility
             if (showGrid)
@@ -708,12 +811,92 @@ namespace Alicat.UI.Features.Graph.Views
         // =========================
         // Thresholds (LiveCharts2)
         // =========================
-        private void Thresholds_ValueChanged(object? sender, EventArgs e)
+        private void Thresholds_TextChanged(object? sender, EventArgs e)
         {
             // Save thresholds to settings
             SaveThresholdsToSettings();
             // Apply threshold lines to chart
             ApplyThresholdLines();
+        }
+        
+        // =========================
+        // Y Step dropdown handler
+        // =========================
+        private void CmbYStep_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            ApplyGridSettings();
+        }
+        
+        // =========================
+        // Show Grid checkbox handler
+        // =========================
+        private void ChkShowGrid_CheckedChanged(object? sender, EventArgs e)
+        {
+            ApplyGridSettings();
+        }
+        
+        // =========================
+        // Show Target checkbox handler
+        // =========================
+        private void ChkShowTarget_CheckedChanged(object? sender, EventArgs e)
+        {
+            UpdateSeriesVisibility();
+        }
+        
+        // =========================
+        // Show Max checkbox handler
+        // =========================
+        private void ChkShowMax_CheckedChanged(object? sender, EventArgs e)
+        {
+            UpdateSeriesVisibility();
+        }
+        
+        // =========================
+        // Show Min checkbox handler
+        // =========================
+        private void ChkShowMin_CheckedChanged(object? sender, EventArgs e)
+        {
+            UpdateSeriesVisibility();
+        }
+        
+        // =========================
+        // Update series visibility based on checkboxes
+        // =========================
+        private void UpdateSeriesVisibility()
+        {
+            if (_lineSeriesTarget != null)
+            {
+                _lineSeriesTarget.IsVisible = chkShowTarget?.Checked ?? true;
+            }
+            
+            if (_lineSeriesMax != null)
+            {
+                _lineSeriesMax.IsVisible = chkShowMax?.Checked ?? true;
+            }
+            
+            if (_lineSeriesMin != null)
+            {
+                _lineSeriesMin.IsVisible = chkShowMin?.Checked ?? true;
+            }
+        }
+        
+        // =========================
+        // Sound alerts handlers
+        // =========================
+        private void ChkSound_CheckedChanged(object? sender, EventArgs e)
+        {
+            // Sound alerts enabled/disabled
+            // This will be used by alert logic
+        }
+        
+        private void ChkAtTarget_CheckedChanged(object? sender, EventArgs e)
+        {
+            // Alert when at target enabled/disabled
+        }
+        
+        private void ChkAtMax_CheckedChanged(object? sender, EventArgs e)
+        {
+            // Alert when at max enabled/disabled
         }
 
         /// <summary>
@@ -721,44 +904,17 @@ namespace Alicat.UI.Features.Graph.Views
         /// </summary>
         private void LoadThresholdsFromSettings()
         {
-            var settings = FormOptions.AppOptions.Current;
+            // Always use default value 0 (as per user requirement)
+            // Settings are not loaded to ensure default is always 0
+            if (txtMaxThreshold != null)
+            {
+                txtMaxThreshold.Text = "0";
+            }
             
-            // Временно отключаем обработчики событий, чтобы не сохранять при загрузке
-            nudMaximum.ValueChanged -= Thresholds_ValueChanged;
-            numericUpDown2.ValueChanged -= Thresholds_ValueChanged;
-
-            // Обновляем максимальные значения на основе настроек
-            if (settings.MaxPressure.HasValue)
+            if (txtMinThreshold != null)
             {
-                // Увеличиваем Maximum, если значение из настроек больше текущего Maximum
-                decimal maxValue = (decimal)settings.MaxPressure.Value;
-                if (maxValue > nudMaximum.Maximum)
-                {
-                    nudMaximum.Maximum = maxValue + 100; // Добавляем запас
-                }
-                if (maxValue >= nudMaximum.Minimum)
-                {
-                    nudMaximum.Value = maxValue;
-                }
+                txtMinThreshold.Text = "0";
             }
-
-            if (settings.MinPressure.HasValue)
-            {
-                decimal minValue = (decimal)settings.MinPressure.Value;
-                // Увеличиваем Maximum для Minimum, если нужно
-                if (minValue > numericUpDown2.Maximum)
-                {
-                    numericUpDown2.Maximum = minValue + 100; // Добавляем запас
-                }
-                if (minValue >= numericUpDown2.Minimum)
-                {
-                    numericUpDown2.Value = minValue;
-                }
-            }
-
-            // Включаем обработчики обратно
-            nudMaximum.ValueChanged += Thresholds_ValueChanged;
-            numericUpDown2.ValueChanged += Thresholds_ValueChanged;
         }
 
         /// <summary>
@@ -767,11 +923,18 @@ namespace Alicat.UI.Features.Graph.Views
         private void SaveThresholdsToSettings()
         {
             var settings = FormOptions.AppOptions.Current.Clone();
-            settings.MaxPressure = (double)nudMaximum.Value;
-            settings.MinPressure = (double)numericUpDown2.Value;
+            
+            if (txtMaxThreshold != null && double.TryParse(txtMaxThreshold.Text, out double maxVal))
+            {
+                settings.MaxPressure = maxVal;
+            }
+            
+            if (txtMinThreshold != null && double.TryParse(txtMinThreshold.Text, out double minVal))
+            {
+                settings.MinPressure = minVal;
+            }
+            
             FormOptions.AppOptions.Current = settings;
-
-            // Вызываем делегат для сохранения настроек (если auto-save включен)
             _onThresholdsChanged?.Invoke();
         }
 
@@ -814,8 +977,19 @@ namespace Alicat.UI.Features.Graph.Views
                 x2 = Math.Max(x1 + 1, _timeSeconds);
             }
 
-            double maxVal = (double)nudMaximum.Value;
-            double minVal = (double)numericUpDown2.Value;
+            // Get values from TextBox controls
+            double maxVal = 0; // Default value
+            double minVal = 0; // Default value
+            
+            if (txtMaxThreshold != null && double.TryParse(txtMaxThreshold.Text, out double parsedMax))
+            {
+                maxVal = parsedMax;
+            }
+            
+            if (txtMinThreshold != null && double.TryParse(txtMinThreshold.Text, out double parsedMin))
+            {
+                minVal = parsedMin;
+            }
 
             _seriesMax.Clear();
             _seriesMax.Add(new ObservablePoint(x1, maxVal));

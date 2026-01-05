@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Windows.Forms;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO.Ports;
 
 namespace Alicat.UI.Features.Graph.Views
@@ -120,10 +121,7 @@ namespace Alicat.UI.Features.Graph.Views
             UpdateFooterStatistics();
         }
 
-        // Checkboxes for legend visibility control
-        private CheckBox? _chkLegendTarget;
-        private CheckBox? _chkLegendMin;
-        private CheckBox? _chkLegendMax;
+        // Checkboxes for legend visibility control - removed
 
         // Header connection status panel
         private Panel? _connectionStatusPanel;
@@ -142,7 +140,7 @@ namespace Alicat.UI.Features.Graph.Views
             // Clear flowLegend to rebuild in correct order
             flowLegend.Controls.Clear();
 
-            // Update legend labels to show colored squares
+            // Update legend labels to show colored squares (no checkboxes)
             if (lblLegendCurrent != null)
             {
                 lblLegendCurrent.Text = "Current";
@@ -154,7 +152,7 @@ namespace Alicat.UI.Features.Graph.Views
                 flowLegend.Controls.Add(lblLegendCurrent);
             }
 
-            // Target: Add checkbox before label
+            // Target: Add label only (no checkbox)
             if (lblLegendTarget != null)
             {
                 lblLegendTarget.Text = "Target";
@@ -163,32 +161,10 @@ namespace Alicat.UI.Features.Graph.Views
                     using var brush = new SolidBrush(Color.FromArgb(240, 200, 0)); // Yellow
                     e.Graphics.FillRectangle(brush, 0, 2, 12, 12);
                 };
-                
-                // Create checkbox for Target
-                _chkLegendTarget = new CheckBox
-                {
-                    AutoSize = true,
-                    Checked = true, // Visible by default
-                    Margin = new Padding(8, 0, 0, 0),
-                    Padding = new Padding(0),
-                    Size = new Size(15, 15),
-                    UseVisualStyleBackColor = false,
-                    BackColor = Color.FromArgb(40, 43, 52),
-                    ForeColor = Color.White
-                };
-                _chkLegendTarget.CheckedChanged += (s, e) =>
-                {
-                    if (_lineSeriesTarget != null)
-                    {
-                        _lineSeriesTarget.IsVisible = _chkLegendTarget.Checked;
-                    }
-                };
-                
-                flowLegend.Controls.Add(_chkLegendTarget);
                 flowLegend.Controls.Add(lblLegendTarget);
             }
 
-            // Min: Add checkbox before label
+            // Min: Add label only (no checkbox)
             if (lblLegendMin != null)
             {
                 lblLegendMin.Text = "Min";
@@ -197,32 +173,10 @@ namespace Alicat.UI.Features.Graph.Views
                     using var brush = new SolidBrush(Color.FromArgb(76, 175, 80)); // Green
                     e.Graphics.FillRectangle(brush, 0, 2, 12, 12);
                 };
-                
-                // Create checkbox for Min
-                _chkLegendMin = new CheckBox
-                {
-                    AutoSize = true,
-                    Checked = true, // Visible by default
-                    Margin = new Padding(8, 0, 0, 0),
-                    Padding = new Padding(0),
-                    Size = new Size(15, 15),
-                    UseVisualStyleBackColor = false,
-                    BackColor = Color.FromArgb(40, 43, 52),
-                    ForeColor = Color.White
-                };
-                _chkLegendMin.CheckedChanged += (s, e) =>
-                {
-                    if (_lineSeriesMin != null)
-                    {
-                        _lineSeriesMin.IsVisible = _chkLegendMin.Checked;
-                    }
-                };
-                
-                flowLegend.Controls.Add(_chkLegendMin);
                 flowLegend.Controls.Add(lblLegendMin);
             }
 
-            // Max: Add checkbox before label
+            // Max: Add label only (no checkbox)
             if (lblLegendMax != null)
             {
                 lblLegendMax.Text = "Max";
@@ -231,28 +185,6 @@ namespace Alicat.UI.Features.Graph.Views
                     using var brush = new SolidBrush(Color.FromArgb(244, 67, 54)); // Red
                     e.Graphics.FillRectangle(brush, 0, 2, 12, 12);
                 };
-                
-                // Create checkbox for Max
-                _chkLegendMax = new CheckBox
-                {
-                    AutoSize = true,
-                    Checked = true, // Visible by default
-                    Margin = new Padding(8, 0, 0, 0),
-                    Padding = new Padding(0),
-                    Size = new Size(15, 15),
-                    UseVisualStyleBackColor = false,
-                    BackColor = Color.FromArgb(40, 43, 52),
-                    ForeColor = Color.White
-                };
-                _chkLegendMax.CheckedChanged += (s, e) =>
-                {
-                    if (_lineSeriesMax != null)
-                    {
-                        _lineSeriesMax.IsVisible = _chkLegendMax.Checked;
-                    }
-                };
-                
-                flowLegend.Controls.Add(_chkLegendMax);
                 flowLegend.Controls.Add(lblLegendMax);
             }
         }
@@ -514,18 +446,19 @@ namespace Alicat.UI.Features.Graph.Views
         
         private void btnGoTarget_Click(object? sender, EventArgs e)
         {
-            if (txtTargetValue == null) return;
-
-            if (double.TryParse(txtTargetValue.Text, System.Globalization.NumberStyles.Float, 
-                System.Globalization.CultureInfo.InvariantCulture, out double target))
-            {
-                _targetHandler?.Invoke(target);
-            }
-            else
-            {
-                MessageBox.Show("Invalid target value. Please enter a number.", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            // Удален txtTargetValue
+            // if (txtTargetValue == null) return;
+            // if (double.TryParse(txtTargetValue.Text, System.Globalization.NumberStyles.Float, 
+            //     System.Globalization.CultureInfo.InvariantCulture, out double target))
+            // {
+            //     _targetHandler?.Invoke(target);
+            // }
+            // else
+            // {
+            //     MessageBox.Show("Invalid target value. Please enter a number.", "Error",
+            //         MessageBoxButtons.OK, MessageBoxIcon.Error);
+            // }
+            return; // Функциональность отключена
         }
 
         private void btnFullscreenHeader_Click(object? sender, EventArgs e)
@@ -715,6 +648,37 @@ namespace Alicat.UI.Features.Graph.Views
             _headerTimer?.Stop();
             _headerTimer?.Dispose();
             base.OnFormClosed(e);
+        }
+
+        private void PanelAlertsIcon_Paint(object? sender, PaintEventArgs e)
+        {
+            if (panelAlertsIcon == null || sender != panelAlertsIcon) return;
+
+            var panel = panelAlertsIcon;
+            var g = e.Graphics;
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            // Золотистый цвет для колокольчика
+            using (var brush = new SolidBrush(Color.FromArgb(255, 214, 69))) // Golden yellow
+            {
+                // Рисуем колокольчик (упрощенная форма)
+                var rect = new Rectangle(2, 2, panel.Width - 4, panel.Height - 4);
+                
+                // Основная часть колокольчика (треугольник с закругленным низом)
+                var path = new System.Drawing.Drawing2D.GraphicsPath();
+                path.AddEllipse(rect.X, rect.Y + rect.Height / 3, rect.Width, rect.Height * 2 / 3);
+                path.AddPolygon(new Point[] {
+                    new Point(rect.X + rect.Width / 2, rect.Y),
+                    new Point(rect.X + rect.Width / 4, rect.Y + rect.Height / 3),
+                    new Point(rect.X + rect.Width * 3 / 4, rect.Y + rect.Height / 3)
+                });
+                
+                g.FillPath(brush, path);
+                
+                // Язычок колокольчика (маленький круг внизу)
+                var tongueRect = new Rectangle(rect.X + rect.Width / 2 - 2, rect.Y + rect.Height - 4, 4, 4);
+                g.FillEllipse(brush, tongueRect);
+            }
         }
     }
 }

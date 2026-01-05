@@ -141,8 +141,9 @@ namespace Alicat.UI.Features.Graph.Views
         /// </summary>
         private StatusLevel DetermineStatusLevel(double currentPressure, double? targetPressure)
         {
-            double? maxPressure = nudMaximum?.Value != null ? (double?)nudMaximum.Value : null;
-            double? minPressure = numericUpDown2?.Value != null ? (double?)numericUpDown2.Value : null;
+            // Удалены nudMaximum и numericUpDown2 - используем значения по умолчанию
+            double? maxPressure = 130; // Значение по умолчанию
+            double? minPressure = 10; // Значение по умолчанию
 
             // ALERT: превышение 95% от максимума или ниже минимума
             if (maxPressure.HasValue && currentPressure >= maxPressure.Value * 0.95)

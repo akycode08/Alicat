@@ -132,6 +132,7 @@ namespace Alicat.UI.Features.Table.Views
             LoadSettings();
             
             // Установить темную тему по умолчанию
+            _isDarkTheme = true; // Устанавливаем флаг темы
             _currentTheme = _darkTheme;
             ApplyTheme();
             
@@ -218,6 +219,7 @@ namespace Alicat.UI.Features.Table.Views
             dgvTable.MultiSelect = true;
             dgvTable.EnableHeadersVisualStyles = false;
             dgvTable.RowHeadersVisible = false;
+            dgvTable.AllowUserToResizeRows = false; // Запретить изменение высоты строк
             
             // Cell double click
             dgvTable.CellDoubleClick += DgvTable_CellDoubleClick;
@@ -225,6 +227,8 @@ namespace Alicat.UI.Features.Table.Views
             dgvTable.CellPainting += DgvTable_CellPainting;
             dgvTable.RowPostPaint += DgvTable_RowPostPaint;
             dgvTable.CellFormatting += DgvTable_CellFormatting;
+            dgvTable.SelectionChanged += DgvTable_SelectionChanged;
+            dgvTable.MouseDown += DgvTable_MouseDown;
         }
 
         private void ApplyTheme()
@@ -376,9 +380,13 @@ namespace Alicat.UI.Features.Table.Views
         {
             const double tolerance = 0.5;
             
-            if (pressure > _maxPressure)
+            // Всегда читаем актуальные значения из настроек
+            double maxPressure = FormOptions.AppOptions.Current.MaxPressure ?? 200.0;
+            double minPressure = FormOptions.AppOptions.Current.MinPressure ?? 0.0;
+            
+            if (pressure > maxPressure)
                 return "Above Max";
-            if (pressure < _minPressure)
+            if (pressure < minPressure)
                 return "Below Min";
             if (Math.Abs(pressure - setpoint) <= tolerance)
                 return "At Target";
@@ -388,20 +396,28 @@ namespace Alicat.UI.Features.Table.Views
         private void LoadHistoryFromStore()
         {
             _dataSource.Clear();
+            _lastLoggedPressure = null;
+            _lastLoggedSetpoint = null;
+            _targetReached = false;
+            
             int index = 1;
             foreach (var point in _dataStore.Points)
             {
-                var dataPoint = new PressureDataPoint
+                // Применяем ту же логику фильтрации, что и для новых точек
+                if (ShouldLogPoint(point))
                 {
-                    Index = index++,
-                    Time = point.Timestamp,
-                    Pressure = point.Current,
-                    Setpoint = point.Target,
-                    Rate = point.RampSpeed,
-                    Status = CalculateStatus(point.Current, point.Target),
-                    Comment = point.Event ?? ""
-                };
-                _dataSource.Add(dataPoint);
+                    var dataPoint = new PressureDataPoint
+                    {
+                        Index = index++,
+                        Time = point.Timestamp,
+                        Pressure = point.Current,
+                        Setpoint = point.Target,
+                        Rate = point.RampSpeed,
+                        Status = CalculateStatus(point.Current, point.Target),
+                        Comment = point.Event ?? ""
+                    };
+                    _dataSource.Add(dataPoint);
+                }
             }
             UpdateStatistics();
         }
@@ -445,34 +461,46 @@ namespace Alicat.UI.Features.Table.Views
 
         private double? _lastLoggedPressure = null;
         private double? _lastLoggedSetpoint = null;
+        private bool _targetReached = false; // Флаг: достигли ли мы текущего setpoint
 
         private bool ShouldLogPoint(DataPointModel point)
         {
-            double threshold = double.TryParse(txtThreshold.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out double t) ? t : 0.10;
-
-            if (_lastLoggedPressure == null)
+            const double tolerance = 0.1; // Допуск для "достижения цели"
+            
+            if (_lastLoggedSetpoint == null)
             {
+                // Первая точка - всегда записываем
                 _lastLoggedPressure = point.Current;
                 _lastLoggedSetpoint = point.Target;
+                _targetReached = Math.Abs(point.Current - point.Target) <= tolerance;
                 return true;
             }
 
-            if (_lastLoggedSetpoint.HasValue && Math.Abs(point.Target - _lastLoggedSetpoint.Value) > 0.01)
+            // Если setpoint изменился - начинаем записывать снова
+            if (Math.Abs(point.Target - _lastLoggedSetpoint.Value) > 0.01)
             {
                 _lastLoggedPressure = point.Current;
                 _lastLoggedSetpoint = point.Target;
-                return true;
+                _targetReached = Math.Abs(point.Current - point.Target) <= tolerance;
+                return true; // Записываем точку с новым setpoint
             }
 
-            double delta = Math.Abs(point.Current - _lastLoggedPressure.Value);
-            if (delta >= threshold)
+            // Setpoint не изменился
+            if (_targetReached)
             {
-                _lastLoggedPressure = point.Current;
-                _lastLoggedSetpoint = point.Target;
-                return true;
+                // Уже достигли цели и setpoint не менялся - не записываем
+                return false;
             }
 
-            return false;
+            // Движемся к цели - записываем
+            // Проверяем, достигли ли мы цели сейчас
+            if (Math.Abs(point.Current - point.Target) <= tolerance)
+            {
+                _targetReached = true;
+            }
+            
+            _lastLoggedPressure = point.Current;
+            return true; // Записываем пока движемся к цели
         }
 
         private void DgvTable_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
@@ -483,12 +511,14 @@ namespace Alicat.UI.Features.Table.Views
             var dataPoint = row.DataBoundItem as PressureDataPoint;
             if (dataPoint == null) return;
 
-            string info = $"{dataPoint.Time:HH:mm:ss.ff} — {dataPoint.Pressure:F2} → {dataPoint.Setpoint:F2}";
-            using var dlg = new AddCommentForm(info, dataPoint.Comment);
+            string rowInfo = $"{dataPoint.Time:HH:mm:ss.ff} — {dataPoint.Pressure:F2} → {dataPoint.Setpoint:F2}";
+            string existingComment = dataPoint.Comment ?? "";
+            
+            using var dlg = new CommentDialog(rowInfo, existingComment, _currentTheme);
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog(this) == DialogResult.OK)
             {
-                dataPoint.Comment = dlg.CommentText;
+                dataPoint.Comment = dlg.Comment;
                 _dataSource.ResetItem(e.RowIndex);
                 UpdateStatistics();
             }
@@ -585,10 +615,36 @@ namespace Alicat.UI.Features.Table.Views
 
         private void DgvTable_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
-            // Ramp Speed column - color coding
-            if (e.ColumnIndex == colRampSpeed.Index && e.RowIndex >= 0)
+            if (e.RowIndex < 0) return;
+            
+            var row = dgvTable.Rows[e.RowIndex];
+            bool isSelected = row.Selected;
+            
+            // Устанавливаем фон строки в зависимости от четности и выделения
+            if (isSelected)
             {
-                var dataPoint = dgvTable.Rows[e.RowIndex].DataBoundItem as PressureDataPoint;
+                // Выделенная строка - используем цвет выделения
+                e.CellStyle.BackColor = _currentTheme.BgRowSelected;
+            }
+            else
+            {
+                // Невыделенная строка - чередующийся фон
+                if (e.RowIndex % 2 == 0)
+                {
+                    // Четные строки - основной фон
+                    e.CellStyle.BackColor = _currentTheme.BgPanel;
+                }
+                else
+                {
+                    // Нечетные строки - альтернативный фон
+                    e.CellStyle.BackColor = _currentTheme.BgRowOdd;
+                }
+            }
+            
+            // Ramp Speed column - color coding
+            if (e.ColumnIndex == colRampSpeed.Index)
+            {
+                var dataPoint = row.DataBoundItem as PressureDataPoint;
                 if (dataPoint != null)
                 {
                     Color textColor = _currentTheme.TextMuted;
@@ -602,47 +658,24 @@ namespace Alicat.UI.Features.Table.Views
             }
             
             // Pressure column - cyan
-            if (e.ColumnIndex == colPressure.Index && e.RowIndex >= 0)
+            if (e.ColumnIndex == colPressure.Index)
             {
                 e.CellStyle.ForeColor = _currentTheme.AccentCyan;
                 e.CellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             }
             
             // Setpoint column - gold
-            if (e.ColumnIndex == colSetpoint.Index && e.RowIndex >= 0)
+            if (e.ColumnIndex == colSetpoint.Index)
             {
                 e.CellStyle.ForeColor = _currentTheme.AccentGold;
                 e.CellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             }
             
-            // Status column - badge background
-            if (e.ColumnIndex == colStatus.Index && e.RowIndex >= 0)
-            {
-                var dataPoint = dgvTable.Rows[e.RowIndex].DataBoundItem as PressureDataPoint;
-                if (dataPoint != null)
-                {
-                    Color bgColor = Color.Transparent;
-                    switch (dataPoint.Status)
-                    {
-                        case "Normal":
-                            bgColor = Color.FromArgb(30, _currentTheme.AccentGreen.R, _currentTheme.AccentGreen.G, _currentTheme.AccentGreen.B);
-                            break;
-                        case "At Target":
-                            bgColor = Color.FromArgb(30, _currentTheme.AccentGold.R, _currentTheme.AccentGold.G, _currentTheme.AccentGold.B);
-                            break;
-                        case "Above Max":
-                            bgColor = Color.FromArgb(30, _currentTheme.AccentRed.R, _currentTheme.AccentRed.G, _currentTheme.AccentRed.B);
-                            break;
-                        case "Below Min":
-                            bgColor = Color.FromArgb(30, _currentTheme.AccentBlue.R, _currentTheme.AccentBlue.G, _currentTheme.AccentBlue.B);
-                            break;
-                    }
-                    e.CellStyle.BackColor = bgColor;
-                }
-            }
+            // Status column - uses default row background like other columns
+            // (removed custom background color to match other columns)
             
             // Comment column - italic, gray
-            if (e.ColumnIndex == colComment.Index && e.RowIndex >= 0)
+            if (e.ColumnIndex == colComment.Index)
             {
                 e.CellStyle.ForeColor = _currentTheme.TextSecondary;
                 e.CellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Italic);
@@ -667,16 +700,10 @@ namespace Alicat.UI.Features.Table.Views
                 }
             }
 
-            // Format Ramp Speed column with arrow
+            // Format Ramp Speed column
             if (e.ColumnIndex == colRampSpeed.Index)
             {
-                string arrow = "→";
-                if (dataPoint.Rate > 0.1)
-                    arrow = "↗";
-                else if (dataPoint.Rate < -0.1)
-                    arrow = "↘";
-                
-                e.Value = $"{arrow} {Math.Abs(dataPoint.Rate):F2} PSI/s";
+                e.Value = $"{dataPoint.Rate:F2} PSI/s";
                 e.FormattingApplied = true;
             }
         }
@@ -810,6 +837,7 @@ namespace Alicat.UI.Features.Table.Views
                 _dataSource.Clear();
                 _lastLoggedPressure = null;
                 _lastLoggedSetpoint = null;
+                _targetReached = false;
                 UpdateStatistics();
             }
         }
@@ -897,6 +925,24 @@ namespace Alicat.UI.Features.Table.Views
                         : Color.FromArgb(229, 231, 235); // Light muted for light theme
                 }
                 panelConnectionStatus.Invalidate(); // Trigger repaint to draw circle and text
+            }
+        }
+
+        private void DgvTable_SelectionChanged(object? sender, EventArgs e)
+        {
+            // Принудительно обновляем стили строк после изменения выделения
+            if (dgvTable != null)
+            {
+                dgvTable.Invalidate();
+            }
+        }
+
+        private void DgvTable_MouseDown(object? sender, MouseEventArgs e)
+        {
+            // ПКМ в любом месте - снимаем выделение
+            if (e.Button == MouseButtons.Right)
+            {
+                dgvTable.ClearSelection();
             }
         }
 
