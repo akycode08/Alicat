@@ -80,7 +80,8 @@ namespace Alicat.UI.Features.Graph.Views
             this.dgvPoints.RowHeadersVisible = false;
             this.dgvPoints.RowTemplate.Height = 24;
             this.dgvPoints.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.dgvPoints.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvPoints.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
+            this.dgvPoints.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.None;
             this.dgvPoints.Size = new System.Drawing.Size(224, 145);
             this.dgvPoints.TabIndex = 1;
             this.dgvPoints.EnableHeadersVisualStyles = false;

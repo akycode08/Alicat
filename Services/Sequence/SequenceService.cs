@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
+using System.Windows.Forms;
 using Alicat.UI.Features.Graph.Views;
 
 namespace Alicat.Services.Sequence
@@ -456,8 +457,43 @@ namespace Alicat.Services.Sequence
             target.Status = TargetStatus.Active;
             SaveTargetsToFile(); // Сохраняем статус
 
-            // Устанавливаем целевое давление
-            _setTargetPressure(target.PSI);
+            // Устанавливаем целевое давление с обработкой ошибок
+            try
+            {
+                _setTargetPressure(target.PSI);
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("Device is not connected") || ex.Message.Contains("not connected"))
+            {
+                // Устройство отключено - останавливаем последовательность
+                System.Diagnostics.Debug.WriteLine($"Sequence stopped: Device disconnected at target {target.PSI} PSI");
+                Stop();
+                OnSequenceStateChanged?.Invoke();
+                
+                // Показываем сообщение пользователю (если есть UI)
+                System.Windows.Forms.MessageBox.Show(
+                    $"Sequence stopped: Device disconnected while setting target {target.PSI:F1} PSI.\n\n" +
+                    "Please reconnect the device and restart the sequence.",
+                    "Device Disconnected",
+                    System.Windows.Forms.MessageBoxButtons.OK,
+                    System.Windows.Forms.MessageBoxIcon.Warning);
+                return;
+            }
+            catch (Exception ex)
+            {
+                // Другая ошибка при установке давления - останавливаем последовательность
+                System.Diagnostics.Debug.WriteLine($"Sequence stopped: Error setting target {target.PSI} PSI - {ex.Message}");
+                Stop();
+                OnSequenceStateChanged?.Invoke();
+                
+                // Показываем сообщение пользователю
+                System.Windows.Forms.MessageBox.Show(
+                    $"Sequence stopped: Error setting target {target.PSI:F1} PSI.\n\n" +
+                    $"Error: {ex.Message}",
+                    "Sequence Error",
+                    System.Windows.Forms.MessageBoxButtons.OK,
+                    System.Windows.Forms.MessageBoxIcon.Error);
+                return;
+            }
 
             _holdDurationSeconds = target.HoldMinutes * 60;
             _holdTimerStarted = false;
@@ -530,8 +566,32 @@ namespace Alicat.Services.Sequence
 
             var target = _targets[_currentTargetIndex];
             
-            // Получаем текущее давление
-            double currentPressure = _getCurrentPressure();
+            // Получаем текущее давление с обработкой ошибок
+            double currentPressure;
+            try
+            {
+                currentPressure = _getCurrentPressure();
+            }
+            catch (Exception ex)
+            {
+                // Ошибка при получении давления (возможно устройство отключено)
+                System.Diagnostics.Debug.WriteLine($"HoldTimer error: Failed to get current pressure - {ex.Message}");
+                
+                // Останавливаем последовательность при ошибке
+                if (_holdTimer != null)
+                    _holdTimer.Stop();
+                
+                Stop();
+                OnSequenceStateChanged?.Invoke();
+                
+                System.Windows.Forms.MessageBox.Show(
+                    $"Sequence stopped: Failed to read device pressure.\n\n" +
+                    $"Error: {ex.Message}",
+                    "Device Error",
+                    System.Windows.Forms.MessageBoxButtons.OK,
+                    System.Windows.Forms.MessageBoxIcon.Warning);
+                return;
+            }
             
             // Проверяем, достигли ли мы целевого давления (tolerance ±2 PSI)
             const double tolerance = 2.0;

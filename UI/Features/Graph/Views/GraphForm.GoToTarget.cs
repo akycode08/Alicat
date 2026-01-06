@@ -41,6 +41,8 @@ namespace Alicat.UI.Features.Graph.Views
         private List<TargetItem> _targets = new List<TargetItem>();
         private int _currentTargetIndex = -1;
         private SequenceState _sequenceState = SequenceState.Stopped;
+        private int _savedScrollPosition = -1; // Сохраненная позиция скролла
+        private bool _isUpdatingTable = false; // Флаг обновления таблицы
         private System.Windows.Forms.Timer? _holdTimer;
         private DateTime _holdStartTime;
         private int _holdDurationSeconds = 0;
@@ -76,6 +78,7 @@ namespace Alicat.UI.Features.Graph.Views
 
         /// <summary>
         /// Синхронизирует targets из SequenceService
+        /// Обновляет таблицу только при реальных изменениях (статус, индекс, состояние)
         /// </summary>
         private void SyncTargetsFromService()
         {
@@ -84,6 +87,16 @@ namespace Alicat.UI.Features.Graph.Views
             // Проверяем, что DataGridView инициализирован
             if (dgvTargets == null || dgvTargets.Columns.Count == 0) return;
 
+            // Сохраняем предыдущие значения для сравнения
+            int previousTargetIndex = _currentTargetIndex;
+            SequenceState previousState = _sequenceState;
+            var previousTargets = new List<(int Number, TargetStatus Status)>();
+            foreach (var t in _targets)
+            {
+                previousTargets.Add((t.Number, t.Status));
+            }
+
+            // Обновляем данные
             _targets.Clear();
             foreach (var target in _sequenceService.Targets)
             {
@@ -99,6 +112,37 @@ namespace Alicat.UI.Features.Graph.Views
             _currentTargetIndex = _sequenceService.CurrentTargetIndex;
             _sequenceState = _sequenceService.State;
 
+            // Проверяем, были ли реальные изменения
+            bool targetsChanged = _targets.Count != previousTargets.Count;
+            if (!targetsChanged)
+            {
+                for (int i = 0; i < _targets.Count; i++)
+                {
+                    if (i < previousTargets.Count)
+                    {
+                        if (_targets[i].Number != previousTargets[i].Number || 
+                            _targets[i].Status != previousTargets[i].Status)
+                        {
+                            targetsChanged = true;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        targetsChanged = true;
+                        break;
+                    }
+                }
+            }
+
+            bool stateChanged = previousTargetIndex != _currentTargetIndex || previousState != _sequenceState;
+
+            // Обновляем таблицу ТОЛЬКО при реальных изменениях
+            if (targetsChanged || stateChanged)
+            {
+                UpdateTargetsTable();
+            }
+
             // Управляем таймером UI в зависимости от состояния последовательности
             if (_holdTimer != null)
             {
@@ -112,7 +156,7 @@ namespace Alicat.UI.Features.Graph.Views
                 }
             }
 
-            UpdateTargetsTable();
+            // Прогресс и кнопки обновляем всегда (но это не затрагивает таблицу)
             UpdateProgress();
             UpdateControlButtons();
         }
@@ -263,6 +307,53 @@ namespace Alicat.UI.Features.Graph.Views
                 RestoreSequenceState();
             }
 
+            // Настраиваем отслеживание скролла
+            if (dgvTargets != null)
+            {
+                // Отслеживаем позицию скролла в реальном времени (когда пользователь прокручивает)
+                dgvTargets.Scroll += (s, e) =>
+                {
+                    if (!_isUpdatingTable && dgvTargets.FirstDisplayedScrollingRowIndex >= 0)
+                    {
+                        _savedScrollPosition = dgvTargets.FirstDisplayedScrollingRowIndex;
+                    }
+                };
+                
+                // Отключаем автоматическую прокрутку при изменении CurrentCell
+                // Используем BeginInvoke чтобы избежать реентрантных вызовов
+                dgvTargets.CurrentCellChanged += (s, e) =>
+                {
+                    if (!_isUpdatingTable && IsHandleCreated)
+                    {
+                        // Используем BeginInvoke для безопасного обновления вне контекста события
+                        BeginInvoke(new Action(() =>
+                        {
+                            if (dgvTargets != null && !dgvTargets.IsDisposed && IsHandleCreated)
+                            {
+                                try
+                                {
+                                    dgvTargets.ClearSelection();
+                                    dgvTargets.CurrentCell = null;
+                                    
+                                    // Восстанавливаем позицию скролла, если она была изменена автоматически
+                                    if (_savedScrollPosition >= 0 && _savedScrollPosition < dgvTargets.Rows.Count)
+                                    {
+                                        if (dgvTargets.FirstDisplayedScrollingRowIndex != _savedScrollPosition)
+                                        {
+                                            dgvTargets.FirstDisplayedScrollingRowIndex = _savedScrollPosition;
+                                        }
+                                    }
+                                }
+                                catch
+                                {
+                                    // Игнорируем ошибки при обновлении
+                                }
+                            }
+                        }));
+                    }
+                };
+            }
+            
             // Обновляем UI
             UpdateTargetsTable();
             UpdateProgress();
@@ -271,7 +362,24 @@ namespace Alicat.UI.Features.Graph.Views
             if (dgvTargets != null)
             {
                 dgvTargets.ClearSelection();
-                dgvTargets.CurrentCell = null;
+                // Используем BeginInvoke только если handle создан
+                if (IsHandleCreated)
+                {
+                    BeginInvoke(new Action(() =>
+                    {
+                        if (dgvTargets != null && !dgvTargets.IsDisposed && IsHandleCreated)
+                        {
+                            try
+                            {
+                                dgvTargets.CurrentCell = null;
+                            }
+                            catch
+                            {
+                                // Игнорируем ошибки
+                            }
+                        }
+                    }));
+                }
             }
             
             // Initialize Hold timer to 00:00
@@ -667,10 +775,10 @@ namespace Alicat.UI.Features.Graph.Views
 
         private void HoldTimer_Tick(object? sender, EventArgs e)
         {
-            // Если используется SequenceService, только обновляем UI
+            // Если используется SequenceService, обновляем только Hold Timer, НЕ всю таблицу
             if (_sequenceService != null)
             {
-                SyncTargetsFromService();
+                // Обновляем только Hold Timer UI, таблицу обновляем только при реальных изменениях
                 UpdateHoldTimerFromService();
                 return;
             }
@@ -1025,44 +1133,121 @@ namespace Alicat.UI.Features.Graph.Views
         {
             if (dgvTargets == null) return;
 
-            dgvTargets.Rows.Clear();
-
-            for (int i = 0; i < _targets.Count; i++)
+            // Сохраняем текущую позицию скролла только если мы не обновляем
+            if (!_isUpdatingTable && dgvTargets.FirstDisplayedScrollingRowIndex >= 0)
             {
-                var target = _targets[i];
-                var statusSymbol = target.Status switch
-                {
-                    TargetStatus.Active => "●",
-                    TargetStatus.Completed => "✓",
-                    _ => "○"
-                };
+                _savedScrollPosition = dgvTargets.FirstDisplayedScrollingRowIndex;
+            }
 
-                var holdText = target.HoldMinutes > 0 ? $"{target.HoldMinutes}m" : "0m";
-                dgvTargets.Rows.Add(
-                    target.Number.ToString(),
-                    target.PSI.ToString("F1"),
-                    holdText,
-                    statusSymbol
-                );
+            _isUpdatingTable = true;
 
-                // Все строки имеют одинаковый темный фон - подсветка фона удалена
-                // Цвет символов статуса устанавливается в DgvTargets_CellFormatting
-                foreach (DataGridViewCell cell in dgvTargets.Rows[i].Cells)
+            try
+            {
+                // Временно отключаем обновление
+                dgvTargets.SuspendLayout();
+                dgvTargets.ClearSelection();
+                // Не изменяем CurrentCell здесь, чтобы избежать реентрантных вызовов
+
+                // Проверяем, нужно ли полное обновление
+                bool needFullRefresh = dgvTargets.Rows.Count != _targets.Count;
+
+                if (needFullRefresh)
                 {
-                    cell.Style.BackColor = Color.FromArgb(21, 23, 28);
-                    
-                    // Устанавливаем ForeColor только для ячеек, которые НЕ являются колонкой Status
-                    // (цвета Status устанавливаются в CellFormatting)
-                    if (dgvTargets.Columns[cell.ColumnIndex].Name != "colStatus")
+                    dgvTargets.Rows.Clear();
+
+                    for (int i = 0; i < _targets.Count; i++)
                     {
-                        cell.Style.ForeColor = Color.White;
+                        var target = _targets[i];
+                        var statusSymbol = target.Status switch
+                        {
+                            TargetStatus.Active => "●",
+                            TargetStatus.Completed => "✓",
+                            _ => "○"
+                        };
+
+                        var holdText = target.HoldMinutes > 0 ? $"{target.HoldMinutes}m" : "0m";
+                        dgvTargets.Rows.Add(
+                            target.Number.ToString(),
+                            target.PSI.ToString("F1"),
+                            holdText,
+                            statusSymbol
+                        );
+
+                        // Все строки имеют одинаковый темный фон - подсветка фона удалена
+                        // Цвет символов статуса устанавливается в DgvTargets_CellFormatting
+                        foreach (DataGridViewCell cell in dgvTargets.Rows[i].Cells)
+                        {
+                            cell.Style.BackColor = Color.FromArgb(21, 23, 28);
+                            
+                            // Устанавливаем ForeColor только для ячеек, которые НЕ являются колонкой Status
+                            // (цвета Status устанавливаются в CellFormatting)
+                            if (dgvTargets.Columns[cell.ColumnIndex].Name != "colStatus")
+                            {
+                                cell.Style.ForeColor = Color.White;
+                            }
+                        }
                     }
                 }
+                else
+                {
+                    // Обновляем только измененные данные, сохраняя позицию скролла
+                    for (int i = 0; i < Math.Min(_targets.Count, dgvTargets.Rows.Count); i++)
+                    {
+                        var target = _targets[i];
+                        var statusSymbol = target.Status switch
+                        {
+                            TargetStatus.Active => "●",
+                            TargetStatus.Completed => "✓",
+                            _ => "○"
+                        };
+
+                        var holdText = target.HoldMinutes > 0 ? $"{target.HoldMinutes}m" : "0m";
+                        
+                        var row = dgvTargets.Rows[i];
+                        row.Cells["colNumber"].Value = target.Number.ToString();
+                        row.Cells["colPSI"].Value = target.PSI.ToString("F1");
+                        row.Cells["colHold"].Value = holdText;
+                        row.Cells["colStatus"].Value = statusSymbol;
+
+                        // Обновляем стили ячеек
+                        foreach (DataGridViewCell cell in row.Cells)
+                        {
+                            cell.Style.BackColor = Color.FromArgb(21, 23, 28);
+                            if (dgvTargets.Columns[cell.ColumnIndex].Name != "colStatus")
+                            {
+                                cell.Style.ForeColor = Color.White;
+                            }
+                        }
+                    }
+                }
+
+                dgvTargets.ResumeLayout();
+
+                // Восстанавливаем позицию скролла после обновления
+                if (_savedScrollPosition >= 0 && _savedScrollPosition < dgvTargets.Rows.Count && IsHandleCreated)
+                {
+                    BeginInvoke(new Action(() =>
+                    {
+                        if (dgvTargets != null && !dgvTargets.IsDisposed && _savedScrollPosition < dgvTargets.Rows.Count && IsHandleCreated)
+                        {
+                            try
+                            {
+                                dgvTargets.FirstDisplayedScrollingRowIndex = _savedScrollPosition;
+                                dgvTargets.ClearSelection();
+                                dgvTargets.CurrentCell = null;
+                            }
+                            catch
+                            {
+                                // Игнорируем ошибки
+                            }
+                        }
+                    }));
+                }
             }
-            
-            // Отключаем автоматическое выделение строк после обновления
-            dgvTargets.ClearSelection();
-            dgvTargets.CurrentCell = null;
+            finally
+            {
+                _isUpdatingTable = false;
+            }
         }
 
         private void UpdateProgress()
