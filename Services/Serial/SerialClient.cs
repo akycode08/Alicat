@@ -50,8 +50,20 @@ namespace Alicat.Services.Serial
         public void Send(string cmd)
         {
             if (string.IsNullOrWhiteSpace(cmd)) return;
-            if (!_port.IsOpen) return;
-            try { _port.Write(cmd + "\r"); } catch { /* ignore */ }
+            if (!_port.IsOpen)
+            {
+                System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] SerialClient.Send: Port {_port.PortName} is not open");
+                return;
+            }
+            try 
+            { 
+                _port.Write(cmd + "\r");
+                System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] TX: {cmd}");
+            } 
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] SerialClient.Send error: {ex.Message}");
+            }
         }
 
         //public void RequestAls() => Send("ALS");
@@ -74,12 +86,17 @@ namespace Alicat.Services.Serial
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] SerialClient.Dispose: Closing port {_port.PortName}");
                 _port.DataReceived -= Port_DataReceived;
                 if (_port.IsOpen) _port.Close();
                 _port.Dispose();
                 Disconnected?.Invoke(this, EventArgs.Empty);
+                System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] SerialClient.Dispose: Port {_port.PortName} closed and Disconnected event fired");
             }
-            catch { /* ignore */ }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] SerialClient.Dispose error: {ex.Message}");
+            }
         }
     }
 }

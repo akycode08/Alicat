@@ -23,7 +23,7 @@ namespace Alicat.Services.Data
 
         // ===== CSV change-based logging =====
         private const double CsvDelta = 0.3;        // порог изменения
-        private const double CsvHeartbeatSec = 0.0; // 0 = выключить, можно поставить 10
+        private const double CsvHeartbeatSec = 0.0; // 0 = выключить, запись только при изменении >= CsvDelta
 
         private DataPoint? _lastCsvPoint;
         private DateTime _lastCsvWriteTime;

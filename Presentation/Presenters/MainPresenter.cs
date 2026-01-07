@@ -48,7 +48,7 @@ namespace Alicat.Presentation.Presenters
         
         // Connection timeout detection - сторожевой таймер
         private System.Threading.Timer? _watchdogTimer;
-        private const int ConnectionTimeoutMs = 5000; // Таймаут 5 секунд без ответа
+        private const int ConnectionTimeoutMs = 30000; // Таймаут 30 секунд без ответа (увеличено для длительных тестов)
 
         // Settings
         private double _maxPressure = 200.0;
@@ -1747,10 +1747,15 @@ namespace Alicat.Presentation.Presenters
                 return;
             }
 
+            // Логируем срабатывание watchdog для диагностики
+            System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] Watchdog timeout - device not responding for {ConnectionTimeoutMs}ms");
+            
             // Таймер сработал - значит нет данных больше таймаута
             _view.BeginInvoke(new Action(() =>
             {
-                _view.UI_AppendStatusInfo("Connection timeout - device not responding");
+                string timeoutMsg = $"Connection timeout ({ConnectionTimeoutMs / 1000}s) - device not responding";
+                _view.UI_AppendStatusInfo(timeoutMsg);
+                System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {timeoutMsg}");
                 _view.UI_UpdateConnectionStatus(false);
                 
                 // Останавливаем таймеры
@@ -1760,11 +1765,12 @@ namespace Alicat.Presentation.Presenters
                 // Закрываем соединение
                 try
                 {
+                    System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] Disposing serial connection due to timeout");
                     _serial?.Dispose();
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Игнорируем ошибки при закрытии
+                    System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] Error disposing serial connection: {ex.Message}");
                 }
                 
                 _serial = null;
