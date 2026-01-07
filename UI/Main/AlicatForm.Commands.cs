@@ -237,28 +237,57 @@ namespace Alicat
             // Подписываемся на событие Applied для обновления при нажатии "Apply"
             dlg.Applied += (_, __) =>
             {
+                // Настройки уже применены в TryApplyFromUi() перед вызовом Applied
                 ApplyOptionsToUi();
                 var ramp = FormOptions.AppOptions.Current.PressureRamp;
-                _ramp?.TryApply(ramp);
-                if (_serial != null && ramp is double r)
+                
+                // Применяем ramp speed через presenter, чтобы обновить внутреннее значение _rampSpeed
+                if (ramp.HasValue && _presenter != null && _serial != null)
                 {
-                    _serial.Send($"SR {r.ToString("G", CultureInfo.InvariantCulture)}");
+                    try
+                    {
+                        _presenter.SetRampSpeed(ramp.Value);
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Устройство не подключено, но значение уже сохранено в настройках
+                    }
                 }
+                
+                // Сохраняем настройки при применении
+                System.Diagnostics.Debug.WriteLine($"[btnOptions_Click] Applied event - AutoConnectOnStartup = {FormOptions.AppOptions.Current.AutoConnectOnStartup}");
+                SaveSettingsToFile();
             };
             
-            dlg.ShowDialog(this);
+            var result = dlg.ShowDialog(this);
 
             // Применяем настройки после закрытия диалога (на случай, если нажали OK)
-            ApplyOptionsToUi();
-
-            var ramp = FormOptions.AppOptions.Current.PressureRamp;
-            _ramp?.TryApply(ramp);
-
-            if (_serial != null && ramp is double r)
+            if (result == DialogResult.OK)
             {
-                _serial.Send($"SR {r.ToString("G", CultureInfo.InvariantCulture)}");
+                ApplyOptionsToUi();
+                
+                // Применяем ramp speed через presenter, чтобы обновить внутреннее значение _rampSpeed
+                var ramp = FormOptions.AppOptions.Current.PressureRamp;
+                if (ramp.HasValue && _presenter != null && _serial != null)
+                {
+                    try
+                    {
+                        _presenter.SetRampSpeed(ramp.Value);
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Устройство не подключено, но значение уже сохранено в настройках
+                    }
+                }
+                
+                // Сохраняем настройки при нажатии OK
+                System.Diagnostics.Debug.WriteLine($"[btnOptions_Click] OK clicked - saving settings...");
+                SaveSettingsToFile();
             }
         }
+        
+        // SaveSettingsToFile доступен напрямую из AlicatForm.Presenter.cs (partial class)
+        // Метод объявлен как private в Presenter.cs, но доступен через partial class
 
         // ====================================================================
         // MENU: NEW SESSION
@@ -276,6 +305,11 @@ namespace Alicat
             string fullPath = System.IO.Path.Combine(folderDialog.SelectedPath, fileName);
 
             DataStore.StartSession(fullPath);
+            
+            // Сбрасываем read-only режим при создании новой сессии
+            _isReadOnlyMode = false;
+            _currentSessionFilePath = fullPath;
+            UpdateReadOnlyMode(false);
 
             MessageBox.Show(
                 $"Session started!\n\nSaving to:\n{fullPath}",

@@ -20,6 +20,7 @@ namespace Alicat
                 public double? MaxIncrement;          // e.g. 20 (Maximum Step)
                 public double? MinIncrement;          // e.g. 0.1 (Minimum Step)
                 public int? PollingFrequency;         // Polling frequency in milliseconds (10, 50, 100, 250, 500, 1000, 2000, 5000)
+                public bool AutoConnectOnStartup;     // Auto-connect to device on program startup
 
                 public Model Clone() => new Model
                 {
@@ -30,7 +31,8 @@ namespace Alicat
                     MinPressure = this.MinPressure,
                     MaxIncrement = this.MaxIncrement,
                     MinIncrement = this.MinIncrement,
-                    PollingFrequency = this.PollingFrequency
+                    PollingFrequency = this.PollingFrequency,
+                    AutoConnectOnStartup = this.AutoConnectOnStartup
                 };
             }
 
@@ -51,7 +53,8 @@ namespace Alicat
                 MinPressure = 0,
                 MaxIncrement = 20,
                 MinIncrement = 0.1,
-                PollingFrequency = 500 // Default 500ms
+                PollingFrequency = 500, // Default 500ms
+                AutoConnectOnStartup = false // Default: no auto-connect
             };
         }
 
@@ -145,6 +148,10 @@ namespace Alicat
             txtMinPressure.Text = m.MinPressure?.ToString(CultureInfo.InvariantCulture) ?? "";
             txtMaxIncrement.Text = m.MaxIncrement?.ToString(CultureInfo.InvariantCulture) ?? "";
             txtMinIncrement.Text = m.MinIncrement?.ToString(CultureInfo.InvariantCulture) ?? "";
+            
+            // Checkbox
+            if (chkAutoConnectOnStartup != null)
+                chkAutoConnectOnStartup.Checked = m.AutoConnectOnStartup;
         }
 
         private static void SafeSelect(ComboBox cmb, string value, string fallback)
@@ -181,7 +188,8 @@ namespace Alicat
                 MinPressure = ParseNullableDouble(txtMinPressure.Text),
                 MaxIncrement = ParseNullableDouble(txtMaxIncrement.Text),
                 MinIncrement = ParseNullableDouble(txtMinIncrement.Text),
-                PollingFrequency = pollingFreq
+                PollingFrequency = pollingFreq,
+                AutoConnectOnStartup = chkAutoConnectOnStartup?.Checked ?? false
             };
 
             // Валидация: числа, если введены, должны быть ≥ 0

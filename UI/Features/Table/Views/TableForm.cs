@@ -131,6 +131,12 @@ namespace Alicat.UI.Features.Table.Views
             SetupConnectionStatusPanel();
             LoadSettings();
             
+            // Подключить обработчик изменения threshold
+            if (txtThreshold != null)
+            {
+                txtThreshold.TextChanged += TxtThreshold_TextChanged;
+            }
+            
             // Установить темную тему по умолчанию
             _isDarkTheme = true; // Устанавливаем флаг темы
             _currentTheme = _darkTheme;
@@ -380,17 +386,45 @@ namespace Alicat.UI.Features.Table.Views
         {
             const double tolerance = 0.5;
             
+            // Получаем threshold из текстового поля
+            double threshold = GetThreshold();
+            
             // Всегда читаем актуальные значения из настроек
             double maxPressure = FormOptions.AppOptions.Current.MaxPressure ?? 200.0;
             double minPressure = FormOptions.AppOptions.Current.MinPressure ?? 0.0;
             
-            if (pressure > maxPressure)
+            // Используем threshold для определения превышения Max/Min
+            if (pressure > maxPressure + threshold)
                 return "Above Max";
-            if (pressure < minPressure)
+            if (pressure < minPressure - threshold)
                 return "Below Min";
             if (Math.Abs(pressure - setpoint) <= tolerance)
                 return "At Target";
             return "Normal";
+        }
+        
+        private double GetThreshold()
+        {
+            if (txtThreshold == null || string.IsNullOrWhiteSpace(txtThreshold.Text))
+                return 0.0;
+            
+            if (double.TryParse(txtThreshold.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out double threshold))
+                return Math.Max(0.0, threshold); // Не допускаем отрицательные значения
+            
+            return 0.0;
+        }
+        
+        private void TxtThreshold_TextChanged(object sender, EventArgs e)
+        {
+            // Пересчитываем статусы для всех записей при изменении threshold
+            foreach (var dataPoint in _dataSource)
+            {
+                dataPoint.Status = CalculateStatus(dataPoint.Pressure, dataPoint.Setpoint);
+            }
+            
+            // Обновляем отображение
+            dgvTable.Invalidate();
+            UpdateStatistics();
         }
 
         private void LoadHistoryFromStore()
@@ -796,30 +830,86 @@ namespace Alicat.UI.Features.Table.Views
 
         private void ApplyCurrentFilter()
         {
-            foreach (DataGridViewRow row in dgvTable.Rows)
+            // Сбрасываем позицию CurrencyManager перед изменением видимости строк
+            // Это необходимо, чтобы избежать ошибки "Row associated with the currency manager's position cannot be made invisible"
+            CurrencyManager? currencyManager = null;
+            int savedPosition = -1;
+            
+            if (dgvTable.BindingContext != null && dgvTable.DataSource != null)
             {
-                if (row.DataBoundItem is PressureDataPoint dataPoint)
+                currencyManager = (CurrencyManager)dgvTable.BindingContext[dgvTable.DataSource];
+                if (currencyManager != null)
                 {
-                    bool visible = false;
-                    
-                    switch (_currentFilter)
+                    savedPosition = currencyManager.Position;
+                    // Сбрасываем позицию на -1 (нет выбранной строки)
+                    if (savedPosition >= 0)
                     {
-                        case LogFilter.All:
-                            visible = true;
-                            break;
-                        case LogFilter.WithComments:
-                            visible = !string.IsNullOrWhiteSpace(dataPoint.Comment);
-                            break;
-                        case LogFilter.Setpoints:
-                            visible = !string.IsNullOrWhiteSpace(dataPoint.Comment) && 
-                                     (dataPoint.Comment.Contains("Setpoint", StringComparison.OrdinalIgnoreCase) ||
-                                      dataPoint.Status == "At Target");
-                            break;
+                        currencyManager.Position = -1;
                     }
-                    
-                    row.Visible = visible;
                 }
             }
+            
+            // Снимаем выделение
+            dgvTable.ClearSelection();
+            dgvTable.CurrentCell = null;
+            
+            // Приостанавливаем обновление UI для лучшей производительности
+            dgvTable.SuspendLayout();
+            
+            try
+            {
+                foreach (DataGridViewRow row in dgvTable.Rows)
+                {
+                    if (row.DataBoundItem is PressureDataPoint dataPoint)
+                    {
+                        bool visible = false;
+                        
+                        switch (_currentFilter)
+                        {
+                            case LogFilter.All:
+                                visible = true;
+                                break;
+                            case LogFilter.WithComments:
+                                visible = !string.IsNullOrWhiteSpace(dataPoint.Comment);
+                                break;
+                            case LogFilter.Setpoints:
+                                // Показываем только строки, где Status == "At Target"
+                                visible = dataPoint.Status == "At Target";
+                                break;
+                        }
+                        
+                        // Безопасно устанавливаем видимость
+                        try
+                        {
+                            row.Visible = visible;
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // Если все еще возникает ошибка, пропускаем эту строку
+                            // Это не должно происходить после сброса CurrencyManager, но на всякий случай
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                // Возобновляем обновление UI
+                dgvTable.ResumeLayout();
+                
+                // Восстанавливаем позицию CurrencyManager (если возможно)
+                if (currencyManager != null && savedPosition >= 0 && savedPosition < currencyManager.Count)
+                {
+                    try
+                    {
+                        currencyManager.Position = savedPosition;
+                    }
+                    catch
+                    {
+                        // Игнорируем ошибки при восстановлении позиции
+                    }
+                }
+            }
+            
             UpdateStatistics();
         }
 

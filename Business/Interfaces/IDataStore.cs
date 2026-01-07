@@ -64,6 +64,11 @@ namespace Alicat.Business.Interfaces
         void RecordSample(double current, double target, string unit, double rampSpeed, int pollingFrequency);
 
         /// <summary>
+        /// Записать точку данных с дополнительными параметрами и PointIndex
+        /// </summary>
+        void RecordSample(double current, double target, string unit, double rampSpeed, int pollingFrequency, int pointIndex);
+
+        /// <summary>
         /// Записать событие
         /// </summary>
         void RecordEvent(double current, double target, string unit, string eventType);
@@ -72,6 +77,11 @@ namespace Alicat.Business.Interfaces
         /// Записать событие с дополнительными параметрами
         /// </summary>
         void RecordEvent(double current, double target, string unit, string eventType, double rampSpeed, int pollingFrequency);
+
+        /// <summary>
+        /// Записать событие с дополнительными параметрами и PointIndex
+        /// </summary>
+        void RecordEvent(double current, double target, string unit, string eventType, double rampSpeed, int pollingFrequency, int pointIndex);
 
         /// <summary>
         /// Завершить сессию

@@ -54,6 +54,11 @@ namespace Alicat
         private GraphForm? _graphForm;
         private TableForm? _tableForm;
         private Alicat.UI.Features.Test.FormTestPressure? _testPressureForm;
+        
+        // Session management
+        private SessionData? _currentSession;
+        private string? _currentSessionFilePath;
+        private bool _isReadOnlyMode = false;
 
         // ====================================================================
         // КОНСТРУКТОР
@@ -67,10 +72,17 @@ namespace Alicat
 
             // Инициализируем Presenter
             InitializePresenter();
+            
+            // Загружаем настройки ДО применения к UI и проверки автоподключения
+            LoadSettingsFromFile();
+            
+            // Подписываемся на событие завершения сессии для автоматического сохранения
+            DataStore.OnSessionEnded += DataStore_OnSessionEnded;
 
             // Меню
             menuSettingsPreferences.Click += btnOptions_Click_Presenter;
             menuDeviceConnect.Click += btnCommunication_Click_Presenter;
+            menuDeviceQuickConnect.Click += menuDeviceQuickConnect_Click;
             menuDeviceDisconnect.Click += menuDeviceDisconnect_Click;
             menuDeviceEmergencyStop.Click += menuDeviceEmergencyStop_Click;
             menuDeviceInfo.Click += menuDeviceInfo_Click;
@@ -127,8 +139,11 @@ namespace Alicat
                 }
             };
 
+            // Загружаем сохраненные настройки ПЕРЕД применением к UI
+            LoadSettingsFromFile();
+            
             ApplyOptionsToUi();
-
+            
             txtIncrement.TextChanged += txtIncrement_TextChanged_Presenter;
 
 
@@ -140,8 +155,43 @@ namespace Alicat
             // (чтобы тема не перезаписала цвет индикатора)
             UI_UpdateConnectionStatus(false);
 
-            // Загружаем сохраненные настройки при старте (если Auto-save был включен)
-            LoadSettingsFromFile();
+            // Auto-connect on startup if enabled (проверяем ПОСЛЕ загрузки настроек)
+            // Используем Shown событие для автоподключения после полной загрузки формы
+            this.Shown += (sender, e) =>
+            {
+                if (FormOptions.AppOptions.Current.AutoConnectOnStartup)
+                {
+                    // Небольшая задержка для полной инициализации формы
+                    System.Threading.Tasks.Task.Delay(500).ContinueWith(_ =>
+                    {
+                        if (InvokeRequired)
+                        {
+                            BeginInvoke(new Action(() =>
+                            {
+                                if (_presenter != null)
+                                {
+                                    _presenter.QuickConnect(this);
+                                }
+                                else
+                                {
+                                    QuickConnect();
+                                }
+                            }));
+                        }
+                        else
+                        {
+                            if (_presenter != null)
+                            {
+                                _presenter.QuickConnect(this);
+                            }
+                            else
+                            {
+                                QuickConnect();
+                            }
+                        }
+                    });
+                }
+            };
         }
 
         // ====================================================================

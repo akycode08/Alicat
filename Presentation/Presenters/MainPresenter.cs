@@ -96,6 +96,27 @@ namespace Alicat.Presentation.Presenters
         }
 
         /// <summary>
+        /// Получает текущий PointIndex из SequenceService
+        /// PointIndex = 0 когда последовательность не запущена
+        /// PointIndex = 1 когда активна первая точка
+        /// PointIndex = 2 когда активна вторая точка и т.д.
+        /// </summary>
+        private int GetCurrentPointIndex()
+        {
+            if (_sequenceService == null)
+                return 0;
+
+            int currentTargetIndex = _sequenceService.CurrentTargetIndex;
+            
+            // Если последовательность не запущена или нет активной точки
+            if (currentTargetIndex < 0)
+                return 0;
+
+            // PointIndex = CurrentTargetIndex + 1 (1 = первая точка, 2 = вторая и т.д.)
+            return currentTargetIndex + 1;
+        }
+
+        /// <summary>
         /// Инициализирует SequenceService для работы последовательности в фоне
         /// </summary>
         private void InitializeSequenceService()
@@ -160,6 +181,231 @@ namespace Alicat.Presentation.Presenters
         // ====================================================================
         // CONNECTION
         // ====================================================================
+
+        /// <summary>
+        /// Быстрое подключение используя последние сохраненные настройки порта
+        /// </summary>
+        public void QuickConnect(Form parentForm)
+        {
+            try
+            {
+                // Загружаем сохраненные настройки коммуникации
+                var commSettings = LoadCommunicationSettings();
+                
+                string? portName = commSettings.PortName;
+                int baudRate = commSettings.BaudRate;
+                string parity = commSettings.Parity;
+                string stopBits = commSettings.StopBits;
+                int dataBits = commSettings.DataBits;
+                int readTimeout = commSettings.ReadTimeout;
+                int writeTimeout = commSettings.WriteTimeout;
+
+                // Если порт не сохранен, показываем диалог
+                if (string.IsNullOrEmpty(portName))
+                {
+                    MessageBox.Show(parentForm,
+                        "No saved port settings found. Please use 'Connect...' to configure and save port settings first.",
+                        "Quick Connect",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                    ConnectDevice(parentForm);
+                    return;
+                }
+
+                // Проверяем, доступен ли порт
+                if (!System.IO.Ports.SerialPort.GetPortNames().Contains(portName))
+                {
+                    var result = MessageBox.Show(parentForm,
+                        $"Port {portName} is not available.\n\nWould you like to open connection dialog?",
+                        "Port Not Available",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning);
+                    
+                    if (result == DialogResult.Yes)
+                    {
+                        ConnectDevice(parentForm);
+                    }
+                    return;
+                }
+
+                // Создаем SerialPort из сохраненных настроек
+                var port = new System.IO.Ports.SerialPort(portName, baudRate)
+                {
+                    Parity = ParseParity(parity),
+                    StopBits = ParseStopBits(stopBits),
+                    DataBits = dataBits,
+                    ReadTimeout = readTimeout,
+                    WriteTimeout = writeTimeout,
+                    Handshake = System.IO.Ports.Handshake.None,
+                    Encoding = System.Text.Encoding.ASCII,
+                    NewLine = "\r",
+                    DtrEnable = false,
+                    RtsEnable = false
+                };
+
+                // Открываем порт
+                port.Open();
+
+                // Проверяем подключение (ping)
+                try
+                {
+                    port.DiscardInBuffer();
+                    port.Write("A\r");
+                    string response = port.ReadLine();
+                    
+                    if (string.IsNullOrWhiteSpace(response) || !response.StartsWith("A"))
+                    {
+                        port.Close();
+                        port.Dispose();
+                        MessageBox.Show(parentForm,
+                            "Port opened, but device response was unexpected.",
+                            "Quick Connect",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+                        return;
+                    }
+                }
+                catch (TimeoutException)
+                {
+                    port.Close();
+                    port.Dispose();
+                    MessageBox.Show(parentForm,
+                        "Device response timeout. Please check connection settings.",
+                        "Quick Connect",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Подключаемся через стандартный метод
+                _serial?.Dispose();
+                _serial = new SerialClient(port);
+                _serial.LineReceived += Serial_LineReceived;
+                _serial.Connected += (_, __) => _view.BeginInvoke(new Action(() =>
+                {
+                    _pollTimer.Start();
+                    StartWatchdogTimer();
+                    _view.UI_UpdateConnectionStatus(true, port.PortName);
+                    
+                    if (_graphForm != null && !_graphForm.IsDisposed)
+                    {
+                        _graphForm.SetConnectionInfo(port.PortName, port.BaudRate);
+                    }
+                    
+                    if (_tableForm != null && !_tableForm.IsDisposed)
+                    {
+                        _tableForm.SetConnectionInfo(port.PortName, port.BaudRate);
+                    }
+                }));
+                _serial.Disconnected += (_, __) => _view.BeginInvoke(new Action(() =>
+                {
+                    _pollTimer.Stop();
+                    StopWatchdogTimer();
+                    _view.UI_UpdateConnectionStatus(false);
+                    
+                    if (_graphForm != null && !_graphForm.IsDisposed)
+                    {
+                        _graphForm.SetConnectionInfo(null, null);
+                    }
+                    
+                    if (_tableForm != null && !_tableForm.IsDisposed)
+                    {
+                        _tableForm.SetConnectionInfo(null, null);
+                    }
+                }));
+
+                _serial.Attach();
+                _ramp = new RampController(_serial);
+                _serial.Send(AlicatCommands.ReadRampSpeed);
+
+                if (!_dataStore.IsRunning)
+                {
+                    _dataStore.StartSession();
+                }
+
+                StartWatchdogTimer();
+
+                _view.UI_UpdateConnectionStatus(true, port.PortName);
+                _view.UI_AppendStatusInfo($"Quick connected to {port.PortName}");
+                
+                if (_graphForm != null && !_graphForm.IsDisposed)
+                {
+                    _graphForm.SetConnectionInfo(port.PortName, port.BaudRate);
+                }
+                
+                if (_tableForm != null && !_tableForm.IsDisposed)
+                {
+                    _tableForm.SetConnectionInfo(port.PortName, port.BaudRate);
+                }
+            }
+            catch (Exception ex)
+            {
+                _view.UI_AppendStatusInfo($"Quick Connect failed: {ex.Message}");
+                MessageBox.Show(parentForm,
+                    $"Quick Connect failed:\n{ex.Message}\n\nWould you like to open connection dialog?",
+                    "Quick Connect Error",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Загружает настройки коммуникации из файла
+        /// </summary>
+        private (string? PortName, int BaudRate, string Parity, string StopBits, int DataBits, int ReadTimeout, int WriteTimeout) LoadCommunicationSettings()
+        {
+            try
+            {
+                string settingsPath = GetSettingsFilePath();
+                if (!System.IO.File.Exists(settingsPath))
+                {
+                    return (null, 19200, "None", "One", 8, 700, 700);
+                }
+
+                string json = System.IO.File.ReadAllText(settingsPath);
+                var settingsData = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(json);
+
+                if (settingsData.TryGetProperty("Communication", out var comm))
+                {
+                    return (
+                        comm.TryGetProperty("PortName", out var pn) && pn.ValueKind != System.Text.Json.JsonValueKind.Null ? pn.GetString() : null,
+                        comm.TryGetProperty("BaudRate", out var br) && br.ValueKind != System.Text.Json.JsonValueKind.Null ? br.GetInt32() : 19200,
+                        comm.TryGetProperty("Parity", out var par) ? par.GetString() ?? "None" : "None",
+                        comm.TryGetProperty("StopBits", out var sb) ? sb.GetString() ?? "One" : "One",
+                        comm.TryGetProperty("DataBits", out var db) && db.ValueKind != System.Text.Json.JsonValueKind.Null ? db.GetInt32() : 8,
+                        comm.TryGetProperty("ReadTimeout", out var rt) && rt.ValueKind != System.Text.Json.JsonValueKind.Null ? rt.GetInt32() : 700,
+                        comm.TryGetProperty("WriteTimeout", out var wt) && wt.ValueKind != System.Text.Json.JsonValueKind.Null ? wt.GetInt32() : 700
+                    );
+                }
+            }
+            catch { }
+
+            return (null, 19200, "None", "One", 8, 700, 700);
+        }
+
+        private static System.IO.Ports.Parity ParseParity(string parity)
+        {
+            return parity?.ToUpperInvariant() switch
+            {
+                "NONE" => System.IO.Ports.Parity.None,
+                "ODD" => System.IO.Ports.Parity.Odd,
+                "EVEN" => System.IO.Ports.Parity.Even,
+                "MARK" => System.IO.Ports.Parity.Mark,
+                "SPACE" => System.IO.Ports.Parity.Space,
+                _ => System.IO.Ports.Parity.None
+            };
+        }
+
+        private static System.IO.Ports.StopBits ParseStopBits(string stopBits)
+        {
+            return stopBits?.ToUpperInvariant() switch
+            {
+                "ONE" => System.IO.Ports.StopBits.One,
+                "TWO" => System.IO.Ports.StopBits.Two,
+                "ONEPOINTFIVE" => System.IO.Ports.StopBits.OnePointFive,
+                _ => System.IO.Ports.StopBits.One
+            };
+        }
 
         /// <summary>
         /// Подключение к устройству через диалог выбора порта.
@@ -349,7 +595,9 @@ namespace Alicat.Presentation.Presenters
                 UpdateLastUpdateText();
 
                 // Record to store
-                _dataStore.RecordSample(_current, _isExhaust ? 0.0 : _setPoint, _unit, _rampSpeed, _pollTimer.Interval);
+                // Получаем PointIndex из SequenceService (0 = до старта, 1+ = номер активной точки)
+                int pointIndex = GetCurrentPointIndex();
+                _dataStore.RecordSample(_current, _isExhaust ? 0.0 : _setPoint, _unit, _rampSpeed, _pollTimer.Interval, pointIndex);
 
                 // Update graph if open
                 if (_graphForm != null && !_graphForm.IsDisposed)
@@ -592,7 +840,8 @@ namespace Alicat.Presentation.Presenters
                     // Resume - restore previous setpoint or use current target
                     _isPaused = false;
                     _view.UI_AppendStatusInfo("Ramp resumed");
-                    _dataStore.RecordEvent(_current, _setPoint, _unit, "RESUMED", _rampSpeed, _pollTimer.Interval);
+                    int pointIndex = GetCurrentPointIndex();
+                    _dataStore.RecordEvent(_current, _setPoint, _unit, "RESUMED", _rampSpeed, _pollTimer.Interval, pointIndex);
                 }
                 else
                 {
@@ -602,7 +851,8 @@ namespace Alicat.Presentation.Presenters
                     _view.UI_SetSetPoint(_current, _unit);
                     _isPaused = true;
                     _view.UI_AppendStatusInfo($"Ramp paused - setpoint set to current ({_current:F2} {_unit}). Polling continues.");
-                    _dataStore.RecordEvent(_current, _setPoint, _unit, "PAUSED", _rampSpeed, _pollTimer.Interval);
+                    int pointIndex = GetCurrentPointIndex();
+                    _dataStore.RecordEvent(_current, _setPoint, _unit, "PAUSED", _rampSpeed, _pollTimer.Interval, pointIndex);
                 }
                 
                 // Update GraphForm pause state
@@ -648,7 +898,8 @@ namespace Alicat.Presentation.Presenters
                 _serial.Send(AlicatCommands.ReadAls);
 
                 // Записываем событие Purge
-                _dataStore.RecordEvent(_current, _setPoint, _unit, "PURGE_STARTED", _rampSpeed, _pollTimer.Interval);
+                int pointIndex = GetCurrentPointIndex();
+                _dataStore.RecordEvent(_current, _setPoint, _unit, "PURGE_STARTED", _rampSpeed, _pollTimer.Interval, pointIndex);
             }
             catch (Exception ex)
             {
@@ -719,7 +970,8 @@ namespace Alicat.Presentation.Presenters
                 _serial.Send(AlicatCommands.ReadAls);
 
                 // Записываем событие изменения давления
-                _dataStore.RecordEvent(_current, _setPoint, _unit, "TARGET_CHANGED", _rampSpeed, _pollTimer.Interval);
+                int pointIndex = GetCurrentPointIndex();
+                _dataStore.RecordEvent(_current, _setPoint, _unit, "TARGET_CHANGED", _rampSpeed, _pollTimer.Interval, pointIndex);
             }
             catch (Exception ex)
             {
@@ -768,7 +1020,8 @@ namespace Alicat.Presentation.Presenters
                 _serial.Send(AlicatCommands.ReadAls);
 
                 // Записываем событие изменения давления
-                _dataStore.RecordEvent(_current, _setPoint, _unit, "TARGET_CHANGED", _rampSpeed, _pollTimer.Interval);
+                int pointIndex = GetCurrentPointIndex();
+                _dataStore.RecordEvent(_current, _setPoint, _unit, "TARGET_CHANGED", _rampSpeed, _pollTimer.Interval, pointIndex);
             }
             catch (Exception ex)
             {
@@ -805,7 +1058,8 @@ namespace Alicat.Presentation.Presenters
                 _serial.Send(AlicatCommands.ReadRampSpeed);
 
                 // Записываем событие изменения скорости рампа
-                _dataStore.RecordEvent(_current, _setPoint, _unit, "RAMP_SPEED_CHANGED", _rampSpeed, _pollTimer.Interval);
+                int pointIndex = GetCurrentPointIndex();
+                _dataStore.RecordEvent(_current, _setPoint, _unit, "RAMP_SPEED_CHANGED", _rampSpeed, _pollTimer.Interval, pointIndex);
             }
             catch (Exception ex)
             {
@@ -1267,6 +1521,8 @@ namespace Alicat.Presentation.Presenters
         /// </summary>
         public void DisconnectDevice()
         {
+            System.Diagnostics.Debug.WriteLine($"[DisconnectDevice] Called. _serial is null: {_serial == null}");
+            
             if (_serial == null)
             {
                 MessageBox.Show("Device is not connected.", "Disconnect",
@@ -1276,12 +1532,33 @@ namespace Alicat.Presentation.Presenters
 
             try
             {
-                _serial?.Dispose();
-                _serial = null;
-                _ramp = null;
-                _pollTimer.Stop();
+                System.Diagnostics.Debug.WriteLine($"[DisconnectDevice] Starting disconnect...");
+                
+                // Останавливаем таймер опроса
+                if (_pollTimer != null)
+                {
+                    _pollTimer.Stop();
+                    System.Diagnostics.Debug.WriteLine($"[DisconnectDevice] Poll timer stopped.");
+                }
+                
+                // Останавливаем watchdog таймер
                 StopWatchdogTimer();
-                _isWaitingForResponse = false; // Сбрасываем флаг при отключении
+                
+                // Сбрасываем флаг ожидания ответа
+                _isWaitingForResponse = false;
+                
+                // Закрываем соединение
+                if (_serial != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DisconnectDevice] Disposing serial connection...");
+                    _serial.Dispose();
+                    _serial = null;
+                    System.Diagnostics.Debug.WriteLine($"[DisconnectDevice] Serial connection disposed.");
+                }
+                
+                _ramp = null;
+
+                // Обновляем UI
                 _view.UI_UpdateConnectionStatus(false);
                 _view.UI_AppendStatusInfo("Device disconnected");
                 
@@ -1296,9 +1573,13 @@ namespace Alicat.Presentation.Presenters
                 {
                     _tableForm.SetConnectionInfo(null, null);
                 }
+                
+                System.Diagnostics.Debug.WriteLine($"[DisconnectDevice] Disconnect completed successfully.");
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"[DisconnectDevice] Error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[DisconnectDevice] Stack trace: {ex.StackTrace}");
                 MessageBox.Show($"Error disconnecting device:\n{ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }

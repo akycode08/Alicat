@@ -5,8 +5,8 @@
     "PollingFrequency": 500
   },
   "Device": {
-    "PressureRamp": 10,
-    "MaxPressure": 600,
+    "PressureRamp": 20,
+    "MaxPressure": 500,
     "MinPressure": 0
   },
   "Control": {
@@ -22,22 +22,8 @@
     "ReadTimeout": 700,
     "WriteTimeout": 700
   },
-  "LastSaved": "2026-01-05T16:45:46.6640026-06:00",
-  "SequenceTargets": [
-    {
-      "PSI": 240,
-      "HoldMinutes": 1,
-      "Status": "Completed"
-    },
-    {
-      "PSI": 285,
-      "HoldMinutes": 1,
-      "Status": "Completed"
-    },
-    {
-      "PSI": 142,
-      "HoldMinutes": 1,
-      "Status": "Completed"
-    }
-  ]
+  "AutoConnect": {
+    "AutoConnectOnStartup": true
+  },
+  "LastSaved": "2026-01-07T17:22:09.0508165-06:00"
 }

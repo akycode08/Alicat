@@ -27,6 +27,9 @@ namespace Alicat.Services.Data
 
         private DataPoint? _lastCsvPoint;
         private DateTime _lastCsvWriteTime;
+        
+        // Счетчик строк CSV (RowNumber)
+        private int _csvRowNumber = 0;
 
         /// <summary>
         /// Все точки данных (только чтение)
@@ -77,6 +80,7 @@ namespace Alicat.Services.Data
 
             _lastCsvPoint = null;
             _lastCsvWriteTime = DateTime.MinValue;
+            _csvRowNumber = 0; // Сбрасываем счетчик строк
 
             OnSessionStarted?.Invoke();
         }
@@ -95,10 +99,11 @@ namespace Alicat.Services.Data
 
             _lastCsvPoint = null;
             _lastCsvWriteTime = DateTime.MinValue;
+            _csvRowNumber = 0; // Сбрасываем счетчик строк
 
-            // Создаём файл и пишем заголовок
+            // Создаём файл и пишем заголовок (новый формат с RowNumber и PointIndex)
             _writer = new StreamWriter(csvFilePath, append: false, Encoding.UTF8);
-            _writer.WriteLine("Timestamp,Time_s,Current,Target,Unit,RampSpeed_psi_s,PollingFrequency,Event");
+            _writer.WriteLine("RowNumber,Timestamp,Time_s,Current,Target,Unit,RampSpeed_psi_s,PollingFrequency,PointIndex,Event");
             _writer.Flush();
 
             OnSessionStarted?.Invoke();
@@ -115,6 +120,11 @@ namespace Alicat.Services.Data
 
         public void RecordSample(double current, double target, string unit, double rampSpeed, int pollingFrequency)
         {
+            RecordSample(current, target, unit, rampSpeed, pollingFrequency, 0);
+        }
+
+        public void RecordSample(double current, double target, string unit, double rampSpeed, int pollingFrequency, int pointIndex)
+        {
             if (!_isRunning) return;
 
             var now = DateTime.Now;
@@ -128,7 +138,7 @@ namespace Alicat.Services.Data
             // CSV (по изменению)
             if (ShouldWriteToCsv(point))
             {
-                WritePointToCsv(point);
+                WritePointToCsv(point, pointIndex);
                 _lastCsvPoint = point;
                 _lastCsvWriteTime = point.Timestamp;
             }
@@ -148,6 +158,11 @@ namespace Alicat.Services.Data
 
         public void RecordEvent(double current, double target, string unit, string eventType, double rampSpeed, int pollingFrequency)
         {
+            RecordEvent(current, target, unit, eventType, rampSpeed, pollingFrequency, 0);
+        }
+
+        public void RecordEvent(double current, double target, string unit, string eventType, double rampSpeed, int pollingFrequency, int pointIndex)
+        {
             if (!_isRunning) return;
 
             var now = DateTime.Now;
@@ -161,7 +176,7 @@ namespace Alicat.Services.Data
             // CSV (события всегда)
             if (_writer != null)
             {
-                WritePointToCsv(point);
+                WritePointToCsv(point, pointIndex);
                 _lastCsvPoint = point;
                 _lastCsvWriteTime = point.Timestamp;
             }
@@ -204,21 +219,27 @@ namespace Alicat.Services.Data
         // ═══════════════════════════════════════════
         // ЗАПИСЬ В CSV
         // ═══════════════════════════════════════════
-        private void WritePointToCsv(DataPoint point)
+        private void WritePointToCsv(DataPoint point, int pointIndex)
         {
             if (_writer == null) return;
 
+            // Увеличиваем счетчик строк
+            _csvRowNumber++;
+
+            // Новый формат: RowNumber,Timestamp,Time_s,Current,Target,Unit,RampSpeed_psi_s,PollingFrequency,PointIndex,Event
             var line = string.Format(
                 CultureInfo.InvariantCulture,
-                "{0:yyyy-MM-dd HH:mm:ss.fff},{1:F3},{2:F2},{3:F2},{4},{5:F2},{6},{7}",
-                point.Timestamp,
-                point.ElapsedSeconds,
-                point.Current,
-                point.Target,
-                point.Unit,
-                point.RampSpeed,
-                point.PollingFrequency,
-                point.Event ?? ""
+                "{0},{1:yyyy-MM-dd HH:mm:ss.fff},{2:F3},{3:F2},{4:F2},{5},{6:F2},{7},{8},{9}",
+                _csvRowNumber,                    // RowNumber
+                point.Timestamp,                  // Timestamp
+                point.ElapsedSeconds,             // Time_s
+                point.Current,                    // Current
+                point.Target,                     // Target
+                point.Unit,                       // Unit
+                point.RampSpeed,                  // RampSpeed_psi_s
+                point.PollingFrequency,           // PollingFrequency
+                pointIndex,                       // PointIndex (0 = до старта, 1 = первая точка, и т.д.)
+                point.Event ?? ""                 // Event
             );
 
             _writer.WriteLine(line);
@@ -240,6 +261,69 @@ namespace Alicat.Services.Data
         }
 
         // ═══════════════════════════════════════════
+        // ЗАГРУЗКА ИСТОРИЧЕСКИХ ДАННЫХ (для read-only режима)
+        // ═══════════════════════════════════════════
+        /// <summary>
+        /// Загружает исторические данные из CSV файла (для read-only режима)
+        /// </summary>
+        public void LoadHistoricalDataFromCsv(string csvFilePath, DateTime sessionStart)
+        {
+            _points.Clear();
+            _sessionStart = sessionStart;
+            _isRunning = false; // Не активная сессия, только для просмотра
+            _csvPath = csvFilePath;
+
+            if (!File.Exists(csvFilePath))
+                return;
+
+            var lines = File.ReadAllLines(csvFilePath);
+            if (lines.Length < 2)
+                return;
+
+            // Определяем формат файла по заголовку
+            bool isNewFormat = lines[0].StartsWith("RowNumber,Timestamp", StringComparison.OrdinalIgnoreCase);
+            int timestampIndex = isNewFormat ? 1 : 0;
+            int timeIndex = isNewFormat ? 2 : 1;
+            int currentIndex = isNewFormat ? 3 : 2;
+            int targetIndex = isNewFormat ? 4 : 3;
+            int unitIndex = isNewFormat ? 5 : 4;
+            int rampSpeedIndex = isNewFormat ? 6 : 5;
+            int pollingFreqIndex = isNewFormat ? 7 : 6;
+            int eventIndex = isNewFormat ? 9 : 7; // PointIndex на позиции 8 в новом формате, Event на 9
+
+            for (int i = 1; i < lines.Length; i++)
+            {
+                if (string.IsNullOrWhiteSpace(lines[i])) continue;
+
+                var parts = lines[i].Split(',');
+                if (parts.Length < currentIndex + 1) continue;
+
+                try
+                {
+                    string timestampStr = parts[timestampIndex];
+                    if (DateTime.TryParse(timestampStr, out DateTime timestamp))
+                    {
+                        double elapsed = parts.Length > timeIndex && double.TryParse(parts[timeIndex], NumberStyles.Float, CultureInfo.InvariantCulture, out double e) ? e : 0;
+                        double current = parts.Length > currentIndex && double.TryParse(parts[currentIndex], NumberStyles.Float, CultureInfo.InvariantCulture, out double c) ? c : 0;
+                        double target = parts.Length > targetIndex && double.TryParse(parts[targetIndex], NumberStyles.Float, CultureInfo.InvariantCulture, out double t) ? t : 0;
+                        string unit = parts.Length > unitIndex ? parts[unitIndex] : "PSIG";
+                        double rampSpeed = parts.Length > rampSpeedIndex && double.TryParse(parts[rampSpeedIndex], NumberStyles.Float, CultureInfo.InvariantCulture, out double rs) ? rs : 0;
+                        int pollingFreq = parts.Length > pollingFreqIndex && int.TryParse(parts[pollingFreqIndex], out int pf) ? pf : 500;
+                        string? eventType = parts.Length > eventIndex && !string.IsNullOrWhiteSpace(parts[eventIndex]) ? parts[eventIndex] : null;
+
+                        var point = new DataPoint(timestamp, elapsed, current, target, unit, rampSpeed, pollingFreq, eventType);
+                        _points.Add(point);
+                    }
+                }
+                catch
+                {
+                    // Пропускаем некорректные строки
+                    continue;
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════
         // ОЧИСТКА
         // ═══════════════════════════════════════════
         public void Clear()
@@ -247,6 +331,7 @@ namespace Alicat.Services.Data
             _points.Clear();
             _lastCsvPoint = null;
             _lastCsvWriteTime = DateTime.MinValue;
+            _csvRowNumber = 0; // Сбрасываем счетчик строк
         }
 
         public void Dispose()

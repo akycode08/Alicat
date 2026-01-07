@@ -8,11 +8,25 @@ namespace Alicat
         [STAThread]
         static void Main()
         {
-            // Стандартная инициализация WinForms (.NET 6/7/8)
-            ApplicationConfiguration.Initialize();
+            try
+            {
+                // Стандартная инициализация WinForms (.NET 6/7/8)
+                ApplicationConfiguration.Initialize();
 
-            // Запускаем твоё главное окно
-            Application.Run(new AlicatForm());
+                // Запускаем твоё главное окно
+                var form = new AlicatForm();
+                form.WindowState = FormWindowState.Normal;
+                form.Show();
+                Application.Run(form);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Ошибка при запуске приложения:\n\n{ex.Message}\n\n{ex.StackTrace}",
+                    "Критическая ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
     }
 }

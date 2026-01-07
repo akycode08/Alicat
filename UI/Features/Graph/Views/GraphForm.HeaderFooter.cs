@@ -409,18 +409,121 @@ namespace Alicat.UI.Features.Graph.Views
 
         private void btnExport_Click(object? sender, EventArgs e)
         {
-            // TODO: Implement export functionality
-            using var saveDialog = new SaveFileDialog
+            // Получаем размер графика для отображения в диалоге
+            var chartBounds = chartPressure.Bounds;
+            
+            // Показываем диалог выбора формата и размера
+            using var exportDialog = new ExportChartDialog(_isDarkTheme, chartBounds.Width, chartBounds.Height)
             {
-                Filter = "CSV Files (*.csv)|*.csv|PNG Files (*.png)|*.png|All Files (*.*)|*.*",
-                Title = "Export Graph Data"
+                StartPosition = FormStartPosition.CenterParent
             };
 
-            if (saveDialog.ShowDialog() == DialogResult.OK)
+            if (exportDialog.ShowDialog(this) == DialogResult.OK)
             {
-                // TODO: Export data or graph image
-                MessageBox.Show($"Export to {saveDialog.FileName} - Not yet implemented", "Export",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ExportChartWithSettings(exportDialog.Settings);
+            }
+        }
+
+        /// <summary>
+        /// Экспортирует график с учетом настроек (формат и масштаб)
+        /// </summary>
+        private void ExportChartWithSettings(ExportSettings settings)
+        {
+            try
+            {
+                // 1. Определяем папку для сохранения
+                string? targetDirectory = null;
+
+                // Если сессия имеет CSV файл, используем его папку
+                if (_dataStore?.CsvPath != null)
+                {
+                    targetDirectory = System.IO.Path.GetDirectoryName(_dataStore.CsvPath);
+                }
+
+                // Если папки нет, показываем диалог выбора
+                if (string.IsNullOrEmpty(targetDirectory) || !System.IO.Directory.Exists(targetDirectory))
+                {
+                    using var folderDialog = new FolderBrowserDialog
+                    {
+                        Description = "Select folder for graph export",
+                        ShowNewFolderButton = true
+                    };
+
+                    if (folderDialog.ShowDialog() != DialogResult.OK)
+                    {
+                        return; // Пользователь отменил
+                    }
+
+                    targetDirectory = folderDialog.SelectedPath;
+                }
+
+                // 2. Генерируем базовое имя файла
+                string extension = settings.Format.ToLowerInvariant();
+                string baseFileName = $"graph_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}";
+                string filePath = System.IO.Path.Combine(targetDirectory, $"{baseFileName}.{extension}");
+
+                // 3. Проверяем существование и добавляем нумерацию если нужно
+                int counter = 1;
+                while (System.IO.File.Exists(filePath))
+                {
+                    string numberedFileName = $"{baseFileName}_{counter:D3}.{extension}";
+                    filePath = System.IO.Path.Combine(targetDirectory, numberedFileName);
+                    counter++;
+                }
+
+                // 4. Экспортируем график
+                var chartBounds = chartPressure.Bounds;
+                int width = chartBounds.Width * settings.Scale;
+                int height = chartBounds.Height * settings.Scale;
+
+                if (settings.Format == "PNG")
+                {
+                    // PNG экспорт с масштабированием
+                    // Сначала рисуем в оригинальном размере, затем масштабируем
+                    using var originalBitmap = new Bitmap(chartBounds.Width, chartBounds.Height);
+                    chartPressure.DrawToBitmap(originalBitmap, chartBounds);
+                    
+                    // Масштабируем изображение
+                    using var scaledBitmap = new Bitmap(width, height);
+                    using var graphics = Graphics.FromImage(scaledBitmap);
+                    graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                    graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                    
+                    graphics.DrawImage(originalBitmap, 0, 0, width, height);
+                    
+                    scaledBitmap.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
+                }
+                else if (settings.Format == "SVG")
+                {
+                    // SVG экспорт (векторный формат)
+                    // LiveCharts2 не поддерживает прямой SVG экспорт, используем PNG как fallback
+                    // Или можно использовать SkiaSharp для SVG
+                    using var bitmap = new Bitmap(chartBounds.Width, chartBounds.Height);
+                    chartPressure.DrawToBitmap(bitmap, chartBounds);
+                    bitmap.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
+                    
+                    MessageBox.Show(
+                        "SVG export is not fully supported yet. Exported as PNG instead.",
+                        "Export Notice",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+
+                // 5. Показываем уведомление об успешном сохранении
+                MessageBox.Show(
+                    $"Graph exported successfully!\n\nFile: {System.IO.Path.GetFileName(filePath)}\nLocation: {targetDirectory}\nFormat: {settings.Format}\nSize: {width} × {height}",
+                    "Export Success",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Error exporting graph:\n{ex.Message}",
+                    "Export Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 

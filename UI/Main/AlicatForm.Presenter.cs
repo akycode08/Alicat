@@ -177,6 +177,17 @@ namespace Alicat
 
         private void menuFileNewSession_Click_Presenter(object? sender, EventArgs e)
         {
+            // Отключаем read-only режим перед началом новой сессии
+            if (_isReadOnlyMode)
+            {
+                // Очищаем текущую сессию
+                _currentSession = null;
+                _currentSessionFilePath = null;
+                
+                // Отключаем read-only режим
+                UpdateReadOnlyMode(false);
+            }
+            
             _presenter?.StartNewSession();
         }
 
@@ -199,9 +210,24 @@ namespace Alicat
         // Device Menu Handlers
         // ====================================================================
 
+        private void menuDeviceQuickConnect_Click(object? sender, EventArgs e)
+        {
+            QuickConnect();
+        }
+
         private void menuDeviceDisconnect_Click(object? sender, EventArgs e)
         {
-            _presenter?.DisconnectDevice();
+            System.Diagnostics.Debug.WriteLine($"[menuDeviceDisconnect_Click] Called. _presenter is null: {_presenter == null}");
+            if (_presenter != null)
+            {
+                _presenter.DisconnectDevice();
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[menuDeviceDisconnect_Click] _presenter is null, cannot disconnect.");
+                MessageBox.Show("Presenter is not initialized.", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private async void menuDeviceEmergencyStop_Click(object? sender, EventArgs e)
@@ -289,16 +315,21 @@ namespace Alicat
             return System.IO.Path.Combine(settingsDir, "settings.json");
         }
 
+        // Метод доступен из других partial class файлов (AlicatForm.Commands.cs)
         private void SaveSettingsToFile()
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine($"[SaveSettingsToFile] Starting save...");
                 string settingsPath = GetSettingsFilePath();
+                System.Diagnostics.Debug.WriteLine($"[SaveSettingsToFile] Settings path: {settingsPath}");
+                
                 string? directory = System.IO.Path.GetDirectoryName(settingsPath);
                 
                 if (!string.IsNullOrEmpty(directory) && !System.IO.Directory.Exists(directory))
                 {
                     System.IO.Directory.CreateDirectory(directory);
+                    System.Diagnostics.Debug.WriteLine($"[SaveSettingsToFile] Created directory: {directory}");
                 }
 
                 var settingsData = new
@@ -321,8 +352,14 @@ namespace Alicat
                         MinIncrement = FormOptions.AppOptions.Current.MinIncrement
                     },
                     Communication = LoadCommunicationSettingsFromFile(),
+                    AutoConnect = new
+                    {
+                        AutoConnectOnStartup = FormOptions.AppOptions.Current.AutoConnectOnStartup
+                    },
                     LastSaved = DateTime.Now
                 };
+
+                System.Diagnostics.Debug.WriteLine($"[SaveSettingsToFile] AutoConnectOnStartup = {FormOptions.AppOptions.Current.AutoConnectOnStartup}");
 
                 string json = System.Text.Json.JsonSerializer.Serialize(settingsData, new System.Text.Json.JsonSerializerOptions
                 {
@@ -330,11 +367,13 @@ namespace Alicat
                 });
 
                 System.IO.File.WriteAllText(settingsPath, json);
+                System.Diagnostics.Debug.WriteLine($"[SaveSettingsToFile] Settings saved successfully to {settingsPath}");
             }
             catch (Exception ex)
             {
                 // Не показываем ошибку пользователю при автосохранении
-                System.Diagnostics.Debug.WriteLine($"Failed to save settings: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[SaveSettingsToFile] Failed to save settings: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[SaveSettingsToFile] Stack trace: {ex.StackTrace}");
             }
         }
 
@@ -438,6 +477,13 @@ namespace Alicat
                         model.MaxIncrement = mi.GetDouble();
                     if (settingsData.TryGetProperty("MinIncrement", out var mini) && mini.ValueKind != System.Text.Json.JsonValueKind.Null)
                         model.MinIncrement = mini.GetDouble();
+                }
+
+                // AutoConnect category
+                if (settingsData.TryGetProperty("AutoConnect", out var autoConnect))
+                {
+                    if (autoConnect.TryGetProperty("AutoConnectOnStartup", out var acos) && acos.ValueKind == System.Text.Json.JsonValueKind.True)
+                        model.AutoConnectOnStartup = true;
                 }
 
                 FormOptions.AppOptions.Current = model;
@@ -638,6 +684,17 @@ namespace Alicat
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            // Сохраняем настройки перед закрытием программы
+            try
+            {
+                SaveSettingsToFile();
+                System.Diagnostics.Debug.WriteLine("[OnFormClosing] Settings saved successfully");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[OnFormClosing] Failed to save settings: {ex.Message}");
+            }
+            
             // Stop polling timer
             _pollTimer?.Stop();
             

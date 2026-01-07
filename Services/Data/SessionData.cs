@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Alicat.Domain;
 
 namespace Alicat.Services.Data
 {
@@ -15,6 +16,16 @@ namespace Alicat.Services.Data
         public TimeSpan Duration { get; set; }
         public string Status { get; set; } = "Active";
         public string Operator { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// Состояние сессии (None, Created, Active, Completed)
+        /// </summary>
+        public SessionState State { get; set; } = SessionState.Created;
+        
+        /// <summary>
+        /// Режим только для чтения (true если State == Completed)
+        /// </summary>
+        public bool IsReadOnly => State == SessionState.Completed;
         
         // Device Info
         public string DeviceModel { get; set; } = string.Empty;

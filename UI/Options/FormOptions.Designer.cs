@@ -25,6 +25,7 @@ namespace Alicat
         private TextBox txtMaxIncrement;
         private Label lblMinIncrement;
         private TextBox txtMinIncrement;
+        private CheckBox chkAutoConnectOnStartup;
 
         // Bottom buttons
         private Panel bottomHost;
@@ -61,8 +62,8 @@ namespace Alicat
             // -------- Form --------
             this.SuspendLayout();
             this.Text = "Preferences";
-            this.ClientSize = new Size(520, 380);
-            this.MinimumSize = new Size(480, 340);
+            this.ClientSize = new Size(520, 420);
+            this.MinimumSize = new Size(480, 380);
             this.StartPosition = FormStartPosition.CenterParent;
             this.BackColor = ModernBg;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -181,7 +182,7 @@ namespace Alicat
             {
                 Dock = DockStyle.Top,
                 ColumnCount = 2,
-                RowCount = 8,
+                RowCount = 9,
                 AutoSize = true,
                 Padding = new Padding(0),
                 BackColor = Color.White
@@ -189,6 +190,7 @@ namespace Alicat
             mainGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 160f)); // labels
             mainGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));  // inputs
 
+            mainGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
             mainGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
             mainGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
             mainGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
@@ -408,6 +410,19 @@ namespace Alicat
             toolTips.SetToolTip(txtMinIncrement, "Minimum increment step.");
             mainGrid.Controls.Add(lblMinIncrement, 0, 7);
             mainGrid.Controls.Add(txtMinIncrement, 1, 7);
+
+            // Auto-connect on startup checkbox
+            chkAutoConnectOnStartup = new CheckBox
+            {
+                Text = "Auto-connect on startup",
+                AutoSize = true,
+                Margin = new Padding(0, 8, 0, 0),
+                ForeColor = ModernText,
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular)
+            };
+            toolTips.SetToolTip(chkAutoConnectOnStartup, "Automatically connect to device using last saved COM port settings when program starts.");
+            mainGrid.Controls.Add(chkAutoConnectOnStartup, 0, 8);
+            mainGrid.SetColumnSpan(chkAutoConnectOnStartup, 2);
 
             contentPanel.Controls.Add(mainGrid);
             this.Controls.Add(contentPanel);

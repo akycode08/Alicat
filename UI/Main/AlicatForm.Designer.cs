@@ -50,6 +50,7 @@ namespace Alicat
         private ToolStripMenuItem menuSettingsPreferences;
         private ToolStripMenuItem menuDevice;
         private ToolStripMenuItem menuDeviceConnect;
+        private ToolStripMenuItem menuDeviceQuickConnect;
         private ToolStripMenuItem menuDeviceDisconnect;
         private ToolStripSeparator menuDeviceSeparator1;
         private ToolStripMenuItem menuDeviceEmergencyStop;
@@ -228,6 +229,7 @@ namespace Alicat
             menuSettingsPreferences = new ToolStripMenuItem();
             menuDevice = new ToolStripMenuItem();
             menuDeviceConnect = new ToolStripMenuItem();
+            menuDeviceQuickConnect = new ToolStripMenuItem();
             menuDeviceDisconnect = new ToolStripMenuItem();
             menuDeviceSeparator1 = new ToolStripSeparator();
             menuDeviceEmergencyStop = new ToolStripMenuItem();
@@ -554,7 +556,7 @@ namespace Alicat
             // 
             // menuDevice
             // 
-            menuDevice.DropDownItems.AddRange(new ToolStripItem[] { menuDeviceConnect, menuDeviceDisconnect, menuDeviceSeparator1, menuDeviceEmergencyStop, menuDeviceSeparator2, menuDeviceInfo });
+            menuDevice.DropDownItems.AddRange(new ToolStripItem[] { menuDeviceConnect, menuDeviceQuickConnect, menuDeviceDisconnect, menuDeviceSeparator1, menuDeviceEmergencyStop, menuDeviceSeparator2, menuDeviceInfo });
             menuDevice.Name = "menuDevice";
             menuDevice.Size = new Size(54, 23);
             menuDevice.Text = "Device";
@@ -565,6 +567,13 @@ namespace Alicat
             menuDeviceConnect.ShortcutKeys = Keys.Control | Keys.K;
             menuDeviceConnect.Size = new Size(232, 22);
             menuDeviceConnect.Text = "Connect...";
+            // 
+            // menuDeviceQuickConnect
+            // 
+            menuDeviceQuickConnect.Name = "menuDeviceQuickConnect";
+            menuDeviceQuickConnect.ShortcutKeys = Keys.F5;
+            menuDeviceQuickConnect.Size = new Size(232, 22);
+            menuDeviceQuickConnect.Text = "Quick Connect";
             // 
             // menuDeviceDisconnect
             // 

@@ -27,12 +27,7 @@ namespace Alicat
 
                 if (openDialog.ShowDialog(this) == DialogResult.OK)
                 {
-                    // TODO: Реализовать загрузку сессии
-                    MessageBox.Show(this, 
-                        $"Opening session: {openDialog.FileName}\n\nFeature not yet implemented.", 
-                        "Open Session", 
-                        MessageBoxButtons.OK, 
-                        MessageBoxIcon.Information);
+                    LoadSessionFromFile(openDialog.FileName);
                 }
             }
             catch (Exception ex)
@@ -52,12 +47,32 @@ namespace Alicat
         {
             try
             {
-                // TODO: Реализовать сохранение текущей сессии
-                MessageBox.Show(this, 
-                    "Save Session\n\nFeature not yet implemented.", 
-                    "Save Session", 
-                    MessageBoxButtons.OK, 
-                    MessageBoxIcon.Information);
+                // Проверяем read-only режим
+                if (_isReadOnlyMode)
+                {
+                    MessageBox.Show(this,
+                        "⚠ READ-ONLY MODE\n\nCannot save a completed session.\nUse 'Save Session As...' to create a copy with a new name.",
+                        "Read-Only Session",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Если файл уже существует, сохраняем в него
+                if (!string.IsNullOrEmpty(_currentSessionFilePath))
+                {
+                    SaveSessionToFile(_currentSessionFilePath, markAsCompleted: false);
+                    MessageBox.Show(this,
+                        "Session saved successfully.",
+                        "Save Session",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+                else
+                {
+                    // Если файла нет, используем Save As
+                    MenuFileSaveSessionAs_Click(sender, e);
+                }
             }
             catch (Exception ex)
             {
@@ -85,11 +100,16 @@ namespace Alicat
 
                 if (saveDialog.ShowDialog(this) == DialogResult.OK)
                 {
-                    // TODO: Реализовать сохранение сессии
-                    MessageBox.Show(this, 
-                        $"Saving session to: {saveDialog.FileName}\n\nFeature not yet implemented.", 
-                        "Save Session As", 
-                        MessageBoxButtons.OK, 
+                    // Для read-only сессий создаем копию с новым именем (не помечаем как Completed)
+                    bool markAsCompleted = !_isReadOnlyMode;
+                    SaveSessionToFile(saveDialog.FileName, markAsCompleted: markAsCompleted);
+                    
+                    MessageBox.Show(this,
+                        _isReadOnlyMode 
+                            ? "Session copied successfully. The new session is editable."
+                            : "Session saved successfully.",
+                        "Save Session As",
+                        MessageBoxButtons.OK,
                         MessageBoxIcon.Information);
                 }
             }
@@ -424,6 +444,10 @@ namespace Alicat
             {
                 using var form = new SessionConfigurationForm();
                 form.StartPosition = FormStartPosition.CenterParent;
+                
+                // Загружаем реальные данные сессии
+                form.LoadSessionData(DataStore, _presenter, _serial);
+                
                 form.ShowDialog(this);
             }
             catch (Exception ex)

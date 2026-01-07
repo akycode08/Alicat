@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
@@ -1198,21 +1198,75 @@ namespace Alicat.UI.Features.Graph.Views
         // =========================
         private void LoadHistoryFromStore()
         {
+            ReloadDataFromStore();
+        }
+
+        /// <summary>
+        /// Публичный метод для перезагрузки данных из DataStore (используется при загрузке сессии)
+        /// </summary>
+        public void ReloadDataFromStore()
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(ReloadDataFromStore));
+                return;
+            }
+
+            // Очищаем существующие данные
+            _seriesCurrent.Clear();
+            _seriesTarget.Clear();
+            _timeSeconds = 0;
+            _lastTargetValue = null;
+
+            // Загружаем все точки из DataStore
             foreach (var point in _dataStore.Points)
             {
                 _seriesCurrent.Add(new ObservablePoint(point.ElapsedSeconds, point.Current));
 
+                // Сохраняем последнее значение target для отображения линии
                 if (point.Target > 0)
                 {
                     _lastTargetValue = point.Target;
                 }
 
+                // Обновляем время до последней точки
                 _timeSeconds = point.ElapsedSeconds + TimeStep;
             }
 
-            ApplyTimeWindow(forceTrim: true);
-            ApplyThresholdLines();
+            // Обновляем target линию (использует _lastTargetValue)
             UpdateTargetLine();
+
+            // Применяем настройки окна времени
+            ApplyTimeWindow(forceTrim: true);
+            
+            // Обновляем линии порогов
+            ApplyThresholdLines();
+            
+            // Обновляем статистику в футере
+            UpdateFooterStatistics();
+            
+            // Обновляем live status панель
+            if (_dataStore.Points.Count > 0)
+            {
+                var lastPoint = _dataStore.Points.Last();
+                double rate = 0;
+                if (_dataStore.Points.Count > 1)
+                {
+                    var prevPoint = _dataStore.Points[_dataStore.Points.Count - 2];
+                    var timeDiff = lastPoint.ElapsedSeconds - prevPoint.ElapsedSeconds;
+                    if (timeDiff > 0)
+                    {
+                        rate = (lastPoint.Current - prevPoint.Current) / timeDiff;
+                    }
+                }
+                UpdateLiveStatus(lastPoint.Current, lastPoint.Target > 0 ? lastPoint.Target : null, lastPoint.Unit, false, rate);
+            }
+
+            // Принудительно обновляем график
+            if (chartPressure != null && !chartPressure.IsDisposed)
+            {
+                chartPressure.Invalidate();
+            }
         }
 
         private void OnNewPointReceived(DataPointModel point)

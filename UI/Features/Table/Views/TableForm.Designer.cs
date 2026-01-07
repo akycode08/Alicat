@@ -406,7 +406,7 @@ namespace Alicat.UI.Features.Table.Views
             btnTabSetpoints.Padding = new System.Windows.Forms.Padding(8, 0, 8, 0);
             btnTabSetpoints.Size = new System.Drawing.Size(75, 28);
             btnTabSetpoints.TabIndex = 2;
-            btnTabSetpoints.Text = "Setpoints";
+            btnTabSetpoints.Text = "At Target";
             btnTabSetpoints.UseVisualStyleBackColor = false;
             btnTabSetpoints.Click += BtnTabSetpoints_Click;
             // 
