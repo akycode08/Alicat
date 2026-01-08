@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Timers;
 using Alicat.Business.Interfaces;
 
 namespace Alicat.Services.Data
@@ -31,13 +32,23 @@ namespace Alicat.Services.Data
         // Счетчик строк CSV (RowNumber)
         private int _csvRowNumber = 0;
 
+        // ===== Auto-save (periodic full dump) =====
+        /// <summary>
+        /// Таймер для автосохранения всех точек из RAM в CSV
+        /// Сохраняет все точки каждые 5 минут для защиты от потери данных
+        /// </summary>
+        private System.Timers.Timer? _autoSaveTimer;
+        private const int AutoSaveIntervalMs = 5 * 60 * 1000; // 5 минут
+        private int _lastAutoSavedIndex = 0; // Индекс последней точки, сохраненной при автосохранении
+
         // ===== Rolling Window / Memory Management =====
         /// <summary>
         /// Максимальное количество точек в RAM (rolling window)
         /// При превышении удаляются самые старые точки (FIFO)
-        /// Это предотвращает накопление памяти при длительных тестах
+        /// Достаточно для отображения графика в реальном времени
+        /// Все данные сохраняются в CSV через автосохранение
         /// </summary>
-        private const int MaxPointsInMemory = 20000; // ~3 часа при polling 500ms
+        private const int MaxPointsInMemory = 1000; // Достаточно для графика (~8 минут при polling 500ms)
 
         /// <summary>
         /// Все точки данных (только чтение)
@@ -89,6 +100,7 @@ namespace Alicat.Services.Data
             _lastCsvPoint = null;
             _lastCsvWriteTime = DateTime.MinValue;
             _csvRowNumber = 0; // Сбрасываем счетчик строк
+            _lastAutoSavedIndex = 0; // Сбрасываем индекс автосохранения
 
             OnSessionStarted?.Invoke();
         }
@@ -113,6 +125,15 @@ namespace Alicat.Services.Data
             _writer = new StreamWriter(csvFilePath, append: false, Encoding.UTF8);
             _writer.WriteLine("RowNumber,Timestamp,Time_s,Current,Target,Unit,RampSpeed_psi_s,PollingFrequency,PointIndex,Event");
             _writer.Flush();
+
+            // Запускаем автосохранение всех точек каждые 5 минут
+            _lastAutoSavedIndex = 0;
+            _autoSaveTimer = new System.Timers.Timer(AutoSaveIntervalMs)
+            {
+                AutoReset = true,
+                Enabled = true
+            };
+            _autoSaveTimer.Elapsed += AutoSaveTimer_Elapsed;
 
             OnSessionStarted?.Invoke();
         }
@@ -270,11 +291,77 @@ namespace Alicat.Services.Data
         }
 
         // ═══════════════════════════════════════════
+        // АВТОСОХРАНЕНИЕ (периодический полный дамп)
+        // ═══════════════════════════════════════════
+        /// <summary>
+        /// Автоматически сохраняет все точки из RAM в CSV каждые 5 минут
+        /// Это защищает от потери данных при отключении питания
+        /// </summary>
+        private void AutoSaveTimer_Elapsed(object? sender, ElapsedEventArgs e)
+        {
+            if (!_isRunning || _writer == null || _points.Count == 0) return;
+
+            try
+            {
+                // Сохраняем все точки, которые были добавлены после последнего автосохранения
+                // При автосохранении записываем ВСЕ точки из RAM в CSV для защиты от потери данных
+                int pointsToSave = _points.Count - _lastAutoSavedIndex;
+                
+                if (pointsToSave > 0)
+                {
+                    for (int i = _lastAutoSavedIndex; i < _points.Count; i++)
+                    {
+                        var point = _points[i];
+                        // При автосохранении записываем все точки, даже если изменение < 0.3
+                        // Используем pointIndex = 0, так как точка уже добавлена
+                        WritePointToCsv(point, 0);
+                    }
+
+                    _lastAutoSavedIndex = _points.Count;
+                    _writer.Flush();
+                    
+                    System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Auto-saved {pointsToSave} points to CSV (total in RAM: {_points.Count})");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Auto-save error: {ex.Message}");
+            }
+        }
+
+        // ═══════════════════════════════════════════
         // КОНЕЦ СЕССИИ
         // ═══════════════════════════════════════════
         public void EndSession()
         {
             _isRunning = false;
+
+            // Останавливаем автосохранение
+            if (_autoSaveTimer != null)
+            {
+                _autoSaveTimer.Stop();
+                _autoSaveTimer.Dispose();
+                _autoSaveTimer = null;
+            }
+
+            // Перед закрытием сохраняем все оставшиеся точки из RAM в CSV
+            if (_writer != null && _points.Count > _lastAutoSavedIndex)
+            {
+                try
+                {
+                    int pointsToSave = _points.Count - _lastAutoSavedIndex;
+                    for (int i = _lastAutoSavedIndex; i < _points.Count; i++)
+                    {
+                        WritePointToCsv(_points[i], 0);
+                    }
+                    _writer.Flush();
+                    System.Diagnostics.Debug.WriteLine($"Session end: saved {pointsToSave} remaining points to CSV");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error saving remaining points on session end: {ex.Message}");
+                }
+            }
 
             _writer?.Flush();
             _writer?.Dispose();
