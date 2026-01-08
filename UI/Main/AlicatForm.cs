@@ -38,7 +38,7 @@ namespace Alicat
         private double? _lastCurrent = null;
 
         private SerialClient? _serial;
-        private readonly Timer _pollTimer = new() { Interval = 500 };
+        private System.Timers.Timer? _pollTimer; // Используем System.Timers.Timer для более точного polling
         private bool _isWaitingForResponse = false; // Защита от переполнения при малых интервалах
 
         private double _maxPressure = 200.0;
@@ -46,6 +46,7 @@ namespace Alicat
         private double _maxIncrementLimit = 20.0;
         private double _minIncrementLimit = 0.1;
         private double _currentIncrement = 5.0;
+        private string _lastValidIncrementText = "5.0"; // Храним последнее валидное значение для отката
 
         private readonly DeviceState _state = new();
         private RampController? _ramp;
@@ -93,7 +94,6 @@ namespace Alicat
             menuDeviceConnect.Click += btnCommunication_Click_Presenter;
             menuDeviceQuickConnect.Click += menuDeviceQuickConnect_Click;
             menuDeviceDisconnect.Click += menuDeviceDisconnect_Click;
-            menuDeviceEmergencyStop.Click += menuDeviceEmergencyStop_Click;
             menuDeviceInfo.Click += menuDeviceInfo_Click;
             menuFileNewSession.Click += menuFileNewSession_Click_Presenter;
             menuFileOpenSession.Click += MenuFileOpenSession_Click;
@@ -128,25 +128,32 @@ namespace Alicat
             // Валидация
             txtTargetInput.TextChanged += (_, __) => ValidateTargetAgainstMax();
 
-            txtIncrement.TextChanged += (_, __) => UpdateIncrementFromText();
+            txtIncrement.TextChanged += ValidateIncrementAgainstMaxPressure;
 
             // Начальные значения UI
             UI_SetPressureUnits(_unit);
             UI_SetSetPoint(_setPoint, _unit);
             RefreshCurrent();
+            
+            // Инициализируем последнее валидное значение increment
+            _lastValidIncrementText = _currentIncrement.ToString("F1", CultureInfo.InvariantCulture);
 
             // Polling timer - работает всегда, даже при паузе
             // Pause останавливает только рампу, но не мониторинг
-            _pollTimer.Tick += (_, __) =>
+            // Используем System.Timers.Timer для более точного polling (не зависит от UI потока)
+            _pollTimer = new System.Timers.Timer(500);
+            _pollTimer.AutoReset = true;
+            _pollTimer.Elapsed += (_, __) =>
             {
                 // Не отправляем новый запрос, пока не получен ответ на предыдущий
                 // Это защищает от переполнения при малых интервалах (например, 10мс)
-                if (_serial != null && !_isWaitingForResponse)
+                if (_serial != null && _serial.IsConnected && !_isWaitingForResponse)
                 {
                     _isWaitingForResponse = true;
                     _serial.Send(AlicatCommands.ReadAls);
                 }
             };
+            _pollTimer.Start();
 
             // Загружаем сохраненные настройки ПЕРЕД применением к UI
             LoadSettingsFromFile();
@@ -237,12 +244,15 @@ namespace Alicat
 
             // Update Polling Frequency from Preferences
             var pollingFreq = FormOptions.AppOptions.Current.PollingFrequency ?? 500;
-            bool wasRunning = _pollTimer.Enabled;
-            _pollTimer.Stop();
-            _pollTimer.Interval = pollingFreq;
-            if (wasRunning)
+            bool wasRunning = _pollTimer?.Enabled ?? false;
+            _pollTimer?.Stop();
+            if (_pollTimer != null)
             {
-                _pollTimer.Start();
+                _pollTimer.Interval = pollingFreq;
+                if (wasRunning)
+                {
+                    _pollTimer.Start();
+                }
             }
 
             ValidateTargetAgainstMax();
@@ -456,11 +466,121 @@ namespace Alicat
         }
 
         /// <summary>
+        /// Валидация increment поля против максимального лимита (MaxIncrementLimit) при изменении текста.
+        /// Не позволяет ввести значение больше максимального - откатывает к предыдущему валидному или к максимуму.
+        /// </summary>
+        public void ValidateIncrementAgainstMaxPressure(object? sender, EventArgs e)
+        {
+            var text = txtIncrement.Text?.Trim();
+            bool parsed = double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double incrementVal);
+            
+            // Проверяем против MaxIncrementLimit (20 PSI) - это лимит для increment
+            bool over = parsed && incrementVal > _maxIncrementLimit;
+            bool under = parsed && incrementVal < _minIncrementLimit;
+            bool invalid = over || under;
+
+            if (invalid)
+            {
+                // Показываем сообщение об ошибке (используем Tag для предотвращения повторных сообщений)
+                if (txtIncrement.Tag?.ToString() != "error_shown")
+                {
+                    System.Media.SystemSounds.Beep.Play();
+                    string errorMessage = over 
+                        ? $"Cannot exceed Maximum Step ({_maxIncrementLimit.ToString("0.###", CultureInfo.InvariantCulture)} {_unit})."
+                        : $"Cannot be less than Minimum Step ({_minIncrementLimit.ToString("0.###", CultureInfo.InvariantCulture)} {_unit}).";
+                    
+                    MessageBox.Show(this,
+                        errorMessage,
+                        "Limit exceeded",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtIncrement.Tag = "error_shown";
+                }
+                
+                // Откатываем к последнему валидному значению или к максимуму/минимуму
+                int selectionStart = txtIncrement.SelectionStart;
+                txtIncrement.TextChanged -= ValidateIncrementAgainstMaxPressure; // Временно отключаем обработчик
+                
+                if (over)
+                {
+                    // Откатываем к максимуму
+                    txtIncrement.Text = _maxIncrementLimit.ToString("F1", CultureInfo.InvariantCulture);
+                    _currentIncrement = _maxIncrementLimit;
+                }
+                else if (under)
+                {
+                    // Откатываем к минимуму
+                    txtIncrement.Text = _minIncrementLimit.ToString("F1", CultureInfo.InvariantCulture);
+                    _currentIncrement = _minIncrementLimit;
+                }
+                else
+                {
+                    // Откатываем к последнему валидному значению
+                    txtIncrement.Text = _lastValidIncrementText;
+                }
+                
+                txtIncrement.TextChanged += ValidateIncrementAgainstMaxPressure; // Включаем обратно
+                txtIncrement.SelectionStart = Math.Min(selectionStart, txtIncrement.Text.Length);
+                
+                // Устанавливаем красный цвет фона
+                if (isDarkTheme)
+                {
+                    txtIncrement.BackColor = System.Drawing.Color.FromArgb(60, 20, 20);
+                }
+                else
+                {
+                    txtIncrement.BackColor = System.Drawing.Color.MistyRose;
+                }
+                
+                UpdateIncrementButtons();
+                ValidateIncrementAgainstMax();
+            }
+            else
+            {
+                // Сбрасываем флаг, если значение валидно
+                if (txtIncrement.Tag?.ToString() == "error_shown")
+                {
+                    txtIncrement.Tag = null;
+                }
+                
+                // Обновляем значение increment, если оно валидно
+                if (parsed)
+                {
+                    double clampedValue = Math.Clamp(incrementVal, _minIncrementLimit, _maxIncrementLimit);
+                    _currentIncrement = clampedValue;
+                    _lastValidIncrementText = clampedValue.ToString("F1", CultureInfo.InvariantCulture);
+                    
+                    // Если значение было обрезано (clamped), обновляем текст в поле
+                    if (clampedValue != incrementVal)
+                    {
+                        txtIncrement.TextChanged -= ValidateIncrementAgainstMaxPressure; // Временно отключаем
+                        txtIncrement.Text = _lastValidIncrementText;
+                        txtIncrement.TextChanged += ValidateIncrementAgainstMaxPressure; // Включаем обратно
+                    }
+                    
+                    UpdateIncrementButtons();
+                    ValidateIncrementAgainstMax(); // Проверяем также против MaxIncrementLimit - этот метод установит правильный цвет
+                }
+                else if (string.IsNullOrWhiteSpace(text))
+                {
+                    // Если текст пустой, сбрасываем цвет на нормальный
+                    if (isDarkTheme)
+                    {
+                        txtIncrement.BackColor = darkBgWindow;
+                    }
+                    else
+                    {
+                        txtIncrement.BackColor = lightBgWindow;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Обновляет текст "Last update" на основе интервала таймера опроса.
         /// </summary>
         private void UpdateLastUpdateText()
         {
-            int intervalMs = _pollTimer.Interval;
+            int intervalMs = (int)(_pollTimer?.Interval ?? 500);
             string text;
 
             if (intervalMs < 1000)

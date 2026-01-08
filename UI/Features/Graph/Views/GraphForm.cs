@@ -647,6 +647,10 @@ namespace Alicat.UI.Features.Graph.Views
 
             // Применяем обновления графика один раз для всего батча
             ApplyTimeWindow(forceTrim: true);
+            
+            // Автоматическая очистка старых точек из графика для производительности
+            // Оставляем только видимое окно + 20% буфер (~1.2 * _timeWindowSeconds)
+            AutoTrimGraphSeries();
             ApplyThresholdLines();
             UpdateTargetLine();
 
@@ -771,6 +775,56 @@ namespace Alicat.UI.Features.Graph.Views
             foreach (var item in itemsToKeep)
             {
                 series.Add(item);
+            }
+        }
+
+        // =========================
+        // Auto-trim graph series (Performance optimization)
+        // =========================
+        /// <summary>
+        /// Автоматически удаляет старые точки из графика для производительности.
+        /// Оставляет только видимое окно + 20% буфер (~1.2 * _timeWindowSeconds).
+        /// Это предотвращает накопление памяти при длительных тестах.
+        /// </summary>
+        private void AutoTrimGraphSeries()
+        {
+            if (_seriesCurrent.Count == 0) return;
+            
+            // Определяем максимальный X (время) для удержания
+            // Видимое окно + 20% буфер (~1.2 * _timeWindowSeconds)
+            double maxTimeToKeep = _timeSeconds;
+            double minTimeToKeep = Math.Max(0, maxTimeToKeep - (_timeWindowSeconds * 1.2));
+            
+            // Если графика еще мало, не трогаем
+            if (_seriesCurrent.Count < 100) return;
+            
+            // Находим первую точку, которую нужно сохранить
+            int firstKeepIndex = -1;
+            for (int i = 0; i < _seriesCurrent.Count; i++)
+            {
+                if (_seriesCurrent[i].X.Value >= minTimeToKeep)
+                {
+                    firstKeepIndex = i;
+                    break;
+                }
+            }
+            
+            // Если все точки в диапазоне, ничего не делаем
+            if (firstKeepIndex <= 0) return;
+            
+            // Эффективное удаление всех старых точек сразу (O(n) вместо O(k*n) для k удалений)
+            // Создаем новый список только с нужными точками
+            var itemsToKeep = new List<ObservablePoint>(_seriesCurrent.Count - firstKeepIndex);
+            for (int i = firstKeepIndex; i < _seriesCurrent.Count; i++)
+            {
+                itemsToKeep.Add(_seriesCurrent[i]);
+            }
+            
+            // Очищаем и перезаполняем коллекцию
+            _seriesCurrent.Clear();
+            foreach (var item in itemsToKeep)
+            {
+                _seriesCurrent.Add(item);
             }
         }
 

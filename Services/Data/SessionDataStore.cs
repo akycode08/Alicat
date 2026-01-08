@@ -31,6 +31,14 @@ namespace Alicat.Services.Data
         // Счетчик строк CSV (RowNumber)
         private int _csvRowNumber = 0;
 
+        // ===== Rolling Window / Memory Management =====
+        /// <summary>
+        /// Максимальное количество точек в RAM (rolling window)
+        /// При превышении удаляются самые старые точки (FIFO)
+        /// Это предотвращает накопление памяти при длительных тестах
+        /// </summary>
+        private const int MaxPointsInMemory = 20000; // ~3 часа при polling 500ms
+
         /// <summary>
         /// Все точки данных (только чтение)
         /// </summary>
@@ -132,8 +140,16 @@ namespace Alicat.Services.Data
 
             var point = new DataPoint(now, elapsed, current, target, unit, rampSpeed, pollingFrequency);
 
-            // RAM
+            // RAM - Rolling Window: ограничиваем количество точек в памяти
             _points.Add(point);
+            
+            // Удаляем самые старые точки, если превышен лимит (FIFO - First In, First Out)
+            if (_points.Count > MaxPointsInMemory)
+            {
+                // Удаляем старые точки с начала списка
+                int pointsToRemove = _points.Count - MaxPointsInMemory;
+                _points.RemoveRange(0, pointsToRemove);
+            }
 
             // CSV (по изменению)
             if (ShouldWriteToCsv(point))
@@ -170,8 +186,15 @@ namespace Alicat.Services.Data
 
             var point = new DataPoint(now, elapsed, current, target, unit, rampSpeed, pollingFrequency, eventType);
 
-            // RAM
+            // RAM - Rolling Window: ограничиваем количество точек в памяти
             _points.Add(point);
+            
+            // Удаляем самые старые точки, если превышен лимит (FIFO)
+            if (_points.Count > MaxPointsInMemory)
+            {
+                int pointsToRemove = _points.Count - MaxPointsInMemory;
+                _points.RemoveRange(0, pointsToRemove);
+            }
 
             // CSV (события всегда)
             if (_writer != null)

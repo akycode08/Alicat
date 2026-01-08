@@ -425,7 +425,9 @@ namespace Alicat
                 if (_pollTimer != null)
                 {
                     _pollTimer.Stop();
-                    System.Diagnostics.Debug.WriteLine($"[Read-Only Mode] Poll timer stopped.");
+                    _pollTimer.Dispose();
+                    _pollTimer = null;
+                    System.Diagnostics.Debug.WriteLine($"[Read-Only Mode] Poll timer stopped and disposed.");
                 }
                 
                 _isWaitingForResponse = false;

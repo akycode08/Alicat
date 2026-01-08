@@ -14,7 +14,6 @@ using Alicat.Services.Sequence;
 using Alicat.UI.Features.Graph.Views;
 using Alicat.UI.Features.Table.Views;
 using Alicat.UI.Features.Terminal.Views;
-using Timer = System.Windows.Forms.Timer;
 
 namespace Alicat.Presentation.Presenters
 {
@@ -40,7 +39,7 @@ namespace Alicat.Presentation.Presenters
         // Services
         private ISerialClient? _serial;
         private IRampController? _ramp;
-        private readonly Timer _pollTimer = new() { Interval = 500 };
+        private readonly System.Timers.Timer _pollTimer = new(500) { AutoReset = true };
         private bool _isWaitingForResponse = false; // Защита от переполнения при малых интервалах
         
         // Sequence service - работает независимо от UI
@@ -71,8 +70,9 @@ namespace Alicat.Presentation.Presenters
             _view = view ?? throw new ArgumentNullException(nameof(view));
             _dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
 
-            // Setup polling timer
-            _pollTimer.Tick += (_, __) =>
+            // Setup polling timer - используем System.Timers.Timer для более точного polling
+            // Этот таймер работает в отдельном потоке и не зависит от UI потока
+            _pollTimer.Elapsed += (_, __) =>
             {
                 // Не отправляем новый запрос, пока не получен ответ на предыдущий
                 // Это защищает от переполнения при малых интервалах (например, 10мс)
@@ -597,7 +597,7 @@ namespace Alicat.Presentation.Presenters
                 // Record to store
                 // Получаем PointIndex из SequenceService (0 = до старта, 1+ = номер активной точки)
                 int pointIndex = GetCurrentPointIndex();
-                _dataStore.RecordSample(_current, _isExhaust ? 0.0 : _setPoint, _unit, _rampSpeed, _pollTimer.Interval, pointIndex);
+                _dataStore.RecordSample(_current, _isExhaust ? 0.0 : _setPoint, _unit, _rampSpeed, (int)_pollTimer.Interval, pointIndex);
 
                 // Update graph if open
                 if (_graphForm != null && !_graphForm.IsDisposed)
@@ -841,7 +841,7 @@ namespace Alicat.Presentation.Presenters
                     _isPaused = false;
                     _view.UI_AppendStatusInfo("Ramp resumed");
                     int pointIndex = GetCurrentPointIndex();
-                    _dataStore.RecordEvent(_current, _setPoint, _unit, "RESUMED", _rampSpeed, _pollTimer.Interval, pointIndex);
+                    _dataStore.RecordEvent(_current, _setPoint, _unit, "RESUMED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
                 }
                 else
                 {
@@ -852,7 +852,7 @@ namespace Alicat.Presentation.Presenters
                     _isPaused = true;
                     _view.UI_AppendStatusInfo($"Ramp paused - setpoint set to current ({_current:F2} {_unit}). Polling continues.");
                     int pointIndex = GetCurrentPointIndex();
-                    _dataStore.RecordEvent(_current, _setPoint, _unit, "PAUSED", _rampSpeed, _pollTimer.Interval, pointIndex);
+                    _dataStore.RecordEvent(_current, _setPoint, _unit, "PAUSED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
                 }
                 
                 // Update GraphForm pause state
@@ -899,7 +899,7 @@ namespace Alicat.Presentation.Presenters
 
                 // Записываем событие Purge
                 int pointIndex = GetCurrentPointIndex();
-                _dataStore.RecordEvent(_current, _setPoint, _unit, "PURGE_STARTED", _rampSpeed, _pollTimer.Interval, pointIndex);
+                _dataStore.RecordEvent(_current, _setPoint, _unit, "PURGE_STARTED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
             }
             catch (Exception ex)
             {
@@ -971,7 +971,7 @@ namespace Alicat.Presentation.Presenters
 
                 // Записываем событие изменения давления
                 int pointIndex = GetCurrentPointIndex();
-                _dataStore.RecordEvent(_current, _setPoint, _unit, "TARGET_CHANGED", _rampSpeed, _pollTimer.Interval, pointIndex);
+                _dataStore.RecordEvent(_current, _setPoint, _unit, "TARGET_CHANGED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
             }
             catch (Exception ex)
             {
@@ -1021,7 +1021,7 @@ namespace Alicat.Presentation.Presenters
 
                 // Записываем событие изменения давления
                 int pointIndex = GetCurrentPointIndex();
-                _dataStore.RecordEvent(_current, _setPoint, _unit, "TARGET_CHANGED", _rampSpeed, _pollTimer.Interval, pointIndex);
+                _dataStore.RecordEvent(_current, _setPoint, _unit, "TARGET_CHANGED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
             }
             catch (Exception ex)
             {
@@ -1059,7 +1059,7 @@ namespace Alicat.Presentation.Presenters
 
                 // Записываем событие изменения скорости рампа
                 int pointIndex = GetCurrentPointIndex();
-                _dataStore.RecordEvent(_current, _setPoint, _unit, "RAMP_SPEED_CHANGED", _rampSpeed, _pollTimer.Interval, pointIndex);
+                _dataStore.RecordEvent(_current, _setPoint, _unit, "RAMP_SPEED_CHANGED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
             }
             catch (Exception ex)
             {
@@ -1124,7 +1124,7 @@ namespace Alicat.Presentation.Presenters
                 _view.UI_AppendStatusInfo($"Ramp speed set to {displayVal} {_unit}/s");
 
                 // Записываем событие изменения скорости рампа
-                _dataStore.RecordEvent(_current, _setPoint, _unit, "RAMP_SPEED_CHANGED", _rampSpeed, _pollTimer.Interval);
+                _dataStore.RecordEvent(_current, _setPoint, _unit, "RAMP_SPEED_CHANGED", _rampSpeed, (int)_pollTimer.Interval);
             }
             catch (Exception ex)
             {
@@ -1951,7 +1951,7 @@ namespace Alicat.Presentation.Presenters
         /// </summary>
         private void UpdateLastUpdateText()
         {
-            int intervalMs = _pollTimer.Interval;
+            int intervalMs = (int)_pollTimer.Interval;
             string text;
             
             if (intervalMs < 1000)

@@ -125,8 +125,11 @@ namespace Alicat.UI.Features.Graph.Views
                 Dock = DockStyle.Fill,
                 ColumnCount = 5,
                 RowCount = 1,
-                Padding = new Padding(0, 5, 0, 0)
+                Padding = new Padding(0, 5, 0, 0),
+                MinimumSize = new Size(0, 35),
+                Height = 35
             };
+            tlpAddPoint.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
             tlpAddPoint.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 50F));
             tlpAddPoint.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
             tlpAddPoint.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80F));
@@ -147,7 +150,9 @@ namespace Alicat.UI.Features.Graph.Views
             {
                 Name = "txtAddPSI",
                 Text = "0",
-                Dock = DockStyle.Fill
+                Dock = DockStyle.Fill,
+                MinimumSize = new Size(0, 28),
+                Height = 28
             };
             tlpAddPoint.Controls.Add(txtAddPSI, 1, 0);
 
@@ -165,7 +170,9 @@ namespace Alicat.UI.Features.Graph.Views
             {
                 Name = "txtAddHold",
                 Text = "0",
-                Dock = DockStyle.Fill
+                Dock = DockStyle.Fill,
+                MinimumSize = new Size(0, 28),
+                Height = 28
             };
             tlpAddPoint.Controls.Add(txtAddHold, 3, 0);
 
@@ -206,8 +213,11 @@ namespace Alicat.UI.Features.Graph.Views
                 Dock = DockStyle.Fill,
                 ColumnCount = 2,
                 RowCount = 1,
-                Padding = new Padding(0, 5, 0, 0)
+                Padding = new Padding(0, 5, 0, 0),
+                MinimumSize = new Size(0, 35),
+                Height = 35
             };
+            tlpQuickImport.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
             tlpQuickImport.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 75F));
             tlpQuickImport.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
 
@@ -215,7 +225,9 @@ namespace Alicat.UI.Features.Graph.Views
             {
                 Name = "txtQuickImport",
                 Text = "",
-                Dock = DockStyle.Fill
+                Dock = DockStyle.Fill,
+                MinimumSize = new Size(0, 28),
+                Height = 28
             };
             tlpQuickImport.Controls.Add(txtQuickImport, 0, 0);
 

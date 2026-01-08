@@ -53,8 +53,6 @@ namespace Alicat
         private ToolStripMenuItem menuDeviceQuickConnect;
         private ToolStripMenuItem menuDeviceDisconnect;
         private ToolStripSeparator menuDeviceSeparator1;
-        private ToolStripMenuItem menuDeviceEmergencyStop;
-        private ToolStripSeparator menuDeviceSeparator2;
         private ToolStripMenuItem menuDeviceInfo;
         private ToolStripMenuItem menuView;
         private ToolStripMenuItem menuViewThemeToggle;
@@ -230,8 +228,6 @@ namespace Alicat
             menuDeviceQuickConnect = new ToolStripMenuItem();
             menuDeviceDisconnect = new ToolStripMenuItem();
             menuDeviceSeparator1 = new ToolStripSeparator();
-            menuDeviceEmergencyStop = new ToolStripMenuItem();
-            menuDeviceSeparator2 = new ToolStripSeparator();
             menuDeviceInfo = new ToolStripMenuItem();
             menuView = new ToolStripMenuItem();
             menuViewThemeToggle = new ToolStripMenuItem();
@@ -554,7 +550,7 @@ namespace Alicat
             // 
             // menuDevice
             // 
-            menuDevice.DropDownItems.AddRange(new ToolStripItem[] { menuDeviceConnect, menuDeviceQuickConnect, menuDeviceDisconnect, menuDeviceSeparator1, menuDeviceEmergencyStop, menuDeviceSeparator2, menuDeviceInfo });
+            menuDevice.DropDownItems.AddRange(new ToolStripItem[] { menuDeviceConnect, menuDeviceQuickConnect, menuDeviceDisconnect, menuDeviceSeparator1, menuDeviceInfo });
             menuDevice.Name = "menuDevice";
             menuDevice.Size = new Size(54, 23);
             menuDevice.Text = "Device";
@@ -584,18 +580,6 @@ namespace Alicat
             // 
             menuDeviceSeparator1.Name = "menuDeviceSeparator1";
             menuDeviceSeparator1.Size = new Size(229, 6);
-            // 
-            // menuDeviceEmergencyStop
-            // 
-            menuDeviceEmergencyStop.Name = "menuDeviceEmergencyStop";
-            menuDeviceEmergencyStop.ShortcutKeys = Keys.Control | Keys.Shift | Keys.E;
-            menuDeviceEmergencyStop.Size = new Size(232, 22);
-            menuDeviceEmergencyStop.Text = "Emergency Stop";
-            // 
-            // menuDeviceSeparator2
-            // 
-            menuDeviceSeparator2.Name = "menuDeviceSeparator2";
-            menuDeviceSeparator2.Size = new Size(229, 6);
             // 
             // menuDeviceInfo
             // 

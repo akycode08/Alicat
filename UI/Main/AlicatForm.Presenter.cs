@@ -230,12 +230,6 @@ namespace Alicat
             }
         }
 
-        private async void menuDeviceEmergencyStop_Click(object? sender, EventArgs e)
-        {
-            if (_presenter != null)
-                await _presenter.EmergencyStop();
-        }
-
         // ====================================================================
         // File Menu Handlers
         // ====================================================================
@@ -715,8 +709,10 @@ namespace Alicat
                 System.Diagnostics.Debug.WriteLine($"[OnFormClosing] Failed to save settings: {ex.Message}");
             }
             
-            // Stop polling timer
+            // Stop and dispose polling timer
             _pollTimer?.Stop();
+            _pollTimer?.Dispose();
+            _pollTimer = null;
             
             // End data store session
             DataStore.EndSession();

@@ -24,6 +24,7 @@ namespace Alicat
         {
             _currentIncrement = Math.Max(0.1, _currentIncrement - 0.1);
             txtIncrement.Text = _currentIncrement.ToString("F1", CultureInfo.InvariantCulture);
+            _lastValidIncrementText = txtIncrement.Text; // Обновляем последнее валидное значение
             UpdateIncrementButtons();
         }
 
@@ -31,6 +32,7 @@ namespace Alicat
         {
             _currentIncrement = Math.Min(_maxIncrementLimit, _currentIncrement + 0.1);
             txtIncrement.Text = _currentIncrement.ToString("F1", CultureInfo.InvariantCulture);
+            _lastValidIncrementText = txtIncrement.Text; // Обновляем последнее валидное значение
             UpdateIncrementButtons();
         }
 

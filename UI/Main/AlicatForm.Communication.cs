@@ -27,7 +27,7 @@ namespace Alicat
                     _serial?.Dispose();
                     _serial = null;
                     _ramp = null;
-                    _pollTimer.Stop();
+                    _pollTimer?.Stop();
                     _isWaitingForResponse = false; // Сбрасываем флаг при отключении
                     UI_UpdateConnectionStatus(false);
                     
@@ -45,12 +45,12 @@ namespace Alicat
             _serial.LineReceived += Serial_LineReceived;
             _serial.Connected += (_, __) => BeginInvoke(new Action(() =>
             {
-                _pollTimer.Start();
+                _pollTimer?.Start();
                 UI_UpdateConnectionStatus(true, opened.PortName);
             }));
             _serial.Disconnected += (_, __) => BeginInvoke(new Action(() =>
             {
-                _pollTimer.Stop();
+                _pollTimer?.Stop();
                 UI_UpdateConnectionStatus(false);
                 
                 // Reset graph values to zero on disconnect

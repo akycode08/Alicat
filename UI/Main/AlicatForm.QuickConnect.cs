@@ -150,12 +150,12 @@ namespace Alicat
                 _serial.LineReceived += Serial_LineReceived;
                 _serial.Connected += (_, __) => BeginInvoke(new Action(() =>
                 {
-                    _pollTimer.Start();
+                    _pollTimer?.Start();
                     UI_UpdateConnectionStatus(true, port.PortName);
                 }));
                 _serial.Disconnected += (_, __) => BeginInvoke(new Action(() =>
                 {
-                    _pollTimer.Stop();
+                    _pollTimer?.Stop();
                     UI_UpdateConnectionStatus(false);
                     
                     if (_graphForm != null && !_graphForm.IsDisposed)
