@@ -332,6 +332,25 @@ namespace Alicat
                     System.Diagnostics.Debug.WriteLine($"[SaveSettingsToFile] Created directory: {directory}");
                 }
 
+                // Читаем RecentSessions из существующего файла, если он есть
+                string[]? recentSessions = null;
+                if (System.IO.File.Exists(settingsPath))
+                {
+                    try
+                    {
+                        string existingJson = System.IO.File.ReadAllText(settingsPath);
+                        var existingData = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(existingJson);
+                        if (existingData.TryGetProperty("RecentSessions", out var recentSessionsProp))
+                        {
+                            recentSessions = System.Text.Json.JsonSerializer.Deserialize<string[]>(recentSessionsProp.GetRawText());
+                        }
+                    }
+                    catch
+                    {
+                        // Если не удалось прочитать RecentSessions, продолжаем без них
+                    }
+                }
+
                 var settingsData = new
                 {
                     General = new
@@ -356,6 +375,7 @@ namespace Alicat
                     {
                         AutoConnectOnStartup = FormOptions.AppOptions.Current.AutoConnectOnStartup
                     },
+                    RecentSessions = recentSessions ?? Array.Empty<string>(),
                     LastSaved = DateTime.Now
                 };
 

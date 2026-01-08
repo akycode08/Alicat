@@ -36,9 +36,7 @@ namespace Alicat.UI.Features.Graph.Views
             }));
             _isDarkTheme = isDarkTheme;
             InitializeComponent();
-            ApplyTheme(_isDarkTheme);
             SetupDataGridView();
-            SetupButtonHoverEffects();
             RenderTable();
         }
 
@@ -102,26 +100,13 @@ namespace Alicat.UI.Features.Graph.Views
                 colNumber, colPSI, colHold, colStatus, colDelete
             });
 
-            // Стили
-            // --bg-panel: #111827
-            dgvPoints.RowsDefaultCellStyle.BackColor = _isDarkTheme 
-                ? Color.FromArgb(17, 24, 39) 
-                : Color.White;
-            dgvPoints.AlternatingRowsDefaultCellStyle.BackColor = _isDarkTheme
-                ? Color.FromArgb(26, 31, 46) // --bg-input: #1a1f2e (slightly darker for alternating)
-                : Color.FromArgb(250, 250, 250);
-            // --text-primary: #e4e7eb
-            dgvPoints.RowsDefaultCellStyle.ForeColor = _isDarkTheme
-                ? Color.FromArgb(228, 231, 235)
-                : Color.Black;
-            
-            // Column header styles
-            if (_isDarkTheme)
-            {
-                dgvPoints.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(26, 31, 46); // --bg-input
-                dgvPoints.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(156, 163, 175); // --text-secondary
-                dgvPoints.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            }
+            // Стандартные стили WinForms
+            dgvPoints.RowsDefaultCellStyle.BackColor = SystemColors.Window;
+            dgvPoints.AlternatingRowsDefaultCellStyle.BackColor = SystemColors.Control;
+            dgvPoints.RowsDefaultCellStyle.ForeColor = SystemColors.WindowText;
+            dgvPoints.ColumnHeadersDefaultCellStyle.BackColor = SystemColors.Control;
+            dgvPoints.ColumnHeadersDefaultCellStyle.ForeColor = SystemColors.ControlText;
+            dgvPoints.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
 
             dgvPoints.CellFormatting += DgvPoints_CellFormatting;
             dgvPoints.CellValueChanged += DgvPoints_CellValueChanged;
@@ -137,10 +122,7 @@ namespace Alicat.UI.Features.Graph.Views
             if (column.Name == "colStatus")
             {
                 e.Value = "○ wait";
-                // --text-muted: #6b7280 (status-wait)
-                e.CellStyle.ForeColor = _isDarkTheme 
-                    ? Color.FromArgb(107, 114, 128) 
-                    : Color.FromArgb(100, 100, 100);
+                e.CellStyle.ForeColor = SystemColors.GrayText;
                 e.FormattingApplied = true;
             }
             else if (column.Name == "colNumber")
@@ -345,76 +327,6 @@ namespace Alicat.UI.Features.Graph.Views
             Close();
         }
 
-        private void ApplyTheme(bool isDark)
-        {
-            _isDarkTheme = isDark;
-
-            if (isDark)
-            {
-                // --bg-window: #0a0e1a
-                BackColor = Color.FromArgb(10, 14, 26);
-                // --text-primary: #e4e7eb
-                ForeColor = Color.FromArgb(228, 231, 235);
-                
-                // Apply colors to all controls
-                if (mainPanel != null)
-                {
-                    mainPanel.BackColor = Color.FromArgb(10, 14, 26); // --bg-window
-                }
-                
-                if (bottomPanel != null)
-                {
-                    bottomPanel.BackColor = Color.FromArgb(17, 24, 39); // --bg-panel
-                }
-            }
-            else
-            {
-                BackColor = Color.FromArgb(250, 250, 255);
-                ForeColor = Color.FromArgb(30, 30, 35);
-                
-                if (mainPanel != null)
-                {
-                    mainPanel.BackColor = Color.FromArgb(250, 250, 255);
-                }
-                
-                if (bottomPanel != null)
-                {
-                    bottomPanel.BackColor = Color.FromArgb(250, 250, 255);
-                }
-            }
-        }
-        
-        /// <summary>
-        /// Sets up hover effects for buttons (--bg-button-hover: #2d3748)
-        /// </summary>
-        private void SetupButtonHoverEffects()
-        {
-            if (!_isDarkTheme) return;
-            
-            var hoverColor = Color.FromArgb(45, 55, 72); // --bg-button-hover: #2d3748
-            
-            // Button hover effects
-            if (btnParseAndAdd != null)
-            {
-                var originalColor = btnParseAndAdd.BackColor;
-                btnParseAndAdd.MouseEnter += (s, e) => btnParseAndAdd.BackColor = hoverColor;
-                btnParseAndAdd.MouseLeave += (s, e) => btnParseAndAdd.BackColor = originalColor;
-            }
-            
-            if (btnClearAll != null)
-            {
-                var originalColor = btnClearAll.BackColor;
-                btnClearAll.MouseEnter += (s, e) => btnClearAll.BackColor = hoverColor;
-                btnClearAll.MouseLeave += (s, e) => btnClearAll.BackColor = originalColor;
-            }
-            
-            if (btnCancel != null)
-            {
-                var originalColor = btnCancel.BackColor;
-                btnCancel.MouseEnter += (s, e) => btnCancel.BackColor = hoverColor;
-                btnCancel.MouseLeave += (s, e) => btnCancel.BackColor = originalColor;
-            }
-        }
     }
 }
 

@@ -87,6 +87,7 @@ namespace Alicat.UI.Features.Graph.Views
                 return;
             }
 
+            // Обновляем Session time только если сессия запущена
             if (lblSessionTime != null && _dataStore != null && _dataStore.IsRunning)
             {
                 TimeSpan duration = DateTime.Now - _dataStore.SessionStart;
@@ -96,10 +97,15 @@ namespace Alicat.UI.Features.Graph.Views
                 
                 // Format: "Session: 00:09:23"
                 lblSessionTime.Text = $"Session: {hours:D2}:{minutes:D2}:{seconds:D2}";
+                
+                // Обновляем статистику (включая Duration) при каждом обновлении времени
+                CalculateAndUpdateStatistics();
             }
             else if (lblSessionTime != null)
             {
                 lblSessionTime.Text = "Session: 00:00:00";
+                // Если сессия не запущена, обновляем статистику чтобы показать Duration = 00:00
+                CalculateAndUpdateStatistics();
             }
         }
 
@@ -108,7 +114,42 @@ namespace Alicat.UI.Features.Graph.Views
             // Initialize header timer for session time update
             _headerTimer = new System.Windows.Forms.Timer { Interval = 1000 }; // Update every second
             _headerTimer.Tick += (_, __) => UpdateHeaderSessionTime();
-            _headerTimer.Start();
+            // НЕ запускаем таймер по умолчанию - только когда создается новая сессия
+            // _headerTimer.Start();
+
+            // Подписываемся на события сессии
+            if (_dataStore != null)
+            {
+                _dataStore.OnSessionStarted += () =>
+                {
+                    if (InvokeRequired)
+                    {
+                        BeginInvoke(new Action(() => _headerTimer?.Start()));
+                    }
+                    else
+                    {
+                        _headerTimer?.Start();
+                    }
+                };
+
+                _dataStore.OnSessionEnded += () =>
+                {
+                    if (InvokeRequired)
+                    {
+                        BeginInvoke(new Action(() => _headerTimer?.Stop()));
+                    }
+                    else
+                    {
+                        _headerTimer?.Stop();
+                    }
+                };
+
+                // Если сессия уже запущена, запускаем таймер
+                if (_dataStore.IsRunning)
+                {
+                    _headerTimer.Start();
+                }
+            }
 
             // Setup header panel layout
             SetupHeaderLayout();
@@ -407,7 +448,23 @@ namespace Alicat.UI.Features.Graph.Views
             _pauseHandler?.Invoke();
         }
 
-        private void btnExport_Click(object? sender, EventArgs e)
+        /// <summary>
+        /// Получает размеры графика для экспорта
+        /// </summary>
+        public Rectangle GetChartBounds()
+        {
+            return chartPressure.Bounds;
+        }
+
+        /// <summary>
+        /// Получает текущую тему графика
+        /// </summary>
+        public bool IsDarkTheme => _isDarkTheme;
+
+        /// <summary>
+        /// Показывает диалог экспорта и экспортирует график
+        /// </summary>
+        public void ShowExportDialog()
         {
             // Получаем размер графика для отображения в диалоге
             var chartBounds = chartPressure.Bounds;
@@ -424,10 +481,16 @@ namespace Alicat.UI.Features.Graph.Views
             }
         }
 
+        private void btnExport_Click(object? sender, EventArgs e)
+        {
+            ShowExportDialog();
+        }
+
         /// <summary>
         /// Экспортирует график с учетом настроек (формат и масштаб)
+        /// Публичный метод для использования из главного меню
         /// </summary>
-        private void ExportChartWithSettings(ExportSettings settings)
+        public void ExportChartWithSettings(ExportSettings settings)
         {
             try
             {
@@ -496,18 +559,44 @@ namespace Alicat.UI.Features.Graph.Views
                 }
                 else if (settings.Format == "SVG")
                 {
-                    // SVG экспорт (векторный формат)
-                    // LiveCharts2 не поддерживает прямой SVG экспорт, используем PNG как fallback
-                    // Или можно использовать SkiaSharp для SVG
+                    // SVG экспорт: создаем SVG файл с встроенным PNG изображением
+                    // Это валидный SVG, который будет отображаться в браузерах
                     using var bitmap = new Bitmap(chartBounds.Width, chartBounds.Height);
                     chartPressure.DrawToBitmap(bitmap, chartBounds);
-                    bitmap.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
                     
-                    MessageBox.Show(
-                        "SVG export is not fully supported yet. Exported as PNG instead.",
-                        "Export Notice",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Information);
+                    // Конвертируем изображение в base64
+                    string base64Image;
+                    using (var ms = new System.IO.MemoryStream())
+                    {
+                        bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                        byte[] imageBytes = ms.ToArray();
+                        base64Image = Convert.ToBase64String(imageBytes);
+                    }
+                    
+                    // Создаем SVG файл с встроенным изображением
+                    string svgContent = $@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""no""?>
+<svg xmlns=""http://www.w3.org/2000/svg"" 
+     xmlns:xlink=""http://www.w3.org/1999/xlink""
+     width=""{chartBounds.Width}"" 
+     height=""{chartBounds.Height}"" 
+     viewBox=""0 0 {chartBounds.Width} {chartBounds.Height}"">
+  <defs>
+    <style type=""text/css"">
+      <![CDATA[
+        .chart-container {{
+          width: 100%;
+          height: 100%;
+        }}
+      ]]>
+    </style>
+  </defs>
+  <image x=""0"" y=""0"" 
+         width=""{chartBounds.Width}"" 
+         height=""{chartBounds.Height}"" 
+         xlink:href=""data:image/png;base64,{base64Image}""/>
+</svg>";
+                    
+                    System.IO.File.WriteAllText(filePath, svgContent, System.Text.Encoding.UTF8);
                 }
 
                 // 5. Показываем уведомление об успешном сохранении

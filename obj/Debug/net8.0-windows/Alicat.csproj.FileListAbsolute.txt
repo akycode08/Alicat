@@ -109,3 +109,4 @@ C:\Users\User\Desktop\Akylbek\Alicat\Alicat\bin\Debug\net8.0-windows\runtimes\wi
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.csproj.Up2Date
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.genruntimeconfig.cache
 C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\ref\Alicat.dll
+C:\Users\User\Desktop\Akylbek\Alicat\Alicat\obj\Debug\net8.0-windows\Alicat.UI.Features.Graph.Views.SequenceEditorModal.resources

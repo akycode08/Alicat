@@ -1251,7 +1251,7 @@ namespace Alicat.Presentation.Presenters
                             string command = AlicatCommands.SetPressureUnits(unitCode.Value);
                             Debug.WriteLine($"Sending command: {command}");
                             _serial.Send(command);
-                            _view.UI_AppendStatusInfo($"Unit change command sent: {command} (waiting for device response)");
+                            _view.UI_AppendStatusInfo($"Unit changed from {oldUnit} -> {newUnit}");
                         }
                         else
                         {

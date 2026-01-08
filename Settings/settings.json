@@ -5,7 +5,7 @@
     "PollingFrequency": 500
   },
   "Device": {
-    "PressureRamp": 20,
+    "PressureRamp": 30,
     "MaxPressure": 500,
     "MinPressure": 0
   },
@@ -25,5 +25,8 @@
   "AutoConnect": {
     "AutoConnectOnStartup": true
   },
-  "LastSaved": "2026-01-07T17:22:09.0508165-06:00"
+  "RecentSessions": [
+    "C:\\Users\\User\\Desktop\\Alicat_Test\\Test10\\session_2026-01-07_09-23-49.csv"
+  ],
+  "LastSaved": "2026-01-08T12:10:59.6515494-06:00"
 }

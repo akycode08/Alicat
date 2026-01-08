@@ -6,8 +6,11 @@ using Alicat.UI.Features.Terminal.Views;
 using Alicat.UI.Features.Graph.Views;
 using Alicat.UI.Features.Table.Views;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Alicat.Services.Data;
@@ -59,6 +62,9 @@ namespace Alicat
         private SessionData? _currentSession;
         private string? _currentSessionFilePath;
         private bool _isReadOnlyMode = false;
+        
+        // Recent Sessions (max 3 items)
+        private readonly List<string> _recentSessions = new();
 
         // ====================================================================
         // КОНСТРУКТОР
@@ -75,6 +81,9 @@ namespace Alicat
             
             // Загружаем настройки ДО применения к UI и проверки автоподключения
             LoadSettingsFromFile();
+            
+            // Загружаем список Recent Sessions
+            LoadRecentSessionsFromSettings();
             
             // Подписываемся на событие завершения сессии для автоматического сохранения
             DataStore.OnSessionEnded += DataStore_OnSessionEnded;

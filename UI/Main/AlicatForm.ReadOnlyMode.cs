@@ -93,9 +93,9 @@ namespace Alicat
                 {
                     // Пытаемся определить формат по содержимому
                     string firstLine = File.ReadLines(filePath).FirstOrDefault() ?? "";
-                    if (firstLine.StartsWith("Timestamp,Time_s"))
+                    if (firstLine.StartsWith("RowNumber,Timestamp") || firstLine.StartsWith("Timestamp,Time_s"))
                     {
-                        // CSV формат
+                        // CSV формат (новый или старый)
                         sessionData = LoadSessionFromCsv(filePath);
                     }
                     else if (firstLine.TrimStart().StartsWith("{") || firstLine.TrimStart().StartsWith("["))
@@ -198,7 +198,7 @@ namespace Alicat
         }
 
         /// <summary>
-        /// Загружает сессию из CSV файла (старый формат)
+        /// Загружает сессию из CSV файла (поддерживает старый и новый формат)
         /// </summary>
         private SessionData LoadSessionFromCsv(string filePath)
         {
@@ -208,8 +208,18 @@ namespace Alicat
                 throw new InvalidDataException("CSV file is empty or has no data rows.");
             }
 
-            // Парсим заголовок
-            var header = lines[0].Split(',');
+            // Определяем формат файла по заголовку
+            bool isNewFormat = lines[0].StartsWith("RowNumber,Timestamp", StringComparison.OrdinalIgnoreCase);
+            
+            // Индексы колонок в зависимости от формата
+            int timestampIndex = isNewFormat ? 1 : 0;  // RowNumber на 0 в новом формате
+            int timeIndex = isNewFormat ? 2 : 1;
+            int currentIndex = isNewFormat ? 3 : 2;
+            int targetIndex = isNewFormat ? 4 : 3;
+            int unitIndex = isNewFormat ? 5 : 4;
+            int rampSpeedIndex = isNewFormat ? 6 : 5;
+            int pollingFreqIndex = isNewFormat ? 7 : 6;
+            int eventIndex = isNewFormat ? 9 : 7;  // PointIndex на 8 в новом формате, Event на 9
             
             // Парсим данные
             var dataPoints = new List<DataPoint>();
@@ -222,12 +232,13 @@ namespace Alicat
                 if (string.IsNullOrWhiteSpace(lines[i])) continue;
 
                 var parts = lines[i].Split(',');
-                if (parts.Length < 4) continue;
+                if (parts.Length < currentIndex + 1) continue;
 
                 try
                 {
-                    // Формат: Timestamp,Time_s,Current,Target,Unit,RampSpeed_psi_s,PollingFrequency,Event
-                    if (DateTime.TryParse(parts[0], out DateTime timestamp))
+                    // Парсим timestamp
+                    string timestampStr = parts[timestampIndex];
+                    if (DateTime.TryParse(timestampStr, out DateTime timestamp))
                     {
                         if (firstTimestamp == null) firstTimestamp = timestamp;
                         lastTimestamp = timestamp;
@@ -237,13 +248,14 @@ namespace Alicat
                             sessionStart = timestamp;
                         }
 
-                        double elapsed = double.TryParse(parts[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double e) ? e : 0;
-                        double current = double.TryParse(parts[2], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double c) ? c : 0;
-                        double target = double.TryParse(parts[3], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double t) ? t : 0;
-                        string unit = parts.Length > 4 ? parts[4] : "PSIG";
-                        double rampSpeed = parts.Length > 5 && double.TryParse(parts[5], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double rs) ? rs : 0;
-                        int pollingFreq = parts.Length > 6 && int.TryParse(parts[6], out int pf) ? pf : 500;
-                        string? eventType = parts.Length > 7 && !string.IsNullOrWhiteSpace(parts[7]) ? parts[7] : null;
+                        // Парсим остальные поля с учетом формата
+                        double elapsed = parts.Length > timeIndex && double.TryParse(parts[timeIndex], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double e) ? e : 0;
+                        double current = parts.Length > currentIndex && double.TryParse(parts[currentIndex], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double c) ? c : 0;
+                        double target = parts.Length > targetIndex && double.TryParse(parts[targetIndex], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double t) ? t : 0;
+                        string unit = parts.Length > unitIndex ? parts[unitIndex] : "PSIG";
+                        double rampSpeed = parts.Length > rampSpeedIndex && double.TryParse(parts[rampSpeedIndex], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double rs) ? rs : 0;
+                        int pollingFreq = parts.Length > pollingFreqIndex && int.TryParse(parts[pollingFreqIndex], out int pf) ? pf : 500;
+                        string? eventType = parts.Length > eventIndex && !string.IsNullOrWhiteSpace(parts[eventIndex]) ? parts[eventIndex] : null;
 
                         var point = new DataPoint(timestamp, elapsed, current, target, unit, rampSpeed, pollingFreq, eventType);
                         dataPoints.Add(point);

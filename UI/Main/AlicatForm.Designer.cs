@@ -57,9 +57,7 @@ namespace Alicat
         private ToolStripSeparator menuDeviceSeparator2;
         private ToolStripMenuItem menuDeviceInfo;
         private ToolStripMenuItem menuView;
-        private ToolStripMenuItem menuViewTheme;
-        private ToolStripMenuItem menuViewLightTheme;
-        private ToolStripMenuItem menuViewDarkTheme;
+        private ToolStripMenuItem menuViewThemeToggle;
         private ToolStripMenuItem menuHelp;
         private ToolStripMenuItem menuHelpAboutDACTools;
         private ToolStripSeparator menuHelpSeparator1;
@@ -236,9 +234,7 @@ namespace Alicat
             menuDeviceSeparator2 = new ToolStripSeparator();
             menuDeviceInfo = new ToolStripMenuItem();
             menuView = new ToolStripMenuItem();
-            menuViewTheme = new ToolStripMenuItem();
-            menuViewLightTheme = new ToolStripMenuItem();
-            menuViewDarkTheme = new ToolStripMenuItem();
+            menuViewThemeToggle = new ToolStripMenuItem();
             menuHelp = new ToolStripMenuItem();
             menuHelpAboutDACTools = new ToolStripMenuItem();
             menuHelpSeparator1 = new ToolStripSeparator();
@@ -457,12 +453,14 @@ namespace Alicat
             // menuFileExportGraphImage
             // 
             menuFileExportGraphImage.Name = "menuFileExportGraphImage";
+            menuFileExportGraphImage.ShortcutKeys = Keys.Control | Keys.Shift | Keys.G;
             menuFileExportGraphImage.Size = new Size(200, 22);
-            menuFileExportGraphImage.Text = "Graph Image (PNG)...";
+            menuFileExportGraphImage.Text = "LineChart(PNG/SVG)...";
             // 
             // menuFileExportSessionReport
             // 
             menuFileExportSessionReport.Name = "menuFileExportSessionReport";
+            menuFileExportSessionReport.ShortcutKeys = Keys.Control | Keys.Shift | Keys.R;
             menuFileExportSessionReport.Size = new Size(200, 22);
             menuFileExportSessionReport.Text = "Session Report (PDF)...";
             // 
@@ -578,6 +576,7 @@ namespace Alicat
             // menuDeviceDisconnect
             // 
             menuDeviceDisconnect.Name = "menuDeviceDisconnect";
+            menuDeviceDisconnect.ShortcutKeys = Keys.Control | Keys.D;
             menuDeviceDisconnect.Size = new Size(232, 22);
             menuDeviceDisconnect.Text = "Disconnect";
             // 
@@ -606,35 +605,19 @@ namespace Alicat
             // 
             // menuView
             // 
-            menuView.DropDownItems.AddRange(new ToolStripItem[] { menuViewTheme });
+            menuView.DropDownItems.AddRange(new ToolStripItem[] { menuViewThemeToggle });
             menuView.Name = "menuView";
             menuView.Size = new Size(44, 23);
             menuView.Text = "View";
             // 
-            // menuViewTheme
+            // menuViewThemeToggle
             // 
-            menuViewTheme.DropDownItems.AddRange(new ToolStripItem[] { menuViewLightTheme, menuViewDarkTheme });
-            menuViewTheme.Name = "menuViewTheme";
-            menuViewTheme.Size = new Size(111, 22);
-            menuViewTheme.Text = "Theme";
-            // 
-            // menuViewLightTheme
-            // 
-            menuViewLightTheme.Checked = false;
-            menuViewLightTheme.CheckState = CheckState.Unchecked;
-            menuViewLightTheme.Name = "menuViewLightTheme";
-            menuViewLightTheme.Size = new Size(141, 22);
-            menuViewLightTheme.Text = "Light Theme";
-            menuViewLightTheme.Click += MenuViewLightTheme_Click;
-            // 
-            // menuViewDarkTheme
-            // 
-            menuViewDarkTheme.Checked = true;
-            menuViewDarkTheme.CheckState = CheckState.Checked;
-            menuViewDarkTheme.Name = "menuViewDarkTheme";
-            menuViewDarkTheme.Size = new Size(141, 22);
-            menuViewDarkTheme.Text = "Dark Theme";
-            menuViewDarkTheme.Click += MenuViewDarkTheme_Click;
+            menuViewThemeToggle.Checked = true;
+            menuViewThemeToggle.CheckState = CheckState.Checked;
+            menuViewThemeToggle.Name = "menuViewThemeToggle";
+            menuViewThemeToggle.Size = new Size(120, 22);
+            menuViewThemeToggle.Text = "Light"; // По умолчанию Dark тема, показываем "Light" для переключения
+            menuViewThemeToggle.Click += MenuViewThemeToggle_Click;
             // 
             // menuHelp
             // 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using Alicat.Presentation.Presenters;
+using Alicat.Domain;
 
 namespace Alicat
 {
@@ -135,25 +136,36 @@ namespace Alicat
                 lblCurrentRate.ForeColor = isDarkTheme ? darkAccentGreen : lightAccentGreen;
             }
 
-            // Update target status with ETA
-            double diff = Math.Abs(now - _setPoint);
-            if (diff < 0.5)
+            // Update target status with ETA using unified function
+            var etaResult = ETACalculator.CalculateETA(now, _setPoint, rate, isExhaust);
+            
+            if (isExhaust)
             {
-                lblTargetStatus.Text = "At target";
+                lblTargetStatus.Text = etaResult.DisplayText;
+                lblTargetStatus.ForeColor = System.Drawing.Color.Red;
+            }
+            else if (etaResult.IsAtTarget)
+            {
+                lblTargetStatus.Text = etaResult.DisplayText;
+                lblTargetStatus.ForeColor = isDarkTheme ? darkAccentGreen : lightAccentGreen;
+            }
+            else if (etaResult.IsStable)
+            {
+                // Если стабильное состояние - показываем разницу
+                double diff = Math.Abs(now - _setPoint);
+                lblTargetStatus.Text = $"→ {diff:F1} {_unit}";
+                lblTargetStatus.ForeColor = isDarkTheme ? darkTextMuted : lightTextMuted;
+            }
+            else if (etaResult.EtaSeconds.HasValue)
+            {
+                // Показываем ETA в формате MM:SS (как в GraphForm)
+                lblTargetStatus.Text = etaResult.DisplayText;
                 lblTargetStatus.ForeColor = isDarkTheme ? darkAccentGreen : lightAccentGreen;
             }
             else
             {
-                // Calculate ETA: (Target - Current) / Ramp Speed
-                if (rampSpeed > 0.001) // Avoid division by zero
-                {
-                    double eta = diff / rampSpeed;
-                    lblTargetStatus.Text = $"ETA: {eta:F1} s";
-                }
-                else
-                {
-                    lblTargetStatus.Text = $"→ {diff:F1} {_unit}";
-                }
+                // Нет данных для расчета ETA
+                lblTargetStatus.Text = etaResult.DisplayText;
                 lblTargetStatus.ForeColor = isDarkTheme ? darkTextMuted : lightTextMuted;
             }
         }

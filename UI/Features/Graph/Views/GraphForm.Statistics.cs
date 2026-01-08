@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows.Forms;
 using System.Drawing;
 using Alicat.Services.Data;
+using Alicat.Domain;
 
 namespace Alicat.UI.Features.Graph.Views
 {
@@ -33,10 +34,10 @@ namespace Alicat.UI.Features.Graph.Views
             double variance = points.Average(p => Math.Pow(p.Current - avg, 2));
             double stdDev = Math.Sqrt(variance);
 
-            // Duration
+            // Duration - считаем только если сессия запущена
             TimeSpan duration = _dataStore.IsRunning 
                 ? DateTime.Now - _dataStore.SessionStart 
-                : (points.Count > 0 ? points.Last().Timestamp - points.First().Timestamp : TimeSpan.Zero);
+                : TimeSpan.Zero; // Если сессия не запущена, Duration = 0
 
             // Sample rate (points per second)
             double sampleRate = duration.TotalSeconds > 0 
@@ -116,32 +117,20 @@ namespace Alicat.UI.Features.Graph.Views
             StatusLevel status = DetermineStatusLevel(currentPressure, targetPressure);
             UpdateStatusIndicator(status);
 
-            // Update ETA value
+            // Update ETA value using unified function
             if (lblETAValue != null)
             {
-                if (targetPressure.HasValue && !isExhaust)
+                var etaResult = ETACalculator.CalculateETA(currentPressure, targetPressure, rate, isExhaust);
+                lblETAValue.Text = etaResult.DisplayText;
+                
+                // Set color based on result
+                if (etaResult.IsAtTarget || etaResult.EtaSeconds.HasValue)
                 {
-                    double delta = currentPressure - targetPressure.Value;
-                    if (Math.Abs(rate) > 0.01)
-                    {
-                        double etaSeconds = Math.Abs(delta / rate);
-                        int etaMins = (int)(etaSeconds / 60);
-                        int etaSecs = (int)(etaSeconds % 60);
-                        lblETAValue.Text = $"{etaMins}:{etaSecs:D2}";
-                        lblETAValue.ForeColor = Color.FromArgb(16, 185, 129);  // Зелёный цвет
-                    }
-                    else
-                    {
-                        lblETAValue.Text = Math.Abs(delta) < 0.1 ? "Done" : "Stable";
-                        lblETAValue.ForeColor = Math.Abs(delta) < 0.1 
-                            ? Color.FromArgb(16, 185, 129)  // Зелёный для "Done"
-                            : Color.FromArgb(107, 114, 128);  // Серый для "Stable"
-                    }
+                    lblETAValue.ForeColor = Color.FromArgb(16, 185, 129);  // Зелёный цвет
                 }
                 else
                 {
-                    lblETAValue.Text = isExhaust ? "Purging" : "--";
-                    lblETAValue.ForeColor = Color.FromArgb(107, 114, 128);  // Серый когда нет значения
+                    lblETAValue.ForeColor = Color.FromArgb(107, 114, 128);  // Серый цвет
                 }
             }
         }

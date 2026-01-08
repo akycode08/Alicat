@@ -49,48 +49,63 @@ namespace Alicat
         private readonly Color darkValueDisconnected = Color.FromArgb(255, 82, 82); // Красный для значений при отключении (темная тема)
 
         // ====================================================================
-        // ОБРАБОТЧИКИ МЕНЮ (View -> Light/Dark Theme)
+        // ОБРАБОТЧИКИ МЕНЮ (View -> Light/Dark Theme Toggle)
         // ====================================================================
-        private void MenuViewLightTheme_Click(object sender, EventArgs e)
+        private void MenuViewThemeToggle_Click(object sender, EventArgs e)
         {
-            ApplyLightTheme();
-            menuViewLightTheme.Checked = true;
-            menuViewDarkTheme.Checked = false;
-            
-            // Update GraphForm theme if open
-            var graphForm = ((IMainView)this).GraphForm;
-            if (graphForm != null && !graphForm.IsDisposed)
+            // Переключаем тему
+            if (isDarkTheme)
             {
-                graphForm.ApplyTheme(false);
+                // Переключаемся на Light
+                ApplyLightTheme();
+                
+                // Update GraphForm theme if open
+                var graphForm = ((IMainView)this).GraphForm;
+                if (graphForm != null && !graphForm.IsDisposed)
+                {
+                    graphForm.ApplyTheme(false);
+                }
+                
+                // Update TableForm theme if open
+                var tableForm = ((IMainView)this).TableForm;
+                if (tableForm != null && !tableForm.IsDisposed)
+                {
+                    tableForm.ApplyTheme(false);
+                }
+            }
+            else
+            {
+                // Переключаемся на Dark
+                ApplyDarkTheme();
+                
+                // Update GraphForm theme if open
+                var graphForm = ((IMainView)this).GraphForm;
+                if (graphForm != null && !graphForm.IsDisposed)
+                {
+                    graphForm.ApplyTheme(true);
+                }
+                
+                // Update TableForm theme if open
+                var tableForm = ((IMainView)this).TableForm;
+                if (tableForm != null && !tableForm.IsDisposed)
+                {
+                    tableForm.ApplyTheme(true);
+                }
             }
             
-            // Update TableForm theme if open
-            var tableForm = ((IMainView)this).TableForm;
-            if (tableForm != null && !tableForm.IsDisposed)
-            {
-                tableForm.ApplyTheme(false);
-            }
+            // Обновляем текст меню: показываем, на ЧТО переключится (противоположная тема)
+            UpdateThemeToggleMenuText();
         }
-
-        private void MenuViewDarkTheme_Click(object sender, EventArgs e)
+        
+        /// <summary>
+        /// Обновляет текст пункта меню Theme Toggle в зависимости от текущей темы
+        /// </summary>
+        private void UpdateThemeToggleMenuText()
         {
-            ApplyDarkTheme();
-            menuViewLightTheme.Checked = false;
-            menuViewDarkTheme.Checked = true;
-            
-            // Update GraphForm theme if open
-            var graphForm = ((IMainView)this).GraphForm;
-            if (graphForm != null && !graphForm.IsDisposed)
-            {
-                graphForm.ApplyTheme(true);
-            }
-            
-            // Update TableForm theme if open
-            var tableForm = ((IMainView)this).TableForm;
-            if (tableForm != null && !tableForm.IsDisposed)
-            {
-                tableForm.ApplyTheme(true);
-            }
+            // Если сейчас Dark, показываем "Light" (чтобы переключиться на Light)
+            // Если сейчас Light, показываем "Dark" (чтобы переключиться на Dark)
+            menuViewThemeToggle.Text = isDarkTheme ? "Light" : "Dark";
+            menuViewThemeToggle.Checked = isDarkTheme;
         }
 
         // ====================================================================
@@ -99,6 +114,7 @@ namespace Alicat
         private void ApplyLightTheme()
         {
             isDarkTheme = false;
+            UpdateThemeToggleMenuText();
 
             BackColor = lightBgPrimary;
 
@@ -206,6 +222,7 @@ namespace Alicat
         private void ApplyDarkTheme()
         {
             isDarkTheme = true;
+            UpdateThemeToggleMenuText();
 
             BackColor = darkBgPrimary;
 
