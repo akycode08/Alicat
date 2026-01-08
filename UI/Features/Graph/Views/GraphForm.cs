@@ -729,9 +729,17 @@ namespace Alicat.UI.Features.Graph.Views
 
             UpdateCustomLabelsX();
 
+            // Для исторических данных (read-only режим) не обрезаем точки
+            // Только изменяем видимое окно через MinLimit/MaxLimit
+            if (!_dataStore.IsRunning)
+            {
+                // Исторические данные - не обрезаем, только меняем видимое окно
+                return;
+            }
+
             if (!forceTrim) return;
 
-            // Trim old points from current series
+            // Trim old points from current series (только для активных сессий)
             TrimSeriesByX(_seriesCurrent, xMin);
 
             // после трима индекс курсора может стать неверным
@@ -789,6 +797,13 @@ namespace Alicat.UI.Features.Graph.Views
         private void AutoTrimGraphSeries()
         {
             if (_seriesCurrent.Count == 0) return;
+            
+            // Для исторических данных (read-only режим) не обрезаем точки
+            // Все данные должны оставаться доступными для просмотра
+            if (!_dataStore.IsRunning)
+            {
+                return;
+            }
             
             // Определяем максимальный X (время) для удержания
             // Видимое окно + 20% буфер (~1.2 * _timeWindowSeconds)

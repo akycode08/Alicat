@@ -5,8 +5,8 @@
     "PollingFrequency": 500
   },
   "Device": {
-    "PressureRamp": 30,
-    "MaxPressure": 500,
+    "PressureRamp": 50,
+    "MaxPressure": 2000,
     "MinPressure": 0
   },
   "Control": {
@@ -28,5 +28,5 @@
   "RecentSessions": [
     "C:\\Users\\User\\Desktop\\Alicat_Test\\Test10\\session_2026-01-07_09-23-49.csv"
   ],
-  "LastSaved": "2026-01-08T13:34:03.5016916-06:00"
+  "LastSaved": "2026-01-08T15:11:59.3099679-06:00"
 }
