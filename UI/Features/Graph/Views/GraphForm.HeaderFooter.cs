@@ -4,6 +4,10 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO.Ports;
+using System.IO;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Drawing;
+using SkiaSharp;
 
 namespace Alicat.UI.Features.Graph.Views
 {
@@ -157,9 +161,7 @@ namespace Alicat.UI.Features.Graph.Views
             // Setup chart header legend with colored squares
             SetupChartHeaderLegend();
 
-            // Initialize footer with auto-save status
-            UpdateFooterAutoSave();
-            UpdateFooterStatistics();
+            // Footer elements removed - no longer needed
         }
 
         // Checkboxes for legend visibility control - removed
@@ -169,65 +171,8 @@ namespace Alicat.UI.Features.Graph.Views
 
         private void SetupChartHeaderLegend()
         {
-            if (flowLegend == null) return;
-
-            // Store existing labels temporarily
-            var existingLabels = new List<Control>();
-            if (lblLegendCurrent != null) existingLabels.Add(lblLegendCurrent);
-            if (lblLegendTarget != null) existingLabels.Add(lblLegendTarget);
-            if (lblLegendMin != null) existingLabels.Add(lblLegendMin);
-            if (lblLegendMax != null) existingLabels.Add(lblLegendMax);
-
-            // Clear flowLegend to rebuild in correct order
-            flowLegend.Controls.Clear();
-
-            // Update legend labels to show colored squares (no checkboxes)
-            if (lblLegendCurrent != null)
-            {
-                lblLegendCurrent.Text = "Current";
-                lblLegendCurrent.Paint += (s, e) =>
-                {
-                    using var brush = new SolidBrush(Color.FromArgb(0, 200, 240)); // Light blue
-                    e.Graphics.FillRectangle(brush, 0, 2, 12, 12);
-                };
-                flowLegend.Controls.Add(lblLegendCurrent);
-            }
-
-            // Target: Add label only (no checkbox)
-            if (lblLegendTarget != null)
-            {
-                lblLegendTarget.Text = "Target";
-                lblLegendTarget.Paint += (s, e) =>
-                {
-                    using var brush = new SolidBrush(Color.FromArgb(240, 200, 0)); // Yellow
-                    e.Graphics.FillRectangle(brush, 0, 2, 12, 12);
-                };
-                flowLegend.Controls.Add(lblLegendTarget);
-            }
-
-            // Min: Add label only (no checkbox)
-            if (lblLegendMin != null)
-            {
-                lblLegendMin.Text = "Min";
-                lblLegendMin.Paint += (s, e) =>
-                {
-                    using var brush = new SolidBrush(Color.FromArgb(76, 175, 80)); // Green
-                    e.Graphics.FillRectangle(brush, 0, 2, 12, 12);
-                };
-                flowLegend.Controls.Add(lblLegendMin);
-            }
-
-            // Max: Add label only (no checkbox)
-            if (lblLegendMax != null)
-            {
-                lblLegendMax.Text = "Max";
-                lblLegendMax.Paint += (s, e) =>
-                {
-                    using var brush = new SolidBrush(Color.FromArgb(244, 67, 54)); // Red
-                    e.Graphics.FillRectangle(brush, 0, 2, 12, 12);
-                };
-                flowLegend.Controls.Add(lblLegendMax);
-            }
+            // Легенда настраивается в ConfigureChart() через chartPressure.LegendPosition
+            // Старая легенда (flowLegend) была удалена
         }
 
         private void SetupHeaderLayout()
@@ -370,50 +315,7 @@ namespace Alicat.UI.Features.Graph.Views
             }
         }
 
-        private void UpdateFooterAutoSave()
-        {
-            if (InvokeRequired)
-            {
-                BeginInvoke(new Action(UpdateFooterAutoSave));
-                return;
-            }
-
-            // TODO: Get auto-save status from main form
-            // For now, show placeholder
-            if (lblAutoSaveStatus != null)
-            {
-                lblAutoSaveStatus.Text = "Auto-save • Enabled";
-                lblAutoSaveStatus.ForeColor = Color.Green;
-            }
-        }
-
-        private void UpdateFooterStatistics()
-        {
-            if (InvokeRequired)
-            {
-                BeginInvoke(new Action(UpdateFooterStatistics));
-                return;
-            }
-
-            var points = _dataStore?.Points;
-            if (points == null || points.Count == 0)
-            {
-                if (lblFooterMin != null) lblFooterMin.Text = "Min: 0.00";
-                if (lblFooterMax != null) lblFooterMax.Text = "Max: 0.00";
-                if (lblFooterAvg != null) lblFooterAvg.Text = "Avg: 0.00";
-                if (lblFooterPoints != null) lblFooterPoints.Text = "Points: 0";
-                return;
-            }
-
-            double min = points.Min(p => p.Current);
-            double max = points.Max(p => p.Current);
-            double avg = points.Average(p => p.Current);
-
-            if (lblFooterMin != null) lblFooterMin.Text = $"Min: {min:F2}";
-            if (lblFooterMax != null) lblFooterMax.Text = $"Max: {max:F2}";
-            if (lblFooterAvg != null) lblFooterAvg.Text = $"Avg: {avg:F2}";
-            if (lblFooterPoints != null) lblFooterPoints.Text = $"Points: {points.Count}";
-        }
+        // Footer elements were removed - UpdateFooterAutoSave and UpdateFooterStatistics are no longer needed
 
         // Pause handler delegate
         private Action? _pauseHandler;
@@ -454,6 +356,39 @@ namespace Alicat.UI.Features.Graph.Views
         public Rectangle GetChartBounds()
         {
             return chartPressure.Bounds;
+        }
+        
+        /// <summary>
+        /// Рендерит график на SKSurface используя DrawToBitmap и конвертацию в SkiaSharp
+        /// </summary>
+        private void RenderChartToSurface(SKSurface surface, int width, int height)
+        {
+            var canvas = surface.Canvas;
+            
+            // Очищаем canvas фоном
+            canvas.Clear(_isDarkTheme ? new SKColor(22, 24, 30) : SKColors.White);
+            
+            // Используем DrawToBitmap для получения изображения графика
+            using var bitmap = new Bitmap(chartPressure.Width, chartPressure.Height);
+            chartPressure.DrawToBitmap(bitmap, new Rectangle(0, 0, chartPressure.Width, chartPressure.Height));
+            
+            // Конвертируем System.Drawing.Bitmap в SKBitmap через MemoryStream
+            using var ms = new MemoryStream();
+            bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            ms.Position = 0;
+            using var skBitmap = SKBitmap.Decode(ms);
+            
+            // Масштабируем и рисуем на canvas с высоким качеством
+            var destRect = new SKRect(0, 0, width, height);
+            var srcRect = new SKRect(0, 0, skBitmap.Width, skBitmap.Height);
+            
+            using var paint = new SKPaint
+            {
+                FilterQuality = SKFilterQuality.High, // Высокое качество масштабирования
+                IsAntialias = true
+            };
+            
+            canvas.DrawBitmap(skBitmap, srcRect, destRect, paint);
         }
 
         /// <summary>
@@ -534,52 +469,42 @@ namespace Alicat.UI.Features.Graph.Views
                     counter++;
                 }
 
-                // 4. Экспортируем график
+                // 4. Экспортируем график используя встроенные методы LiveCharts2 через SkiaSharp
                 var chartBounds = chartPressure.Bounds;
                 int width = chartBounds.Width * settings.Scale;
                 int height = chartBounds.Height * settings.Scale;
 
                 if (settings.Format == "PNG")
                 {
-                    // PNG экспорт с масштабированием
-                    // Сначала рисуем в оригинальном размере, затем масштабируем
-                    using var originalBitmap = new Bitmap(chartBounds.Width, chartBounds.Height);
-                    chartPressure.DrawToBitmap(originalBitmap, chartBounds);
+                    // PNG экспорт через SKSurface (встроенный метод LiveCharts2 через SkiaSharp)
+                    using var surface = SKSurface.Create(new SKImageInfo(width, height));
+                    RenderChartToSurface(surface, width, height);
                     
-                    // Масштабируем изображение
-                    using var scaledBitmap = new Bitmap(width, height);
-                    using var graphics = Graphics.FromImage(scaledBitmap);
-                    graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                    graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                    graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
-                    
-                    graphics.DrawImage(originalBitmap, 0, 0, width, height);
-                    
-                    scaledBitmap.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
+                    // Сохраняем в PNG
+                    using var image = surface.Snapshot();
+                    using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+                    using var stream = File.OpenWrite(filePath);
+                    data.SaveTo(stream);
                 }
                 else if (settings.Format == "SVG")
                 {
-                    // SVG экспорт: создаем SVG файл с встроенным PNG изображением
-                    // Это валидный SVG, который будет отображаться в браузерах
-                    using var bitmap = new Bitmap(chartBounds.Width, chartBounds.Height);
-                    chartPressure.DrawToBitmap(bitmap, chartBounds);
+                    // SVG экспорт: используем PNG из SkiaSharp и встраиваем в SVG
+                    using var surface = SKSurface.Create(new SKImageInfo(width, height));
+                    RenderChartToSurface(surface, width, height);
                     
-                    // Конвертируем изображение в base64
-                    string base64Image;
-                    using (var ms = new System.IO.MemoryStream())
-                    {
-                        bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-                        byte[] imageBytes = ms.ToArray();
-                        base64Image = Convert.ToBase64String(imageBytes);
-                    }
+                    // Получаем PNG изображение
+                    using var image = surface.Snapshot();
+                    using var pngData = image.Encode(SKEncodedImageFormat.Png, 100);
+                    byte[] imageBytes = pngData.ToArray();
+                    string base64Image = Convert.ToBase64String(imageBytes);
                     
-                    // Создаем SVG файл с встроенным изображением
+                    // Создаем SVG файл с встроенным PNG изображением
                     string svgContent = $@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""no""?>
 <svg xmlns=""http://www.w3.org/2000/svg"" 
      xmlns:xlink=""http://www.w3.org/1999/xlink""
-     width=""{chartBounds.Width}"" 
-     height=""{chartBounds.Height}"" 
-     viewBox=""0 0 {chartBounds.Width} {chartBounds.Height}"">
+     width=""{width}"" 
+     height=""{height}"" 
+     viewBox=""0 0 {width} {height}"">
   <defs>
     <style type=""text/css"">
       <![CDATA[
@@ -591,12 +516,12 @@ namespace Alicat.UI.Features.Graph.Views
     </style>
   </defs>
   <image x=""0"" y=""0"" 
-         width=""{chartBounds.Width}"" 
-         height=""{chartBounds.Height}"" 
+         width=""{width}"" 
+         height=""{height}"" 
          xlink:href=""data:image/png;base64,{base64Image}""/>
 </svg>";
                     
-                    System.IO.File.WriteAllText(filePath, svgContent, System.Text.Encoding.UTF8);
+                    File.WriteAllText(filePath, svgContent, System.Text.Encoding.UTF8);
                 }
 
                 // 5. Показываем уведомление об успешном сохранении
@@ -696,6 +621,43 @@ namespace Alicat.UI.Features.Graph.Views
                     pnlLiveStatus.BackColor = Color.FromArgb(32, 35, 44);
                 }
                 
+                // THRESHOLDS, DISPLAY, ALERTS panels - dark background (same as LiveStatus)
+                if (grpThresholds != null)
+                {
+                    grpThresholds.BackColor = Color.FromArgb(32, 35, 44);
+                }
+                if (grpDisplay != null)
+                {
+                    grpDisplay.BackColor = Color.FromArgb(32, 35, 44);
+                }
+                if (grpAlerts != null)
+                {
+                    grpAlerts.BackColor = Color.FromArgb(32, 35, 44);
+                }
+                // Left panel GroupBoxes
+                if (grpLiveStatus != null)
+                {
+                    grpLiveStatus.BackColor = Color.FromArgb(32, 35, 44);
+                }
+                if (grpSessionStats != null)
+                {
+                    grpSessionStats.BackColor = Color.FromArgb(32, 35, 44);
+                }
+                if (grpGoToTarget != null)
+                {
+                    grpGoToTarget.BackColor = Color.FromArgb(32, 35, 44);
+                }
+                
+                // Chart - dark background (same as LiveStatus)
+                if (chartPressure != null)
+                {
+                    chartPressure.BackColor = Color.FromArgb(32, 35, 44);
+                }
+                if (panelCenter != null)
+                {
+                    panelCenter.BackColor = Color.FromArgb(32, 35, 44);
+                }
+                
                 // SESSION STATS panel - dark background
                 if (tlpSessionStats != null)
                 {
@@ -730,12 +692,6 @@ namespace Alicat.UI.Features.Graph.Views
                 // Update ETA and Trend colors for dark theme
                 if (lblETA != null) lblETA.ForeColor = Color.FromArgb(150, 155, 165);
                 if (lblTrend != null) lblTrend.ForeColor = Color.FromArgb(150, 155, 165);
-
-                if (lblThemeIndicator != null)
-                {
-                    lblThemeIndicator.Text = "✓ Dark theme";
-                    lblThemeIndicator.ForeColor = Color.White;
-                }
             }
             else
             {
@@ -750,6 +706,43 @@ namespace Alicat.UI.Features.Graph.Views
                 if (pnlLiveStatus != null)
                 {
                     pnlLiveStatus.BackColor = Color.FromArgb(255, 255, 255);
+                }
+                
+                // THRESHOLDS, DISPLAY, ALERTS panels - light background (same as LiveStatus)
+                if (grpThresholds != null)
+                {
+                    grpThresholds.BackColor = Color.FromArgb(255, 255, 255);
+                }
+                if (grpDisplay != null)
+                {
+                    grpDisplay.BackColor = Color.FromArgb(255, 255, 255);
+                }
+                if (grpAlerts != null)
+                {
+                    grpAlerts.BackColor = Color.FromArgb(255, 255, 255);
+                }
+                // Left panel GroupBoxes
+                if (grpLiveStatus != null)
+                {
+                    grpLiveStatus.BackColor = Color.FromArgb(255, 255, 255);
+                }
+                if (grpSessionStats != null)
+                {
+                    grpSessionStats.BackColor = Color.FromArgb(255, 255, 255);
+                }
+                if (grpGoToTarget != null)
+                {
+                    grpGoToTarget.BackColor = Color.FromArgb(255, 255, 255);
+                }
+                
+                // Chart - light background (same as LiveStatus)
+                if (chartPressure != null)
+                {
+                    chartPressure.BackColor = Color.FromArgb(255, 255, 255);
+                }
+                if (panelCenter != null)
+                {
+                    panelCenter.BackColor = Color.FromArgb(255, 255, 255);
                 }
                 
                 // SESSION STATS panel - light background
@@ -786,12 +779,6 @@ namespace Alicat.UI.Features.Graph.Views
                 // Update ETA and Trend colors for light theme
                 if (lblETA != null) lblETA.ForeColor = Color.FromArgb(80, 85, 95);
                 if (lblTrend != null) lblTrend.ForeColor = Color.FromArgb(80, 85, 95);
-
-                if (lblThemeIndicator != null)
-                {
-                    lblThemeIndicator.Text = "✓ Light theme";
-                    lblThemeIndicator.ForeColor = Color.Black;
-                }
             }
             
             // Force repaint of LIVE STATUS panel border
@@ -815,8 +802,7 @@ namespace Alicat.UI.Features.Graph.Views
             Color labelColor = isDark ? Color.FromArgb(120, 125, 140) : Color.FromArgb(80, 85, 95);
             Color valueColor = isDark ? Color.White : Color.FromArgb(30, 30, 35);
 
-            // Update labels
-            if (lblSessionStatsTitle != null) lblSessionStatsTitle.ForeColor = labelColor;
+            // Update labels (lblSessionStatsTitle removed - now using GroupBox Text)
             if (lblMinLabel != null) lblMinLabel.ForeColor = labelColor;
             if (lblMaxLabel != null) lblMaxLabel.ForeColor = labelColor;
             if (lblAvgLabel != null) lblAvgLabel.ForeColor = labelColor;

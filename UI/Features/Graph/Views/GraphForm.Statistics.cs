@@ -73,9 +73,6 @@ namespace Alicat.UI.Features.Graph.Views
             //     ? $"~{sampleRate:F1} Hz" 
             //     : "0 Hz";
             // if (lblSampleRateValue != null) lblSampleRateValue.Text = sampleRateStr;
-
-            // Update footer statistics
-            UpdateFooterStatistics();
         }
 
         // Update Live Status with large pressure display

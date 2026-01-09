@@ -12,9 +12,6 @@ namespace Alicat.UI.Features.Graph.Views
 {
     public partial class GraphForm
     {
-        // Toolbar buttons container (replaces Reset/Fullscreen in header)
-        private FlowLayoutPanel? _toolbarButtons;
-
         // Zoom and Pan state
         private bool _isPanning = false;
         private bool _isZooming = false;
@@ -27,212 +24,34 @@ namespace Alicat.UI.Features.Graph.Views
         // Zoom selection overlay panel (for visual feedback)
         private Panel? _zoomOverlayPanel;
 
-        // Toolbar buttons
-        private Button? _btnCamera;
-        private Button? _btnZoomToSelection;
-        private Button? _btnPan;
-        private Button? _btnZoomIn;
-        private Button? _btnZoomOut;
-        private Button? _btnFitToScreen;
-        private Button? _btnHome;
+        // Toolbar buttons are now created in Designer (btnZoom, btnPan, btnPlus, btnMinus, btnFullscreenChart, btnHome)
 
         /// <summary>
         /// Инициализирует панель инструментов графика
+        /// Кнопки созданы в Designer - связываем обработчики событий
         /// </summary>
         private void InitializeToolbar()
         {
-            // Find panelChartButtons (it's a FlowLayoutPanel)
-            FlowLayoutPanel? buttonsPanel = null;
-            
-            // Try direct access first
-            if (panelChartButtons != null)
-            {
-                buttonsPanel = panelChartButtons;
-            }
-            else
-            {
-                // Try to find by name
-                var found = Controls.Find("panelChartButtons", true).FirstOrDefault();
-                buttonsPanel = found as FlowLayoutPanel;
-            }
-
-            if (buttonsPanel == null)
-            {
-                System.Diagnostics.Debug.WriteLine("ERROR: panelChartButtons not found!");
-                return;
-            }
-
-            // Clear existing buttons (Reset, Fullscreen) first
-            buttonsPanel.Controls.Clear();
-            buttonsPanel.FlowDirection = FlowDirection.LeftToRight;
-            buttonsPanel.WrapContents = false;
-            buttonsPanel.AutoSize = true;
-            buttonsPanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            buttonsPanel.Padding = new Padding(4, 4, 4, 4);
-            
-            // Create buttons directly in panelChartButtons (no nested container)
-            CreateToolbarButtonsDirectly(buttonsPanel);
-            
-            // Force layout update
-            buttonsPanel.PerformLayout();
-            buttonsPanel.Invalidate();
-            buttonsPanel.Update();
+            // Connect event handlers for toolbar buttons (created in Designer)
+            if (btnZoom != null) btnZoom.Click += BtnZoom_Click;
+            if (btnPan != null) btnPan.Click += BtnPan_Click;
+            if (btnPlus != null) btnPlus.Click += BtnZoomIn_Click;
+            if (btnMinus != null) btnMinus.Click += BtnZoomOut_Click;
+            if (btnFullscreenChart != null) btnFullscreenChart.Click += BtnFitToScreen_Click;
+            if (btnHome != null) btnHome.Click += BtnHome_Click;
         }
-        
-        /// <summary>
-        /// Создает кнопки напрямую в указанной панели
-        /// </summary>
-        private void CreateToolbarButtonsDirectly(FlowLayoutPanel targetPanel)
+
+        // Event handler for btnZoom (redirects to BtnZoomToSelection_Click)
+        private void BtnZoom_Click(object? sender, EventArgs e)
         {
-            // Button style
-            var buttonStyle = new
-            {
-                Size = new Size(32, 32),
-                BackColor = Color.FromArgb(40, 43, 52),
-                FlatStyle = FlatStyle.Flat,
-                FlatAppearance = new
-                {
-                    BorderSize = 0,
-                    MouseOverBackColor = Color.FromArgb(50, 53, 62),
-                    MouseDownBackColor = Color.FromArgb(35, 38, 47)
-                },
-                ForeColor = Color.FromArgb(200, 205, 215),
-                Font = new Font("Segoe UI Symbol", 12f),
-                Margin = new Padding(2),
-                Cursor = Cursors.Hand
-            };
-
-            // 1. Camera (Export screenshot)
-            _btnCamera = CreateToolbarButton("📷", "Export chart as image", buttonStyle);
-            _btnCamera.Click += BtnCamera_Click;
-            targetPanel.Controls.Add(_btnCamera);
-
-            // 2. Zoom to Selection
-            _btnZoomToSelection = CreateToolbarButton("🔍", "Zoom to selection", buttonStyle);
-            _btnZoomToSelection.Click += BtnZoomToSelection_Click;
-            targetPanel.Controls.Add(_btnZoomToSelection);
-
-            // 3. Pan
-            _btnPan = CreateToolbarButton("⇄", "Pan chart", buttonStyle);
-            _btnPan.Click += BtnPan_Click;
-            targetPanel.Controls.Add(_btnPan);
-
-            // 4. Zoom In
-            _btnZoomIn = CreateToolbarButton("⊕", "Zoom in", buttonStyle);
-            _btnZoomIn.Click += BtnZoomIn_Click;
-            targetPanel.Controls.Add(_btnZoomIn);
-
-            // 5. Zoom Out
-            _btnZoomOut = CreateToolbarButton("⊖", "Zoom out", buttonStyle);
-            _btnZoomOut.Click += BtnZoomOut_Click;
-            targetPanel.Controls.Add(_btnZoomOut);
-
-            // 6. Fit to Screen
-            _btnFitToScreen = CreateToolbarButton("⛶", "Fit to screen", buttonStyle);
-            _btnFitToScreen.Click += BtnFitToScreen_Click;
-            targetPanel.Controls.Add(_btnFitToScreen);
-
-            // 7. Home (Reset view)
-            _btnHome = CreateToolbarButton("⌂", "Reset view", buttonStyle);
-            _btnHome.Click += BtnHome_Click;
-            targetPanel.Controls.Add(_btnHome);
+            BtnZoomToSelection_Click(sender, e);
         }
 
-        /// <summary>
-        /// Создает кнопки панели инструментов
-        /// </summary>
-        private void CreateToolbarButtons()
-        {
-            if (_toolbarButtons == null) return;
-
-            // Button style
-            var buttonStyle = new
-            {
-                Size = new Size(32, 32),
-                BackColor = Color.FromArgb(40, 43, 52),
-                FlatStyle = FlatStyle.Flat,
-                FlatAppearance = new
-                {
-                    BorderSize = 0,
-                    MouseOverBackColor = Color.FromArgb(50, 53, 62),
-                    MouseDownBackColor = Color.FromArgb(35, 38, 47)
-                },
-                ForeColor = Color.FromArgb(200, 205, 215),
-                Font = new Font("Segoe UI Symbol", 12f),
-                Margin = new Padding(2),
-                Cursor = Cursors.Hand
-            };
-
-            // 1. Camera (Export screenshot) - логика будет добавлена позже
-            _btnCamera = CreateToolbarButton("📷", "Export chart as image", buttonStyle);
-            // _btnCamera.Click += BtnCamera_Click; // Пока без логики
-            _toolbarButtons.Controls.Add(_btnCamera);
-
-            // 2. Zoom to Selection (Magnifying glass with square) - логика будет добавлена позже
-            _btnZoomToSelection = CreateToolbarButton("🔍", "Zoom to selection", buttonStyle);
-            // _btnZoomToSelection.Click += BtnZoomToSelection_Click; // Пока без логики
-            _toolbarButtons.Controls.Add(_btnZoomToSelection);
-
-            // 3. Pan (Four-directional arrows) - логика будет добавлена позже
-            _btnPan = CreateToolbarButton("⇄", "Pan chart", buttonStyle);
-            // _btnPan.Click += BtnPan_Click; // Пока без логики
-            _toolbarButtons.Controls.Add(_btnPan);
-
-            // 4. Zoom In (Plus in square) - логика будет добавлена позже
-            _btnZoomIn = CreateToolbarButton("⊕", "Zoom in", buttonStyle);
-            // _btnZoomIn.Click += BtnZoomIn_Click; // Пока без логики
-            _toolbarButtons.Controls.Add(_btnZoomIn);
-
-            // 5. Zoom Out (Minus in square) - логика будет добавлена позже
-            _btnZoomOut = CreateToolbarButton("⊖", "Zoom out", buttonStyle);
-            // _btnZoomOut.Click += BtnZoomOut_Click; // Пока без логики
-            _toolbarButtons.Controls.Add(_btnZoomOut);
-
-            // 6. Fit to Screen (Expand icon) - логика будет добавлена позже
-            _btnFitToScreen = CreateToolbarButton("⛶", "Fit to screen", buttonStyle);
-            // _btnFitToScreen.Click += BtnFitToScreen_Click; // Пока без логики
-            _toolbarButtons.Controls.Add(_btnFitToScreen);
-
-            // 7. Home (Reset view) - логика будет добавлена позже
-            _btnHome = CreateToolbarButton("⌂", "Reset view", buttonStyle);
-            // _btnHome.Click += BtnHome_Click; // Пока без логики
-            _toolbarButtons.Controls.Add(_btnHome);
-        }
-
-        private Button CreateToolbarButton(string text, string tooltip, dynamic style)
-        {
-            var btn = new Button
-            {
-                Text = text,
-                Size = style.Size,
-                BackColor = style.BackColor,
-                FlatStyle = style.FlatStyle,
-                ForeColor = style.ForeColor,
-                Font = style.Font,
-                Margin = style.Margin,
-                Cursor = style.Cursor,
-                Visible = true,
-                Enabled = true
-            };
-
-            btn.FlatAppearance.BorderSize = style.FlatAppearance.BorderSize;
-            btn.FlatAppearance.MouseOverBackColor = style.FlatAppearance.MouseOverBackColor;
-            btn.FlatAppearance.MouseDownBackColor = style.FlatAppearance.MouseDownBackColor;
-
-            var toolTip = new ToolTip();
-            toolTip.SetToolTip(btn, tooltip);
-
-            return btn;
-        }
+        // Buttons are now created in Designer - no need for CreateToolbarButtons() or CreateToolbarButton()
 
         // =========================
         // Toolbar button handlers
         // =========================
-
-        private void BtnCamera_Click(object? sender, EventArgs e)
-        {
-            ExportChartAsImage();
-        }
 
         private void BtnZoomToSelection_Click(object? sender, EventArgs e)
         {
@@ -302,18 +121,19 @@ namespace Alicat.UI.Features.Graph.Views
 
         private void UpdateButtonStates()
         {
-            if (_btnPan != null)
+            // Update button states using buttons from Designer
+            if (btnPan != null)
             {
-                _btnPan.BackColor = _isPanning 
+                btnPan.BackColor = _isPanning 
                     ? Color.FromArgb(60, 100, 150) 
-                    : Color.FromArgb(40, 43, 52);
+                    : Color.FromArgb(30, 33, 40);
             }
 
-            if (_btnZoomToSelection != null)
+            if (btnZoom != null)
             {
-                _btnZoomToSelection.BackColor = _isZooming 
+                btnZoom.BackColor = _isZooming 
                     ? Color.FromArgb(60, 100, 150) 
-                    : Color.FromArgb(40, 43, 52);
+                    : Color.FromArgb(30, 33, 40);
             }
         }
 

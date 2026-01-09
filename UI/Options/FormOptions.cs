@@ -72,10 +72,8 @@ namespace Alicat
             InitializeComponent();
 
             // 1) Берём текущее состояние (глобальные настройки) в локальную копию
-            _working = AppOptions.Current.Clone();
-
-            // 2) Показываем в UI
-            BindModelToUi(_working);
+            // Всегда загружаем актуальные значения из AppOptions.Current
+            RefreshFromCurrentSettings();
 
             // 3) Подписки на кнопки
             btnApply.Click += (_, __) =>
@@ -281,5 +279,18 @@ namespace Alicat
 
         // (опционально) Если нужно забрать результат напрямую
         internal AppOptions.Model GetResultModel() => _working.Clone();
+
+        /// <summary>
+        /// Обновляет UI из текущих настроек AppOptions.Current
+        /// (вызывается при изменении настроек извне, например, из GraphForm)
+        /// </summary>
+        public void RefreshFromCurrentSettings()
+        {
+            // Обновляем локальную копию из текущих настроек
+            _working = AppOptions.Current.Clone();
+            
+            // Обновляем UI
+            BindModelToUi(_working);
+        }
     }
 }

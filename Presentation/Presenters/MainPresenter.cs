@@ -1409,14 +1409,14 @@ namespace Alicat.Presentation.Presenters
                 // Устанавливаем обработчик для GO TO TARGET секции (без подтверждения)
                 _graphForm.SetTargetHandlerSilent((target) => SetTargetSilent(target));
                 
+                // Set emergency vent handler
+                _graphForm.SetEmergencyVentHandler(async () => await EmergencyStop());
+                
                 // Передаем SequenceService в GraphForm для синхронизации
                 if (_sequenceService != null)
                 {
                     _graphForm.SetSequenceService(_sequenceService);
                 }
-                
-                // Set emergency vent handler
-                _graphForm.SetEmergencyVentHandler(async () => await EmergencyStop());
                 
                 // Apply theme from main form
                 bool isDark = _view.IsDarkTheme;
@@ -1437,6 +1437,31 @@ namespace Alicat.Presentation.Presenters
                     _graphForm.WindowState = FormWindowState.Normal;
                 _graphForm.Focus();
             }
+            
+            // Устанавливаем обработчик для синхронизации thresholds с главной формой
+            _graphForm.SetThresholdsChangedHandler(() =>
+            {
+                // Обновляем внутренние значения в Presenter
+                _maxPressure = FormOptions.AppOptions.Current.MaxPressure ?? 200.0;
+                _minPressure = FormOptions.AppOptions.Current.MinPressure ?? 0.0;
+                
+                // Обновляем значения в View
+                _view.MaxPressure = _maxPressure;
+                
+                // Сохраняем настройки в файл
+                _view.SaveSettingsIfAutoSaveEnabled();
+                
+                // Обновляем UI через View (thread-safe)
+                _view.BeginInvoke(new Action(() =>
+                {
+                    _view.ApplyOptionsToUi();
+                    _view.ValidateTargetAgainstMax();
+                    _view.ValidateIncrementAgainstMax();
+                }));
+            });
+            
+            // Синхронизируем thresholds с текущими настройками при открытии
+            _graphForm.RefreshThresholdsFromSettings();
         }
 
         public void ShowTable(Form parentForm)

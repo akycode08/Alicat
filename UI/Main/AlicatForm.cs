@@ -260,8 +260,14 @@ namespace Alicat
             UpdateIncrementButtons();
 
             // Update System Settings display
-            lblMaxPressureValue.Text = $"{_maxPressure:F0} {_unit}";
-            lblMaxIncrementValue.Text = $"{_maxIncrementLimit:F1} {_unit}";
+            if (lblMaxPressureValue != null)
+            {
+                lblMaxPressureValue.Text = $"{_maxPressure:F0} {_unit}";
+            }
+            if (lblMaxIncrementValue != null)
+            {
+                lblMaxIncrementValue.Text = $"{_maxIncrementLimit:F1} {_unit}";
+            }
         }
 
         // ====================================================================

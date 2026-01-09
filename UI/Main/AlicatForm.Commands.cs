@@ -256,6 +256,12 @@ namespace Alicat
                     }
                 }
                 
+                // Синхронизируем thresholds в GraphForm (если открыт)
+                if (_graphForm != null && !_graphForm.IsDisposed)
+                {
+                    _graphForm.RefreshThresholdsFromSettings();
+                }
+                
                 // Сохраняем настройки при применении
                 System.Diagnostics.Debug.WriteLine($"[btnOptions_Click] Applied event - AutoConnectOnStartup = {FormOptions.AppOptions.Current.AutoConnectOnStartup}");
                 SaveSettingsToFile();
@@ -280,6 +286,12 @@ namespace Alicat
                     {
                         // Устройство не подключено, но значение уже сохранено в настройках
                     }
+                }
+                
+                // Синхронизируем thresholds в GraphForm (если открыт)
+                if (_graphForm != null && !_graphForm.IsDisposed)
+                {
+                    _graphForm.RefreshThresholdsFromSettings();
                 }
                 
                 // Сохраняем настройки при нажатии OK
@@ -321,27 +333,6 @@ namespace Alicat
             );
 
             UI_AppendStatusInfo("New session started");
-        }
-
-        // ====================================================================
-        // NAVIGATION: GRAPH
-        // ====================================================================
-
-        private void btnGraph_Click(object? sender, EventArgs e)
-        {
-            if (_graphForm == null || _graphForm.IsDisposed)
-            {
-                _graphForm = new GraphForm(DataStore);
-                // Устанавливаем обработчик для автоматического сохранения настроек при изменении thresholds
-                _graphForm.SetThresholdsChangedHandler(() => ((IMainView)this).SaveSettingsIfAutoSaveEnabled());
-                _graphForm.Show(this);
-            }
-            else
-            {
-                if (_graphForm.WindowState == FormWindowState.Minimized)
-                    _graphForm.WindowState = FormWindowState.Normal;
-                _graphForm.Focus();
-            }
         }
 
         // ====================================================================

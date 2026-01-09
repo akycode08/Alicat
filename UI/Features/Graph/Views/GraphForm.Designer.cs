@@ -34,6 +34,7 @@
             chartPressure = new LiveChartsCore.SkiaSharpView.WinForms.CartesianChart();
             panelLeft = new Panel();
             tlpLeft = new TableLayoutPanel();
+            grpLiveStatus = new GroupBox();
             pnlLiveStatus = new Panel();
             lblCurrentPressureLarge = new Label();
             lblCurrentUnit = new Label();
@@ -42,10 +43,8 @@
             pnlLiveStatusDivider = new Panel();
             lblETALabel = new Label();
             lblETAValue = new Label();
-            lblTarget = new Label();
-            lblETA = new Label();
+            grpSessionStats = new GroupBox();
             tlpSessionStats = new TableLayoutPanel();
-            lblSessionStatsTitle = new Label();
             lblMinLabel = new Label();
             lblMinValue = new Label();
             lblMaxLabel = new Label();
@@ -56,8 +55,8 @@
             lblPointsValue = new Label();
             lblDurationLabel = new Label();
             lblDurationValue = new Label();
+            grpGoToTarget = new GroupBox();
             tlpGoToTarget = new TableLayoutPanel();
-            lblGoToTargetTitle = new Label();
             dgvTargets = new DataGridView();
             tlpTargetInputs = new TableLayoutPanel();
             lblPSILabel = new Label();
@@ -77,7 +76,8 @@
             btnPauseTarget = new Button();
             btnStop = new Button();
             btnSkip = new Button();
-            btnEmergency = new Button();
+            lblTarget = new Label();
+            lblETA = new Label();
             tableLayoutPanel1 = new TableLayoutPanel();
             lblDelta = new Label();
             lblRate = new Label();
@@ -89,15 +89,25 @@
             lblSampleRateLabel = new Label();
             lblSampleRateValue = new Label();
             panelRight = new Panel();
+            btnEmergencyRight = new Button();
             tableSettings = new TableLayoutPanel();
+            grpThresholds = new GroupBox();
+            lblMaxThreshold = new Label();
+            numMaxThreshold = new NumericUpDown();
+            lblMinThreshold = new Label();
+            numMinThreshold = new NumericUpDown();
+            btnApplyThresholds = new Button();
+            grpDisplay = new GroupBox();
+            grpAlerts = new GroupBox();
             tlpTimeWindow = new TableLayoutPanel();
             lblTimeWindowTitle = new Label();
-            lblDuration = new Label();
-            cmbDuration = new ComboBox();
-            tlpGrid = new TableLayoutPanel();
+            btnPage1 = new Button();
+            btnPage2 = new Button();
+            btnPage3 = new Button();
+            btnPage4 = new Button();
+            btnPage5 = new Button();
+            btnPage6 = new Button();
             lblGridTitle = new Label();
-            lblYStep = new Label();
-            cmbYStep = new ComboBox();
             tlpThresholds = new TableLayoutPanel();
             lblThresholdsTitle = new Label();
             lblMaximum = new Label();
@@ -119,12 +129,6 @@
             chkAtTarget = new CheckBox();
             chkAtMax = new CheckBox();
             panelBottom = new Panel();
-            footerLayout = new TableLayoutPanel();
-            lblAutoSaveStatus = new Label();
-            lblFooterMin = new Label();
-            lblFooterAvg = new Label();
-            lblFooterPoints = new Label();
-            lblThemeIndicator = new Label();
             panelHeader = new Panel();
             headerLayoutPanel = new TableLayoutPanel();
             headerLeftFlowPanel = new FlowLayoutPanel();
@@ -135,56 +139,68 @@
             btnPause = new Button();
             btnExport = new Button();
             panelChartHeader = new Panel();
-            panelChartButtons = new FlowLayoutPanel();
-            flowLegend = new FlowLayoutPanel();
-            lblLegendCurrent = new Label();
-            lblLegendTarget = new Label();
-            lblLegendMin = new Label();
-            lblLegendMax = new Label();
-            btnChartReset = new Button();
-            btnFullscreen = new Button();
+            tlpChartHeader = new TableLayoutPanel();
+            durationPanel = new FlowLayoutPanel();
+            btn5M = new Button();
+            btn15M = new Button();
+            btn1H = new Button();
+            btn4H = new Button();
+            btn10H = new Button();
+            btnALL = new Button();
+            toolbarPanel = new FlowLayoutPanel();
+            btnZoom = new Button();
+            btnPan = new Button();
+            btnPlus = new Button();
+            btnMinus = new Button();
+            btnFullscreenChart = new Button();
+            btnHome = new Button();
             panelCenter = new Panel();
             lblComPort = new Label();
             lblHotkeys = new Label();
             btnReset = new Button();
             btnFullscreenHeader = new Button();
-            lblFooterMax = new Label();
             panelLeft.SuspendLayout();
             tlpLeft.SuspendLayout();
+            grpLiveStatus.SuspendLayout();
             pnlLiveStatus.SuspendLayout();
+            grpSessionStats.SuspendLayout();
             tlpSessionStats.SuspendLayout();
+            grpGoToTarget.SuspendLayout();
             tlpGoToTarget.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvTargets).BeginInit();
             tlpTargetInputs.SuspendLayout();
+            tlpButtonsRow.SuspendLayout();
             tlpControlButtons.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
             tableLayoutPanel2.SuspendLayout();
             panelRight.SuspendLayout();
             tableSettings.SuspendLayout();
+            grpThresholds.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)numMaxThreshold).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numMinThreshold).BeginInit();
             tlpTimeWindow.SuspendLayout();
-            tlpGrid.SuspendLayout();
             tlpThresholds.SuspendLayout();
             tlpDisplay.SuspendLayout();
             tlpAlerts.SuspendLayout();
-            panelBottom.SuspendLayout();
-            footerLayout.SuspendLayout();
             panelHeader.SuspendLayout();
             headerLayoutPanel.SuspendLayout();
             headerLeftFlowPanel.SuspendLayout();
             headerRightFlowPanel.SuspendLayout();
             panelChartHeader.SuspendLayout();
-            flowLegend.SuspendLayout();
+            tlpChartHeader.SuspendLayout();
+            durationPanel.SuspendLayout();
+            toolbarPanel.SuspendLayout();
             panelCenter.SuspendLayout();
             SuspendLayout();
             // 
             // chartPressure
             // 
-            chartPressure.BackColor = Color.FromArgb(21, 23, 28);
+            chartPressure.BackColor = Color.FromArgb(32, 35, 44);
             chartPressure.Dock = DockStyle.Fill;
             chartPressure.Location = new Point(0, 0);
             chartPressure.Margin = new Padding(0);
             chartPressure.Name = "chartPressure";
-            chartPressure.Size = new Size(910, 710);
+            chartPressure.Size = new Size(780, 660);
             chartPressure.TabIndex = 0;
             // 
             // panelLeft
@@ -201,21 +217,34 @@
             // 
             tlpLeft.ColumnCount = 1;
             tlpLeft.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tlpLeft.Controls.Add(pnlLiveStatus, 0, 1);
-            tlpLeft.Controls.Add(tlpSessionStats, 0, 2);
-            tlpLeft.Controls.Add(tlpGoToTarget, 0, 3);
-            tlpLeft.Controls.Add(btnEmergency, 0, 4);
+            tlpLeft.Controls.Add(grpLiveStatus, 0, 0);
+            tlpLeft.Controls.Add(grpSessionStats, 0, 1);
+            tlpLeft.Controls.Add(grpGoToTarget, 0, 2);
             tlpLeft.Dock = DockStyle.Fill;
             tlpLeft.Location = new Point(0, 0);
             tlpLeft.Name = "tlpLeft";
-            tlpLeft.RowCount = 5;
-            tlpLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 2F));
+            tlpLeft.RowCount = 3;
+            tlpLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 22F));
             tlpLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
-            tlpLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 18F));
-            tlpLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tlpLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 10F));
-            tlpLeft.Size = new Size(189, 704);
+            tlpLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 58F));
+            tlpLeft.Size = new Size(260, 770);
             tlpLeft.TabIndex = 0;
+            // 
+            // grpLiveStatus
+            // 
+            grpLiveStatus.BackColor = Color.FromArgb(32, 35, 44);
+            grpLiveStatus.Controls.Add(pnlLiveStatus);
+            grpLiveStatus.Dock = DockStyle.Fill;
+            grpLiveStatus.FlatStyle = FlatStyle.Flat;
+            grpLiveStatus.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            grpLiveStatus.ForeColor = Color.FromArgb(107, 114, 128);
+            grpLiveStatus.Location = new Point(3, 3);
+            grpLiveStatus.Name = "grpLiveStatus";
+            grpLiveStatus.Padding = new Padding(8, 12, 8, 8);
+            grpLiveStatus.Size = new Size(254, 163);
+            grpLiveStatus.TabIndex = 0;
+            grpLiveStatus.TabStop = false;
+            grpLiveStatus.Text = "LIVE STATUS";
             // 
             // pnlLiveStatus
             // 
@@ -228,9 +257,9 @@
             pnlLiveStatus.Controls.Add(lblETALabel);
             pnlLiveStatus.Controls.Add(lblETAValue);
             pnlLiveStatus.Dock = DockStyle.Fill;
-            pnlLiveStatus.Location = new Point(3, 17);
+            pnlLiveStatus.Location = new Point(8, 27);
             pnlLiveStatus.Name = "pnlLiveStatus";
-            pnlLiveStatus.Size = new Size(183, 140);
+            pnlLiveStatus.Size = new Size(238, 128);
             pnlLiveStatus.TabIndex = 0;
             pnlLiveStatus.Paint += PnlLiveStatus_Paint;
             // 
@@ -316,48 +345,48 @@
             lblETAValue.Text = "--";
             lblETAValue.TextAlign = ContentAlignment.MiddleRight;
             // 
+            // grpSessionStats
+            // 
+            grpSessionStats.BackColor = Color.FromArgb(32, 35, 44);
+            grpSessionStats.Controls.Add(tlpSessionStats);
+            grpSessionStats.Dock = DockStyle.Fill;
+            grpSessionStats.FlatStyle = FlatStyle.Flat;
+            grpSessionStats.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            grpSessionStats.ForeColor = Color.FromArgb(107, 114, 128);
+            grpSessionStats.Location = new Point(3, 172);
+            grpSessionStats.Name = "grpSessionStats";
+            grpSessionStats.Padding = new Padding(8, 12, 8, 8);
+            grpSessionStats.Size = new Size(254, 148);
+            grpSessionStats.TabIndex = 1;
+            grpSessionStats.TabStop = false;
+            grpSessionStats.Text = "SESSION STATS";
+            // 
             // tlpSessionStats
             // 
             tlpSessionStats.ColumnCount = 2;
             tlpSessionStats.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             tlpSessionStats.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tlpSessionStats.Controls.Add(lblSessionStatsTitle, 0, 0);
-            tlpSessionStats.Controls.Add(lblMinLabel, 0, 1);
-            tlpSessionStats.Controls.Add(lblMinValue, 1, 1);
-            tlpSessionStats.Controls.Add(lblMaxLabel, 0, 2);
-            tlpSessionStats.Controls.Add(lblMaxValue, 1, 2);
-            tlpSessionStats.Controls.Add(lblAvgLabel, 0, 3);
-            tlpSessionStats.Controls.Add(lblAvgValue, 1, 3);
-            tlpSessionStats.Controls.Add(lblPointsLabel, 0, 4);
-            tlpSessionStats.Controls.Add(lblPointsValue, 1, 4);
-            tlpSessionStats.Controls.Add(lblDurationLabel, 0, 5);
-            tlpSessionStats.Controls.Add(lblDurationValue, 1, 5);
+            tlpSessionStats.Controls.Add(lblMinLabel, 0, 0);
+            tlpSessionStats.Controls.Add(lblMinValue, 1, 0);
+            tlpSessionStats.Controls.Add(lblMaxLabel, 0, 1);
+            tlpSessionStats.Controls.Add(lblMaxValue, 1, 1);
+            tlpSessionStats.Controls.Add(lblAvgLabel, 0, 2);
+            tlpSessionStats.Controls.Add(lblAvgValue, 1, 2);
+            tlpSessionStats.Controls.Add(lblPointsLabel, 0, 3);
+            tlpSessionStats.Controls.Add(lblPointsValue, 1, 3);
+            tlpSessionStats.Controls.Add(lblDurationLabel, 0, 4);
+            tlpSessionStats.Controls.Add(lblDurationValue, 1, 4);
             tlpSessionStats.Dock = DockStyle.Fill;
-            tlpSessionStats.Location = new Point(3, 157);
+            tlpSessionStats.Location = new Point(8, 27);
             tlpSessionStats.Name = "tlpSessionStats";
-            tlpSessionStats.RowCount = 6;
-            tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Absolute, 25F));
+            tlpSessionStats.RowCount = 5;
             tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
             tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
             tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
             tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
             tlpSessionStats.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
-            tlpSessionStats.Size = new Size(183, 120);
-            tlpSessionStats.TabIndex = 3;
-            // 
-            // lblSessionStatsTitle
-            // 
-            lblSessionStatsTitle.AutoSize = true;
-            tlpSessionStats.SetColumnSpan(lblSessionStatsTitle, 2);
-            lblSessionStatsTitle.Dock = DockStyle.Fill;
-            lblSessionStatsTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            lblSessionStatsTitle.ForeColor = Color.FromArgb(120, 125, 140);
-            lblSessionStatsTitle.Location = new Point(3, 0);
-            lblSessionStatsTitle.Name = "lblSessionStatsTitle";
-            lblSessionStatsTitle.Size = new Size(177, 25);
-            lblSessionStatsTitle.TabIndex = 0;
-            lblSessionStatsTitle.Text = "SESSION STATS";
-            lblSessionStatsTitle.TextAlign = ContentAlignment.MiddleLeft;
+            tlpSessionStats.Size = new Size(238, 113);
+            tlpSessionStats.TabIndex = 0;
             // 
             // lblMinLabel
             // 
@@ -365,9 +394,9 @@
             lblMinLabel.Dock = DockStyle.Fill;
             lblMinLabel.Font = new Font("Segoe UI", 8F);
             lblMinLabel.ForeColor = Color.FromArgb(120, 125, 140);
-            lblMinLabel.Location = new Point(3, 25);
+            lblMinLabel.Location = new Point(3, 0);
             lblMinLabel.Name = "lblMinLabel";
-            lblMinLabel.Size = new Size(85, 19);
+            lblMinLabel.Size = new Size(113, 22);
             lblMinLabel.TabIndex = 1;
             lblMinLabel.Text = "Min:";
             lblMinLabel.TextAlign = ContentAlignment.MiddleLeft;
@@ -378,9 +407,9 @@
             lblMinValue.Dock = DockStyle.Fill;
             lblMinValue.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
             lblMinValue.ForeColor = Color.White;
-            lblMinValue.Location = new Point(94, 25);
+            lblMinValue.Location = new Point(122, 0);
             lblMinValue.Name = "lblMinValue";
-            lblMinValue.Size = new Size(86, 19);
+            lblMinValue.Size = new Size(113, 22);
             lblMinValue.TabIndex = 2;
             lblMinValue.Text = "0.00";
             lblMinValue.TextAlign = ContentAlignment.MiddleRight;
@@ -391,9 +420,9 @@
             lblMaxLabel.Dock = DockStyle.Fill;
             lblMaxLabel.Font = new Font("Segoe UI", 8F);
             lblMaxLabel.ForeColor = Color.FromArgb(120, 125, 140);
-            lblMaxLabel.Location = new Point(3, 44);
+            lblMaxLabel.Location = new Point(3, 22);
             lblMaxLabel.Name = "lblMaxLabel";
-            lblMaxLabel.Size = new Size(85, 19);
+            lblMaxLabel.Size = new Size(113, 22);
             lblMaxLabel.TabIndex = 3;
             lblMaxLabel.Text = "Max:";
             lblMaxLabel.TextAlign = ContentAlignment.MiddleLeft;
@@ -404,9 +433,9 @@
             lblMaxValue.Dock = DockStyle.Fill;
             lblMaxValue.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
             lblMaxValue.ForeColor = Color.White;
-            lblMaxValue.Location = new Point(94, 44);
+            lblMaxValue.Location = new Point(122, 22);
             lblMaxValue.Name = "lblMaxValue";
-            lblMaxValue.Size = new Size(86, 19);
+            lblMaxValue.Size = new Size(113, 22);
             lblMaxValue.TabIndex = 4;
             lblMaxValue.Text = "0.00";
             lblMaxValue.TextAlign = ContentAlignment.MiddleRight;
@@ -417,9 +446,9 @@
             lblAvgLabel.Dock = DockStyle.Fill;
             lblAvgLabel.Font = new Font("Segoe UI", 8F);
             lblAvgLabel.ForeColor = Color.FromArgb(120, 125, 140);
-            lblAvgLabel.Location = new Point(3, 63);
+            lblAvgLabel.Location = new Point(3, 44);
             lblAvgLabel.Name = "lblAvgLabel";
-            lblAvgLabel.Size = new Size(85, 19);
+            lblAvgLabel.Size = new Size(113, 22);
             lblAvgLabel.TabIndex = 5;
             lblAvgLabel.Text = "Average:";
             lblAvgLabel.TextAlign = ContentAlignment.MiddleLeft;
@@ -430,9 +459,9 @@
             lblAvgValue.Dock = DockStyle.Fill;
             lblAvgValue.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
             lblAvgValue.ForeColor = Color.White;
-            lblAvgValue.Location = new Point(94, 63);
+            lblAvgValue.Location = new Point(122, 44);
             lblAvgValue.Name = "lblAvgValue";
-            lblAvgValue.Size = new Size(86, 19);
+            lblAvgValue.Size = new Size(113, 22);
             lblAvgValue.TabIndex = 6;
             lblAvgValue.Text = "0.00";
             lblAvgValue.TextAlign = ContentAlignment.MiddleRight;
@@ -443,9 +472,9 @@
             lblPointsLabel.Dock = DockStyle.Fill;
             lblPointsLabel.Font = new Font("Segoe UI", 8F);
             lblPointsLabel.ForeColor = Color.FromArgb(120, 125, 140);
-            lblPointsLabel.Location = new Point(3, 82);
+            lblPointsLabel.Location = new Point(3, 66);
             lblPointsLabel.Name = "lblPointsLabel";
-            lblPointsLabel.Size = new Size(85, 19);
+            lblPointsLabel.Size = new Size(113, 22);
             lblPointsLabel.TabIndex = 9;
             lblPointsLabel.Text = "Points:";
             lblPointsLabel.TextAlign = ContentAlignment.MiddleLeft;
@@ -456,9 +485,9 @@
             lblPointsValue.Dock = DockStyle.Fill;
             lblPointsValue.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
             lblPointsValue.ForeColor = Color.White;
-            lblPointsValue.Location = new Point(94, 82);
+            lblPointsValue.Location = new Point(122, 66);
             lblPointsValue.Name = "lblPointsValue";
-            lblPointsValue.Size = new Size(86, 19);
+            lblPointsValue.Size = new Size(113, 22);
             lblPointsValue.TabIndex = 10;
             lblPointsValue.Text = "0";
             lblPointsValue.TextAlign = ContentAlignment.MiddleRight;
@@ -469,9 +498,9 @@
             lblDurationLabel.Dock = DockStyle.Fill;
             lblDurationLabel.Font = new Font("Segoe UI", 8F);
             lblDurationLabel.ForeColor = Color.FromArgb(120, 125, 140);
-            lblDurationLabel.Location = new Point(3, 101);
+            lblDurationLabel.Location = new Point(3, 88);
             lblDurationLabel.Name = "lblDurationLabel";
-            lblDurationLabel.Size = new Size(85, 19);
+            lblDurationLabel.Size = new Size(113, 25);
             lblDurationLabel.TabIndex = 11;
             lblDurationLabel.Text = "Duration:";
             lblDurationLabel.TextAlign = ContentAlignment.MiddleLeft;
@@ -482,34 +511,48 @@
             lblDurationValue.Dock = DockStyle.Fill;
             lblDurationValue.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
             lblDurationValue.ForeColor = Color.White;
-            lblDurationValue.Location = new Point(94, 101);
+            lblDurationValue.Location = new Point(122, 88);
             lblDurationValue.Name = "lblDurationValue";
-            lblDurationValue.Size = new Size(86, 19);
+            lblDurationValue.Size = new Size(113, 25);
             lblDurationValue.TabIndex = 12;
             lblDurationValue.Text = "00:00";
             lblDurationValue.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // grpGoToTarget
+            // 
+            grpGoToTarget.BackColor = Color.FromArgb(32, 35, 44);
+            grpGoToTarget.Controls.Add(tlpGoToTarget);
+            grpGoToTarget.Dock = DockStyle.Fill;
+            grpGoToTarget.FlatStyle = FlatStyle.Flat;
+            grpGoToTarget.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            grpGoToTarget.ForeColor = Color.FromArgb(107, 114, 128);
+            grpGoToTarget.Location = new Point(3, 326);
+            grpGoToTarget.Name = "grpGoToTarget";
+            grpGoToTarget.Padding = new Padding(8, 12, 8, 8);
+            grpGoToTarget.Size = new Size(254, 441);
+            grpGoToTarget.TabIndex = 2;
+            grpGoToTarget.TabStop = false;
+            grpGoToTarget.Text = "GO TO TARGET";
             // 
             // tlpGoToTarget
             // 
             tlpGoToTarget.ColumnCount = 1;
             tlpGoToTarget.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tlpGoToTarget.Controls.Add(lblGoToTargetTitle, 0, 0);
-            tlpGoToTarget.Controls.Add(dgvTargets, 0, 1);
-            tlpGoToTarget.Controls.Add(tlpTargetInputs, 0, 2);
-            tlpGoToTarget.Controls.Add(btnAddTarget, 0, 3);
-            tlpGoToTarget.Controls.Add(tlpButtonsRow, 0, 4);
-            tlpGoToTarget.Controls.Add(lblProgress, 0, 5);
-            tlpGoToTarget.Controls.Add(progressBarProgress, 0, 6);
-            tlpGoToTarget.Controls.Add(lblHoldTimer, 0, 7);
-            tlpGoToTarget.Controls.Add(progressBarHold, 0, 8);
-            tlpGoToTarget.Controls.Add(tlpControlButtons, 0, 9);
+            tlpGoToTarget.Controls.Add(dgvTargets, 0, 0);
+            tlpGoToTarget.Controls.Add(tlpTargetInputs, 0, 1);
+            tlpGoToTarget.Controls.Add(btnAddTarget, 0, 2);
+            tlpGoToTarget.Controls.Add(tlpButtonsRow, 0, 3);
+            tlpGoToTarget.Controls.Add(lblProgress, 0, 4);
+            tlpGoToTarget.Controls.Add(progressBarProgress, 0, 5);
+            tlpGoToTarget.Controls.Add(lblHoldTimer, 0, 6);
+            tlpGoToTarget.Controls.Add(progressBarHold, 0, 7);
+            tlpGoToTarget.Controls.Add(tlpControlButtons, 0, 8);
             tlpGoToTarget.Dock = DockStyle.Fill;
-            tlpGoToTarget.Location = new Point(3, 283);
+            tlpGoToTarget.Location = new Point(8, 27);
             tlpGoToTarget.Name = "tlpGoToTarget";
             tlpGoToTarget.Padding = new Padding(5);
-            tlpGoToTarget.RowCount = 10;
-            tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Absolute, 25F));
-            tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+            tlpGoToTarget.RowCount = 9;
+            tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Percent, 28F));
             tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
             tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
             tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
@@ -518,21 +561,8 @@
             tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Absolute, 25F));
             tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Absolute, 15F));
             tlpGoToTarget.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
-            tlpGoToTarget.Size = new Size(183, 346);
-            tlpGoToTarget.TabIndex = 4;
-            // 
-            // lblGoToTargetTitle
-            // 
-            lblGoToTargetTitle.AutoSize = true;
-            lblGoToTargetTitle.Dock = DockStyle.Fill;
-            lblGoToTargetTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            lblGoToTargetTitle.ForeColor = Color.FromArgb(120, 125, 140);
-            lblGoToTargetTitle.Location = new Point(8, 5);
-            lblGoToTargetTitle.Name = "lblGoToTargetTitle";
-            lblGoToTargetTitle.Size = new Size(178, 25);
-            lblGoToTargetTitle.TabIndex = 0;
-            lblGoToTargetTitle.Text = "GO TO TARGET";
-            lblGoToTargetTitle.TextAlign = ContentAlignment.MiddleLeft;
+            tlpGoToTarget.Size = new Size(238, 406);
+            tlpGoToTarget.TabIndex = 0;
             // 
             // dgvTargets
             // 
@@ -545,7 +575,6 @@
             dataGridViewCellStyle1.BackColor = Color.FromArgb(26, 31, 46);
             dataGridViewCellStyle1.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
             dataGridViewCellStyle1.ForeColor = Color.FromArgb(156, 163, 175);
-            // SelectionBackColor установлен в тот же цвет, что и BackColor, чтобы не было синей подсветки при выделении заголовка
             dataGridViewCellStyle1.SelectionBackColor = Color.FromArgb(26, 31, 46);
             dataGridViewCellStyle1.SelectionForeColor = Color.FromArgb(156, 163, 175);
             dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
@@ -554,8 +583,7 @@
             dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = Color.FromArgb(21, 23, 28);
             dataGridViewCellStyle2.Font = new Font("Segoe UI", 9F);
-            dataGridViewCellStyle2.ForeColor = Color.White;
-            // SelectionBackColor установлен в тот же цвет, что и BackColor, чтобы не было подсветки выбранной строки
+            dataGridViewCellStyle2.ForeColor = Color.FromArgb(107, 114, 128);
             dataGridViewCellStyle2.SelectionBackColor = Color.FromArgb(21, 23, 28);
             dataGridViewCellStyle2.SelectionForeColor = Color.White;
             dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
@@ -563,13 +591,13 @@
             dgvTargets.Dock = DockStyle.Fill;
             dgvTargets.EnableHeadersVisualStyles = false;
             dgvTargets.GridColor = Color.FromArgb(42, 45, 53);
-            dgvTargets.Location = new Point(8, 33);
+            dgvTargets.Location = new Point(8, 8);
             dgvTargets.MultiSelect = false;
             dgvTargets.Name = "dgvTargets";
             dgvTargets.ReadOnly = true;
             dgvTargets.RowHeadersVisible = false;
             dgvTargets.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvTargets.Size = new Size(178, 90);
+            dgvTargets.Size = new Size(222, 165);
             dgvTargets.TabIndex = 1;
             // 
             // tlpTargetInputs
@@ -584,12 +612,12 @@
             tlpTargetInputs.Controls.Add(lblHoldLabel, 2, 0);
             tlpTargetInputs.Controls.Add(txtHold, 3, 1);
             tlpTargetInputs.Dock = DockStyle.Fill;
-            tlpTargetInputs.Location = new Point(8, 126);
+            tlpTargetInputs.Location = new Point(8, 179);
             tlpTargetInputs.Name = "tlpTargetInputs";
             tlpTargetInputs.RowCount = 2;
             tlpTargetInputs.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
             tlpTargetInputs.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
-            tlpTargetInputs.Size = new Size(178, 44);
+            tlpTargetInputs.Size = new Size(222, 44);
             tlpTargetInputs.TabIndex = 2;
             // 
             // lblPSILabel
@@ -614,7 +642,7 @@
             txtPSI.Location = new Point(45, 20);
             txtPSI.Margin = new Padding(0);
             txtPSI.Name = "txtPSI";
-            txtPSI.Size = new Size(29, 23);
+            txtPSI.Size = new Size(51, 22);
             txtPSI.TabIndex = 1;
             txtPSI.Text = "0";
             // 
@@ -623,7 +651,7 @@
             lblHoldLabel.AutoSize = true;
             lblHoldLabel.Dock = DockStyle.Fill;
             lblHoldLabel.ForeColor = Color.FromArgb(120, 125, 140);
-            lblHoldLabel.Location = new Point(74, 0);
+            lblHoldLabel.Location = new Point(96, 0);
             lblHoldLabel.Margin = new Padding(0);
             lblHoldLabel.Name = "lblHoldLabel";
             lblHoldLabel.Size = new Size(75, 20);
@@ -637,10 +665,10 @@
             txtHold.BorderStyle = BorderStyle.FixedSingle;
             txtHold.Dock = DockStyle.Fill;
             txtHold.ForeColor = Color.White;
-            txtHold.Location = new Point(149, 20);
+            txtHold.Location = new Point(171, 20);
             txtHold.Margin = new Padding(0);
             txtHold.Name = "txtHold";
-            txtHold.Size = new Size(29, 23);
+            txtHold.Size = new Size(51, 22);
             txtHold.TabIndex = 3;
             txtHold.Text = "0";
             // 
@@ -651,23 +679,23 @@
             btnAddTarget.FlatAppearance.BorderSize = 0;
             btnAddTarget.FlatStyle = FlatStyle.Flat;
             btnAddTarget.ForeColor = Color.White;
-            btnAddTarget.Location = new Point(8, 176);
+            btnAddTarget.Location = new Point(8, 229);
             btnAddTarget.Name = "btnAddTarget";
-            btnAddTarget.Size = new Size(178, 24);
+            btnAddTarget.Size = new Size(222, 24);
             btnAddTarget.TabIndex = 3;
             btnAddTarget.Text = "+ Add";
             btnAddTarget.UseVisualStyleBackColor = false;
             // 
             // tlpButtonsRow
             // 
+            tlpButtonsRow.Controls.Add(btnClearAll);
+            tlpButtonsRow.Controls.Add(btnEdit);
             tlpButtonsRow.Dock = DockStyle.Fill;
-            tlpButtonsRow.FlowDirection = FlowDirection.LeftToRight;
-            tlpButtonsRow.WrapContents = false;
-            tlpButtonsRow.AutoSize = false;
-            tlpButtonsRow.Location = new Point(8, 206);
+            tlpButtonsRow.Location = new Point(8, 259);
             tlpButtonsRow.Name = "tlpButtonsRow";
-            tlpButtonsRow.Size = new Size(178, 24);
+            tlpButtonsRow.Size = new Size(222, 24);
             tlpButtonsRow.TabIndex = 4;
+            tlpButtonsRow.WrapContents = false;
             // 
             // btnClearAll
             // 
@@ -675,13 +703,13 @@
             btnClearAll.FlatAppearance.BorderColor = Color.FromArgb(80, 85, 95);
             btnClearAll.FlatStyle = FlatStyle.Flat;
             btnClearAll.ForeColor = Color.FromArgb(200, 205, 215);
-            btnClearAll.Size = new Size(86, 24);
+            btnClearAll.Location = new Point(0, 0);
             btnClearAll.Margin = new Padding(0, 0, 6, 0);
             btnClearAll.Name = "btnClearAll";
+            btnClearAll.Size = new Size(86, 24);
             btnClearAll.TabIndex = 0;
             btnClearAll.Text = "🗑️ Clear";
             btnClearAll.UseVisualStyleBackColor = false;
-            tlpButtonsRow.Controls.Add(btnClearAll);
             // 
             // btnEdit
             // 
@@ -689,22 +717,22 @@
             btnEdit.FlatAppearance.BorderColor = Color.FromArgb(80, 85, 95);
             btnEdit.FlatStyle = FlatStyle.Flat;
             btnEdit.ForeColor = Color.FromArgb(200, 205, 215);
-            btnEdit.Size = new Size(86, 24);
+            btnEdit.Location = new Point(92, 0);
             btnEdit.Margin = new Padding(0);
             btnEdit.Name = "btnEdit";
+            btnEdit.Size = new Size(86, 24);
             btnEdit.TabIndex = 1;
             btnEdit.Text = "⚙ Edit";
             btnEdit.UseVisualStyleBackColor = false;
-            tlpButtonsRow.Controls.Add(btnEdit);
             // 
             // lblProgress
             // 
             lblProgress.AutoSize = true;
             lblProgress.Dock = DockStyle.Fill;
             lblProgress.ForeColor = Color.FromArgb(120, 125, 140);
-            lblProgress.Location = new Point(8, 236);
+            lblProgress.Location = new Point(8, 286);
             lblProgress.Name = "lblProgress";
-            lblProgress.Size = new Size(178, 20);
+            lblProgress.Size = new Size(222, 20);
             lblProgress.TabIndex = 5;
             lblProgress.Text = "Progress:        0/2";
             lblProgress.TextAlign = ContentAlignment.MiddleLeft;
@@ -712,11 +740,10 @@
             // progressBarProgress
             // 
             progressBarProgress.Dock = DockStyle.Fill;
-            // --accent-green: #10b981 (progress bar)
             progressBarProgress.ForeColor = Color.FromArgb(16, 185, 129);
-            progressBarProgress.Location = new Point(8, 256);
+            progressBarProgress.Location = new Point(8, 309);
             progressBarProgress.Name = "progressBarProgress";
-            progressBarProgress.Size = new Size(178, 9);
+            progressBarProgress.Size = new Size(222, 9);
             progressBarProgress.Style = ProgressBarStyle.Continuous;
             progressBarProgress.TabIndex = 6;
             // 
@@ -725,11 +752,10 @@
             lblHoldTimer.AutoSize = true;
             lblHoldTimer.Dock = DockStyle.Fill;
             lblHoldTimer.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            // --accent-gold: #f59e0b
             lblHoldTimer.ForeColor = Color.FromArgb(245, 158, 11);
-            lblHoldTimer.Location = new Point(8, 271);
+            lblHoldTimer.Location = new Point(8, 321);
             lblHoldTimer.Name = "lblHoldTimer";
-            lblHoldTimer.Size = new Size(178, 25);
+            lblHoldTimer.Size = new Size(222, 25);
             lblHoldTimer.TabIndex = 7;
             lblHoldTimer.Text = "Hold:           00:00";
             lblHoldTimer.TextAlign = ContentAlignment.MiddleLeft;
@@ -737,11 +763,10 @@
             // progressBarHold
             // 
             progressBarHold.Dock = DockStyle.Fill;
-            // --accent-gold: #f59e0b
             progressBarHold.ForeColor = Color.FromArgb(245, 158, 11);
-            progressBarHold.Location = new Point(8, 296);
+            progressBarHold.Location = new Point(8, 349);
             progressBarHold.Name = "progressBarHold";
-            progressBarHold.Size = new Size(178, 9);
+            progressBarHold.Size = new Size(222, 9);
             progressBarHold.Style = ProgressBarStyle.Continuous;
             progressBarHold.TabIndex = 8;
             // 
@@ -753,9 +778,9 @@
             tlpControlButtons.Controls.Add(btnStop);
             tlpControlButtons.Controls.Add(btnSkip);
             tlpControlButtons.Dock = DockStyle.Fill;
-            tlpControlButtons.Location = new Point(8, 311);
+            tlpControlButtons.Location = new Point(8, 364);
             tlpControlButtons.Name = "tlpControlButtons";
-            tlpControlButtons.Size = new Size(178, 34);
+            tlpControlButtons.Size = new Size(222, 34);
             tlpControlButtons.TabIndex = 9;
             tlpControlButtons.WrapContents = false;
             // 
@@ -811,18 +836,19 @@
             btnSkip.Text = "⏭";
             btnSkip.UseVisualStyleBackColor = false;
             // 
-            // btnEmergency
+            // lblTarget
             // 
-            btnEmergency.Anchor = AnchorStyles.None;
-            btnEmergency.AutoSize = true;
-            btnEmergency.BackColor = Color.FromArgb(191, 0, 0);
-            btnEmergency.ForeColor = Color.FromArgb(210, 215, 225);
-            btnEmergency.Location = new Point(19, 646);
-            btnEmergency.Name = "btnEmergency";
-            btnEmergency.Size = new Size(150, 43);
-            btnEmergency.TabIndex = 1;
-            btnEmergency.Text = "Emergency Vent";
-            btnEmergency.UseVisualStyleBackColor = false;
+            lblTarget.Location = new Point(3, 0);
+            lblTarget.Name = "lblTarget";
+            lblTarget.Size = new Size(88, 23);
+            lblTarget.TabIndex = 0;
+            // 
+            // lblETA
+            // 
+            lblETA.Location = new Point(3, 0);
+            lblETA.Name = "lblETA";
+            lblETA.Size = new Size(88, 16);
+            lblETA.TabIndex = 0;
             // 
             // tableLayoutPanel1
             // 
@@ -957,7 +983,8 @@
             // 
             // panelRight
             // 
-            panelRight.BackColor = Color.FromArgb(21, 23, 28);
+            panelRight.BackColor = Color.FromArgb(15, 19, 32);
+            panelRight.Controls.Add(btnEmergencyRight);
             panelRight.Controls.Add(tableSettings);
             panelRight.Dock = DockStyle.Right;
             panelRight.Location = new Point(1040, 50);
@@ -967,26 +994,151 @@
             panelRight.Size = new Size(260, 770);
             panelRight.TabIndex = 2;
             // 
+            // btnEmergencyRight
+            // 
+            btnEmergencyRight.BackColor = Color.FromArgb(239, 68, 68);
+            btnEmergencyRight.Cursor = Cursors.Hand;
+            btnEmergencyRight.Dock = DockStyle.Bottom;
+            btnEmergencyRight.FlatAppearance.BorderSize = 0;
+            btnEmergencyRight.FlatStyle = FlatStyle.Flat;
+            btnEmergencyRight.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            btnEmergencyRight.ForeColor = Color.White;
+            btnEmergencyRight.Location = new Point(10, 711);
+            btnEmergencyRight.Name = "btnEmergencyRight";
+            btnEmergencyRight.Size = new Size(240, 55);
+            btnEmergencyRight.TabIndex = 0;
+            btnEmergencyRight.Text = "🔴 EMERGENCY VENT\r\nPRESS ESC OR CLICK";
+            btnEmergencyRight.UseVisualStyleBackColor = false;
+            // 
             // tableSettings
             // 
             tableSettings.ColumnCount = 1;
             tableSettings.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tableSettings.Controls.Add(tlpTimeWindow, 0, 0);
-            tableSettings.Controls.Add(tlpGrid, 0, 1);
-            tableSettings.Controls.Add(tlpThresholds, 0, 2);
-            tableSettings.Controls.Add(tlpDisplay, 0, 3);
-            tableSettings.Controls.Add(tlpAlerts, 0, 4);
+            tableSettings.Controls.Add(grpThresholds, 0, 0);
+            tableSettings.Controls.Add(grpDisplay, 0, 1);
+            tableSettings.Controls.Add(grpAlerts, 0, 2);
             tableSettings.Dock = DockStyle.Fill;
             tableSettings.Location = new Point(10, 4);
             tableSettings.Name = "tableSettings";
-            tableSettings.RowCount = 5;
-            tableSettings.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
-            tableSettings.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
-            tableSettings.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
-            tableSettings.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
-            tableSettings.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
-            tableSettings.Size = new Size(167, 694);
+            tableSettings.RowCount = 3;
+            tableSettings.RowStyles.Add(new RowStyle(SizeType.Percent, 33.3333321F));
+            tableSettings.RowStyles.Add(new RowStyle(SizeType.Percent, 33.3333321F));
+            tableSettings.RowStyles.Add(new RowStyle(SizeType.Percent, 33.3333321F));
+            tableSettings.Size = new Size(240, 762);
             tableSettings.TabIndex = 0;
+            // 
+            // grpThresholds
+            // 
+            grpThresholds.BackColor = Color.FromArgb(32, 35, 44);
+            grpThresholds.Controls.Add(lblMaxThreshold);
+            grpThresholds.Controls.Add(numMaxThreshold);
+            grpThresholds.Controls.Add(lblMinThreshold);
+            grpThresholds.Controls.Add(numMinThreshold);
+            grpThresholds.Controls.Add(btnApplyThresholds);
+            grpThresholds.Dock = DockStyle.Fill;
+            grpThresholds.FlatStyle = FlatStyle.Flat;
+            grpThresholds.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            grpThresholds.ForeColor = Color.FromArgb(107, 114, 128);
+            grpThresholds.Location = new Point(3, 3);
+            grpThresholds.Name = "grpThresholds";
+            grpThresholds.Padding = new Padding(8, 12, 8, 8);
+            grpThresholds.Size = new Size(234, 248);
+            grpThresholds.TabIndex = 0;
+            grpThresholds.TabStop = false;
+            grpThresholds.Text = "THRESHOLDS";
+            // 
+            // lblMaxThreshold
+            // 
+            lblMaxThreshold.Font = new Font("Segoe UI", 9F);
+            lblMaxThreshold.ForeColor = Color.FromArgb(156, 163, 175);
+            lblMaxThreshold.Location = new Point(12, 28);
+            lblMaxThreshold.Name = "lblMaxThreshold";
+            lblMaxThreshold.Size = new Size(40, 20);
+            lblMaxThreshold.TabIndex = 0;
+            lblMaxThreshold.Text = "Max:";
+            // 
+            // numMaxThreshold
+            // 
+            numMaxThreshold.BackColor = Color.FromArgb(26, 31, 46);
+            numMaxThreshold.BorderStyle = BorderStyle.FixedSingle;
+            numMaxThreshold.Font = new Font("Consolas", 10F);
+            numMaxThreshold.ForeColor = Color.FromArgb(228, 231, 235);
+            numMaxThreshold.Location = new Point(160, 25);
+            numMaxThreshold.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
+            numMaxThreshold.Name = "numMaxThreshold";
+            numMaxThreshold.Size = new Size(70, 23);
+            numMaxThreshold.TabIndex = 1;
+            numMaxThreshold.TextAlign = HorizontalAlignment.Right;
+            numMaxThreshold.Value = new decimal(new int[] { 128, 0, 0, 0 });
+            // 
+            // lblMinThreshold
+            // 
+            lblMinThreshold.Font = new Font("Segoe UI", 9F);
+            lblMinThreshold.ForeColor = Color.FromArgb(156, 163, 175);
+            lblMinThreshold.Location = new Point(12, 55);
+            lblMinThreshold.Name = "lblMinThreshold";
+            lblMinThreshold.Size = new Size(40, 20);
+            lblMinThreshold.TabIndex = 2;
+            lblMinThreshold.Text = "Min:";
+            // 
+            // numMinThreshold
+            // 
+            numMinThreshold.BackColor = Color.FromArgb(26, 31, 46);
+            numMinThreshold.BorderStyle = BorderStyle.FixedSingle;
+            numMinThreshold.Font = new Font("Consolas", 10F);
+            numMinThreshold.ForeColor = Color.FromArgb(228, 231, 235);
+            numMinThreshold.Location = new Point(160, 52);
+            numMinThreshold.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
+            numMinThreshold.Name = "numMinThreshold";
+            numMinThreshold.Size = new Size(70, 23);
+            numMinThreshold.TabIndex = 3;
+            numMinThreshold.TextAlign = HorizontalAlignment.Right;
+            numMinThreshold.Value = new decimal(new int[] { 10, 0, 0, 0 });
+            // 
+            // btnApplyThresholds
+            // 
+            btnApplyThresholds.BackColor = Color.FromArgb(16, 185, 129);
+            btnApplyThresholds.Cursor = Cursors.Hand;
+            btnApplyThresholds.FlatAppearance.BorderSize = 0;
+            btnApplyThresholds.FlatStyle = FlatStyle.Flat;
+            btnApplyThresholds.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            btnApplyThresholds.ForeColor = Color.White;
+            btnApplyThresholds.Location = new Point(12, 85);
+            btnApplyThresholds.Name = "btnApplyThresholds";
+            btnApplyThresholds.Size = new Size(216, 28);
+            btnApplyThresholds.TabIndex = 4;
+            btnApplyThresholds.Text = "Apply";
+            btnApplyThresholds.UseVisualStyleBackColor = false;
+            // 
+            // grpDisplay
+            // 
+            grpDisplay.BackColor = Color.FromArgb(32, 35, 44);
+            grpDisplay.Dock = DockStyle.Fill;
+            grpDisplay.FlatStyle = FlatStyle.Flat;
+            grpDisplay.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            grpDisplay.ForeColor = Color.FromArgb(107, 114, 128);
+            grpDisplay.Location = new Point(3, 257);
+            grpDisplay.Name = "grpDisplay";
+            grpDisplay.Padding = new Padding(8, 12, 8, 8);
+            grpDisplay.Size = new Size(234, 248);
+            grpDisplay.TabIndex = 1;
+            grpDisplay.TabStop = false;
+            grpDisplay.Text = "DISPLAY";
+            // 
+            // grpAlerts
+            // 
+            grpAlerts.BackColor = Color.FromArgb(32, 35, 44);
+            grpAlerts.Dock = DockStyle.Fill;
+            grpAlerts.FlatStyle = FlatStyle.Flat;
+            grpAlerts.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            grpAlerts.ForeColor = Color.FromArgb(107, 114, 128);
+            grpAlerts.Location = new Point(3, 511);
+            grpAlerts.Name = "grpAlerts";
+            grpAlerts.Padding = new Padding(8, 12, 8, 8);
+            grpAlerts.Size = new Size(234, 248);
+            grpAlerts.TabIndex = 2;
+            grpAlerts.TabStop = false;
+            grpAlerts.Text = "ALERTS 🔔";
             // 
             // tlpTimeWindow
             // 
@@ -997,19 +1149,23 @@
             tlpTimeWindow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
             tlpTimeWindow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
             tlpTimeWindow.Controls.Add(lblTimeWindowTitle, 0, 0);
-            tlpTimeWindow.Controls.Add(cmbDuration, 1, 1);
-            tlpTimeWindow.Controls.Add(lblDuration, 0, 1);
+            tlpTimeWindow.Controls.Add(btnPage1, 0, 1);
+            tlpTimeWindow.Controls.Add(btnPage2, 1, 1);
+            tlpTimeWindow.Controls.Add(btnPage3, 0, 2);
+            tlpTimeWindow.Controls.Add(btnPage4, 1, 2);
+            tlpTimeWindow.Controls.Add(btnPage5, 0, 3);
+            tlpTimeWindow.Controls.Add(btnPage6, 1, 3);
             tlpTimeWindow.Dock = DockStyle.Fill;
             tlpTimeWindow.Location = new Point(3, 3);
             tlpTimeWindow.Name = "tlpTimeWindow";
-            tlpTimeWindow.RowCount = 3;
-            tlpTimeWindow.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
-            tlpTimeWindow.RowStyles.Add(new RowStyle(SizeType.Percent, 70F));
-            tlpTimeWindow.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
-            tlpTimeWindow.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
-            tlpTimeWindow.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
+            tlpTimeWindow.RowCount = 4;
+            tlpTimeWindow.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
+            tlpTimeWindow.RowStyles.Add(new RowStyle(SizeType.Percent, 26F));
+            tlpTimeWindow.RowStyles.Add(new RowStyle(SizeType.Percent, 27F));
+            tlpTimeWindow.RowStyles.Add(new RowStyle(SizeType.Percent, 27F));
             tlpTimeWindow.Size = new Size(161, 132);
             tlpTimeWindow.TabIndex = 0;
+            tlpTimeWindow.Visible = false;
             // 
             // lblTimeWindowTitle
             // 
@@ -1026,85 +1182,96 @@
             lblTimeWindowTitle.TabIndex = 12;
             lblTimeWindowTitle.Text = "TIME WINDOW";
             // 
-            // lblDuration
+            // btnPage1
             // 
-            lblDuration.AutoSize = true;
-            lblDuration.Dock = DockStyle.Top;
-            lblDuration.ForeColor = Color.FromArgb(210, 215, 225);
-            lblDuration.Location = new Point(4, 34);
-            lblDuration.Margin = new Padding(4, 4, 0, 0);
-            lblDuration.Name = "lblDuration";
-            lblDuration.Padding = new Padding(5, 5, 0, 0);
-            lblDuration.Size = new Size(92, 20);
-            lblDuration.TabIndex = 11;
-            lblDuration.Text = "Duration";
+            btnPage1.BackColor = Color.FromArgb(42, 45, 53);
+            btnPage1.Dock = DockStyle.Fill;
+            btnPage1.FlatAppearance.BorderColor = Color.FromArgb(80, 85, 95);
+            btnPage1.FlatStyle = FlatStyle.Flat;
+            btnPage1.ForeColor = Color.FromArgb(200, 205, 215);
+            btnPage1.Location = new Point(3, 29);
+            btnPage1.Name = "btnPage1";
+            btnPage1.Size = new Size(90, 28);
+            btnPage1.TabIndex = 10;
+            btnPage1.Text = "5 mins";
+            btnPage1.UseVisualStyleBackColor = false;
             // 
-            // cmbDuration
+            // btnPage2
             // 
-            cmbDuration.BackColor = Color.FromArgb(40, 43, 52);
-            cmbDuration.Dock = DockStyle.Top;
-            cmbDuration.ForeColor = Color.White;
-            cmbDuration.FormattingEnabled = true;
-            cmbDuration.Location = new Point(99, 33);
-            cmbDuration.Name = "cmbDuration";
-            cmbDuration.Size = new Size(59, 23);
-            cmbDuration.TabIndex = 10;
+            btnPage2.BackColor = Color.FromArgb(42, 45, 53);
+            btnPage2.Dock = DockStyle.Fill;
+            btnPage2.FlatAppearance.BorderColor = Color.FromArgb(80, 85, 95);
+            btnPage2.FlatStyle = FlatStyle.Flat;
+            btnPage2.ForeColor = Color.FromArgb(200, 205, 215);
+            btnPage2.Location = new Point(99, 29);
+            btnPage2.Name = "btnPage2";
+            btnPage2.Size = new Size(59, 28);
+            btnPage2.TabIndex = 11;
+            btnPage2.Text = "15 mins";
+            btnPage2.UseVisualStyleBackColor = false;
             // 
-            // tlpGrid
+            // btnPage3
             // 
-            tlpGrid.BackColor = Color.FromArgb(32, 35, 44);
-            tlpGrid.ColumnCount = 2;
-            tlpGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
-            tlpGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
-            tlpGrid.Controls.Add(lblGridTitle, 0, 0);
-            tlpGrid.Controls.Add(lblYStep, 0, 1);
-            tlpGrid.Controls.Add(cmbYStep, 1, 1);
-            tlpGrid.Dock = DockStyle.Fill;
-            tlpGrid.Location = new Point(3, 141);
-            tlpGrid.Name = "tlpGrid";
-            tlpGrid.RowCount = 2;
-            tlpGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
-            tlpGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 70F));
-            tlpGrid.Size = new Size(161, 132);
-            tlpGrid.TabIndex = 1;
+            btnPage3.BackColor = Color.FromArgb(42, 45, 53);
+            btnPage3.Dock = DockStyle.Fill;
+            btnPage3.FlatAppearance.BorderColor = Color.FromArgb(80, 85, 95);
+            btnPage3.FlatStyle = FlatStyle.Flat;
+            btnPage3.ForeColor = Color.FromArgb(200, 205, 215);
+            btnPage3.Location = new Point(3, 63);
+            btnPage3.Name = "btnPage3";
+            btnPage3.Size = new Size(90, 29);
+            btnPage3.TabIndex = 12;
+            btnPage3.Text = "1 hour";
+            btnPage3.UseVisualStyleBackColor = false;
+            // 
+            // btnPage4
+            // 
+            btnPage4.BackColor = Color.FromArgb(42, 45, 53);
+            btnPage4.Dock = DockStyle.Fill;
+            btnPage4.FlatAppearance.BorderColor = Color.FromArgb(80, 85, 95);
+            btnPage4.FlatStyle = FlatStyle.Flat;
+            btnPage4.ForeColor = Color.FromArgb(200, 205, 215);
+            btnPage4.Location = new Point(99, 63);
+            btnPage4.Name = "btnPage4";
+            btnPage4.Size = new Size(59, 29);
+            btnPage4.TabIndex = 13;
+            btnPage4.Text = "4 hours";
+            btnPage4.UseVisualStyleBackColor = false;
+            // 
+            // btnPage5
+            // 
+            btnPage5.BackColor = Color.FromArgb(42, 45, 53);
+            btnPage5.Dock = DockStyle.Fill;
+            btnPage5.FlatAppearance.BorderColor = Color.FromArgb(80, 85, 95);
+            btnPage5.FlatStyle = FlatStyle.Flat;
+            btnPage5.ForeColor = Color.FromArgb(200, 205, 215);
+            btnPage5.Location = new Point(3, 98);
+            btnPage5.Name = "btnPage5";
+            btnPage5.Size = new Size(90, 31);
+            btnPage5.TabIndex = 14;
+            btnPage5.Text = "10 hours";
+            btnPage5.UseVisualStyleBackColor = false;
+            // 
+            // btnPage6
+            // 
+            btnPage6.BackColor = Color.FromArgb(42, 45, 53);
+            btnPage6.Dock = DockStyle.Fill;
+            btnPage6.FlatAppearance.BorderColor = Color.FromArgb(80, 85, 95);
+            btnPage6.FlatStyle = FlatStyle.Flat;
+            btnPage6.ForeColor = Color.FromArgb(200, 205, 215);
+            btnPage6.Location = new Point(99, 98);
+            btnPage6.Name = "btnPage6";
+            btnPage6.Size = new Size(59, 31);
+            btnPage6.TabIndex = 15;
+            btnPage6.Text = "All";
+            btnPage6.UseVisualStyleBackColor = false;
             // 
             // lblGridTitle
             // 
-            lblGridTitle.AutoSize = true;
-            tlpGrid.SetColumnSpan(lblGridTitle, 2);
-            lblGridTitle.Dock = DockStyle.Top;
-            lblGridTitle.Font = new Font("Segoe UI", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lblGridTitle.ForeColor = Color.FromArgb(120, 125, 140);
-            lblGridTitle.Location = new Point(5, 5);
-            lblGridTitle.Margin = new Padding(5, 5, 0, 0);
+            lblGridTitle.Location = new Point(0, 0);
             lblGridTitle.Name = "lblGridTitle";
-            lblGridTitle.Size = new Size(156, 13);
+            lblGridTitle.Size = new Size(100, 23);
             lblGridTitle.TabIndex = 0;
-            lblGridTitle.Text = "GRID";
-            // 
-            // lblYStep
-            // 
-            lblYStep.AutoSize = true;
-            lblYStep.Dock = DockStyle.Top;
-            lblYStep.ForeColor = Color.FromArgb(210, 215, 225);
-            lblYStep.Location = new Point(4, 43);
-            lblYStep.Margin = new Padding(4, 4, 0, 0);
-            lblYStep.Name = "lblYStep";
-            lblYStep.Padding = new Padding(5, 5, 0, 0);
-            lblYStep.Size = new Size(92, 20);
-            lblYStep.TabIndex = 1;
-            lblYStep.Text = "Y Step:";
-            // 
-            // cmbYStep
-            // 
-            cmbYStep.BackColor = Color.FromArgb(40, 43, 52);
-            cmbYStep.Dock = DockStyle.Top;
-            cmbYStep.ForeColor = Color.White;
-            cmbYStep.FormattingEnabled = true;
-            cmbYStep.Location = new Point(99, 42);
-            cmbYStep.Name = "cmbYStep";
-            cmbYStep.Size = new Size(59, 23);
-            cmbYStep.TabIndex = 2;
             // 
             // tlpThresholds
             // 
@@ -1427,105 +1594,18 @@
             // panelBottom
             // 
             panelBottom.BackColor = Color.FromArgb(21, 23, 28);
-            panelBottom.Controls.Add(footerLayout);
             panelBottom.Dock = DockStyle.Bottom;
-            panelBottom.Location = new Point(0, 750);
+            panelBottom.Location = new Point(260, 750);
             panelBottom.Name = "panelBottom";
-            panelBottom.Size = new Size(1300, 70);
+            panelBottom.Size = new Size(780, 70);
             panelBottom.TabIndex = 3;
-            // 
-            // footerLayout
-            // 
-            footerLayout.ColumnCount = 5;
-            footerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            footerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            footerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            footerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            footerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 15F));
-            footerLayout.Controls.Add(lblAutoSaveStatus, 0, 0);
-            footerLayout.Controls.Add(lblFooterMin, 1, 0);
-            footerLayout.Controls.Add(lblFooterAvg, 2, 0);
-            footerLayout.Controls.Add(lblFooterPoints, 3, 0);
-            footerLayout.Controls.Add(lblThemeIndicator, 4, 0);
-            footerLayout.Dock = DockStyle.Fill;
-            footerLayout.Location = new Point(0, 0);
-            footerLayout.Name = "footerLayout";
-            footerLayout.RowCount = 1;
-            footerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
-            footerLayout.Size = new Size(1300, 70);
-            footerLayout.TabIndex = 0;
-            // 
-            // lblAutoSaveStatus
-            // 
-            lblAutoSaveStatus.AutoSize = true;
-            lblAutoSaveStatus.Dock = DockStyle.Fill;
-            lblAutoSaveStatus.Font = new Font("Segoe UI", 8F);
-            lblAutoSaveStatus.ForeColor = Color.Green;
-            lblAutoSaveStatus.Location = new Point(3, 0);
-            lblAutoSaveStatus.Name = "lblAutoSaveStatus";
-            lblAutoSaveStatus.Size = new Size(319, 70);
-            lblAutoSaveStatus.TabIndex = 0;
-            lblAutoSaveStatus.Text = "Auto-save • Enabled";
-            lblAutoSaveStatus.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // lblFooterMin
-            // 
-            lblFooterMin.AutoSize = true;
-            lblFooterMin.Dock = DockStyle.Fill;
-            lblFooterMin.Font = new Font("Segoe UI", 8F);
-            lblFooterMin.ForeColor = Color.White;
-            lblFooterMin.Location = new Point(328, 0);
-            lblFooterMin.Name = "lblFooterMin";
-            lblFooterMin.Size = new Size(254, 70);
-            lblFooterMin.TabIndex = 1;
-            lblFooterMin.Text = "Min: 0.00";
-            lblFooterMin.TextAlign = ContentAlignment.MiddleCenter;
-            // 
-            // lblFooterAvg
-            // 
-            lblFooterAvg.AutoSize = true;
-            lblFooterAvg.Dock = DockStyle.Fill;
-            lblFooterAvg.Font = new Font("Segoe UI", 8F);
-            lblFooterAvg.ForeColor = Color.White;
-            lblFooterAvg.Location = new Point(588, 0);
-            lblFooterAvg.Name = "lblFooterAvg";
-            lblFooterAvg.Size = new Size(254, 70);
-            lblFooterAvg.TabIndex = 2;
-            lblFooterAvg.Text = "Avg: 0.00";
-            lblFooterAvg.TextAlign = ContentAlignment.MiddleCenter;
-            // 
-            // lblFooterPoints
-            // 
-            lblFooterPoints.AutoSize = true;
-            lblFooterPoints.Dock = DockStyle.Fill;
-            lblFooterPoints.Font = new Font("Segoe UI", 8F);
-            lblFooterPoints.ForeColor = Color.White;
-            lblFooterPoints.Location = new Point(848, 0);
-            lblFooterPoints.Name = "lblFooterPoints";
-            lblFooterPoints.Size = new Size(254, 70);
-            lblFooterPoints.TabIndex = 3;
-            lblFooterPoints.Text = "Points: 0";
-            lblFooterPoints.TextAlign = ContentAlignment.MiddleRight;
-            // 
-            // lblThemeIndicator
-            // 
-            lblThemeIndicator.AutoSize = true;
-            lblThemeIndicator.Dock = DockStyle.Fill;
-            lblThemeIndicator.Font = new Font("Segoe UI", 8F);
-            lblThemeIndicator.ForeColor = Color.Black;
-            lblThemeIndicator.Location = new Point(1108, 0);
-            lblThemeIndicator.Name = "lblThemeIndicator";
-            lblThemeIndicator.Size = new Size(189, 70);
-            lblThemeIndicator.TabIndex = 4;
-            lblThemeIndicator.Text = "✓ Light theme";
-            lblThemeIndicator.TextAlign = ContentAlignment.MiddleRight;
             // 
             // panelHeader
             // 
             panelHeader.BackColor = Color.FromArgb(26, 29, 36);
             panelHeader.Controls.Add(headerLayoutPanel);
             panelHeader.Dock = DockStyle.Top;
-            panelHeader.Location = new Point(0, 40);
+            panelHeader.Location = new Point(0, 0);
             panelHeader.Name = "panelHeader";
             panelHeader.Size = new Size(1300, 50);
             panelHeader.TabIndex = 4;
@@ -1644,129 +1724,299 @@
             // panelChartHeader
             // 
             panelChartHeader.BackColor = Color.FromArgb(21, 23, 28);
-            panelChartHeader.Controls.Add(panelChartButtons);
-            panelChartHeader.Controls.Add(flowLegend);
+            panelChartHeader.Controls.Add(tlpChartHeader);
             panelChartHeader.Dock = DockStyle.Top;
-            panelChartHeader.Location = new Point(0, 0);
+            panelChartHeader.Location = new Point(260, 50);
             panelChartHeader.Name = "panelChartHeader";
-            panelChartHeader.Size = new Size(1300, 40);
+            panelChartHeader.Size = new Size(780, 40);
             panelChartHeader.TabIndex = 5;
             // 
-            // panelChartButtons
+            // tlpChartHeader
             // 
-            panelChartButtons.Dock = DockStyle.Right;
-            panelChartButtons.Location = new Point(1020, 0);
-            panelChartButtons.Name = "panelChartButtons";
-            panelChartButtons.Size = new Size(280, 40);
-            panelChartButtons.TabIndex = 1;
+            tlpChartHeader.ColumnCount = 2;
+            tlpChartHeader.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tlpChartHeader.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tlpChartHeader.Controls.Add(durationPanel, 0, 0);
+            tlpChartHeader.Controls.Add(toolbarPanel, 1, 0);
+            tlpChartHeader.Dock = DockStyle.Fill;
+            tlpChartHeader.Location = new Point(0, 0);
+            tlpChartHeader.Name = "tlpChartHeader";
+            tlpChartHeader.RowCount = 1;
+            tlpChartHeader.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            tlpChartHeader.Size = new Size(780, 40);
+            tlpChartHeader.TabIndex = 0;
             // 
-            // flowLegend
+            // durationPanel
             // 
-            flowLegend.AutoSize = true;
-            flowLegend.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            flowLegend.Controls.Add(lblLegendCurrent);
-            flowLegend.Controls.Add(lblLegendTarget);
-            flowLegend.Controls.Add(lblLegendMin);
-            flowLegend.Controls.Add(lblLegendMax);
-            flowLegend.Dock = DockStyle.Left;
-            flowLegend.Location = new Point(0, 0);
-            flowLegend.Margin = new Padding(0);
-            flowLegend.Name = "flowLegend";
-            flowLegend.Padding = new Padding(12, 10, 0, 0);
-            flowLegend.Size = new Size(244, 40);
-            flowLegend.TabIndex = 0;
-            flowLegend.WrapContents = false;
+            durationPanel.Controls.Add(btn5M);
+            durationPanel.Controls.Add(btn15M);
+            durationPanel.Controls.Add(btn1H);
+            durationPanel.Controls.Add(btn4H);
+            durationPanel.Controls.Add(btn10H);
+            durationPanel.Controls.Add(btnALL);
+            durationPanel.Dock = DockStyle.Fill;
+            durationPanel.Location = new Point(0, 0);
+            durationPanel.Margin = new Padding(0);
+            durationPanel.Name = "durationPanel";
+            durationPanel.Padding = new Padding(8, 6, 0, 6);
+            durationPanel.Size = new Size(390, 40);
+            durationPanel.TabIndex = 0;
+            durationPanel.WrapContents = false;
             // 
-            // lblLegendCurrent
+            // btn5M
             // 
-            lblLegendCurrent.AutoSize = true;
-            lblLegendCurrent.ForeColor = Color.White;
-            lblLegendCurrent.Location = new Point(15, 10);
-            lblLegendCurrent.Name = "lblLegendCurrent";
-            lblLegendCurrent.Padding = new Padding(16, 0, 0, 0);
-            lblLegendCurrent.Size = new Size(63, 15);
-            lblLegendCurrent.TabIndex = 0;
-            lblLegendCurrent.Text = "Current";
+            btn5M.AutoSize = true;
+            btn5M.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btn5M.BackColor = Color.FromArgb(30, 33, 40);
+            btn5M.FlatAppearance.BorderColor = Color.FromArgb(70, 75, 85);
+            btn5M.FlatAppearance.MouseDownBackColor = Color.FromArgb(45, 49, 58);
+            btn5M.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
+            btn5M.FlatStyle = FlatStyle.Flat;
+            btn5M.ForeColor = Color.FromArgb(220, 224, 232);
+            btn5M.Location = new Point(11, 6);
+            btn5M.Margin = new Padding(3, 0, 3, 0);
+            btn5M.Name = "btn5M";
+            btn5M.Padding = new Padding(8, 4, 8, 4);
+            btn5M.Size = new Size(52, 35);
+            btn5M.TabIndex = 0;
+            btn5M.Text = "5M";
+            btn5M.UseVisualStyleBackColor = false;
             // 
-            // lblLegendTarget
+            // btn15M
             // 
-            lblLegendTarget.AutoSize = true;
-            lblLegendTarget.ForeColor = Color.White;
-            lblLegendTarget.Location = new Point(84, 10);
-            lblLegendTarget.Name = "lblLegendTarget";
-            lblLegendTarget.Padding = new Padding(16, 0, 0, 0);
-            lblLegendTarget.Size = new Size(56, 15);
-            lblLegendTarget.TabIndex = 1;
-            lblLegendTarget.Text = "Target";
+            btn15M.AutoSize = true;
+            btn15M.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btn15M.BackColor = Color.FromArgb(30, 33, 40);
+            btn15M.FlatAppearance.BorderColor = Color.FromArgb(70, 75, 85);
+            btn15M.FlatAppearance.MouseDownBackColor = Color.FromArgb(45, 49, 58);
+            btn15M.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
+            btn15M.FlatStyle = FlatStyle.Flat;
+            btn15M.ForeColor = Color.FromArgb(220, 224, 232);
+            btn15M.Location = new Point(69, 6);
+            btn15M.Margin = new Padding(3, 0, 3, 0);
+            btn15M.Name = "btn15M";
+            btn15M.Padding = new Padding(8, 4, 8, 4);
+            btn15M.Size = new Size(58, 35);
+            btn15M.TabIndex = 1;
+            btn15M.Text = "15M";
+            btn15M.UseVisualStyleBackColor = false;
             // 
-            // lblLegendMin
+            // btn1H
             // 
-            lblLegendMin.AutoSize = true;
-            lblLegendMin.ForeColor = Color.White;
-            lblLegendMin.Location = new Point(146, 10);
-            lblLegendMin.Name = "lblLegendMin";
-            lblLegendMin.Padding = new Padding(16, 0, 0, 0);
-            lblLegendMin.Size = new Size(44, 15);
-            lblLegendMin.TabIndex = 2;
-            lblLegendMin.Text = "Min";
+            btn1H.AutoSize = true;
+            btn1H.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btn1H.BackColor = Color.FromArgb(30, 33, 40);
+            btn1H.FlatAppearance.BorderColor = Color.FromArgb(70, 75, 85);
+            btn1H.FlatAppearance.MouseDownBackColor = Color.FromArgb(45, 49, 58);
+            btn1H.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
+            btn1H.FlatStyle = FlatStyle.Flat;
+            btn1H.ForeColor = Color.FromArgb(220, 224, 232);
+            btn1H.Location = new Point(133, 6);
+            btn1H.Margin = new Padding(3, 0, 3, 0);
+            btn1H.Name = "btn1H";
+            btn1H.Padding = new Padding(8, 4, 8, 4);
+            btn1H.Size = new Size(50, 35);
+            btn1H.TabIndex = 2;
+            btn1H.Text = "1H";
+            btn1H.UseVisualStyleBackColor = false;
             // 
-            // lblLegendMax
+            // btn4H
             // 
-            lblLegendMax.AutoSize = true;
-            lblLegendMax.ForeColor = Color.White;
-            lblLegendMax.Location = new Point(196, 10);
-            lblLegendMax.Name = "lblLegendMax";
-            lblLegendMax.Padding = new Padding(16, 0, 0, 0);
-            lblLegendMax.Size = new Size(45, 15);
-            lblLegendMax.TabIndex = 3;
-            lblLegendMax.Text = "Max";
+            btn4H.AutoSize = true;
+            btn4H.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btn4H.BackColor = Color.FromArgb(30, 33, 40);
+            btn4H.FlatAppearance.BorderColor = Color.FromArgb(70, 75, 85);
+            btn4H.FlatAppearance.MouseDownBackColor = Color.FromArgb(45, 49, 58);
+            btn4H.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
+            btn4H.FlatStyle = FlatStyle.Flat;
+            btn4H.ForeColor = Color.FromArgb(220, 224, 232);
+            btn4H.Location = new Point(189, 6);
+            btn4H.Margin = new Padding(3, 0, 3, 0);
+            btn4H.Name = "btn4H";
+            btn4H.Padding = new Padding(8, 4, 8, 4);
+            btn4H.Size = new Size(50, 35);
+            btn4H.TabIndex = 3;
+            btn4H.Text = "4H";
+            btn4H.UseVisualStyleBackColor = false;
             // 
-            // btnChartReset
+            // btn10H
             // 
-            btnChartReset.AutoSize = true;
-            btnChartReset.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            btnChartReset.BackColor = Color.FromArgb(30, 33, 40);
-            btnChartReset.FlatAppearance.BorderColor = Color.FromArgb(70, 75, 85);
-            btnChartReset.FlatAppearance.MouseDownBackColor = Color.FromArgb(45, 49, 58);
-            btnChartReset.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
-            btnChartReset.FlatStyle = FlatStyle.Flat;
-            btnChartReset.ForeColor = Color.FromArgb(220, 224, 232);
-            btnChartReset.Location = new Point(4, 4);
-            btnChartReset.Margin = new Padding(4);
-            btnChartReset.Name = "btnChartReset";
-            btnChartReset.Padding = new Padding(6, 4, 6, 4);
-            btnChartReset.Size = new Size(59, 35);
-            btnChartReset.TabIndex = 0;
-            btnChartReset.Text = "Reset";
-            btnChartReset.UseVisualStyleBackColor = false;
+            btn10H.AutoSize = true;
+            btn10H.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btn10H.BackColor = Color.FromArgb(30, 33, 40);
+            btn10H.FlatAppearance.BorderColor = Color.FromArgb(70, 75, 85);
+            btn10H.FlatAppearance.MouseDownBackColor = Color.FromArgb(45, 49, 58);
+            btn10H.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
+            btn10H.FlatStyle = FlatStyle.Flat;
+            btn10H.ForeColor = Color.FromArgb(220, 224, 232);
+            btn10H.Location = new Point(245, 6);
+            btn10H.Margin = new Padding(3, 0, 3, 0);
+            btn10H.Name = "btn10H";
+            btn10H.Padding = new Padding(8, 4, 8, 4);
+            btn10H.Size = new Size(56, 35);
+            btn10H.TabIndex = 4;
+            btn10H.Text = "10H";
+            btn10H.UseVisualStyleBackColor = false;
             // 
-            // btnFullscreen
+            // btnALL
             // 
-            btnFullscreen.AutoSize = true;
-            btnFullscreen.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            btnFullscreen.BackColor = Color.FromArgb(30, 33, 40);
-            btnFullscreen.FlatAppearance.BorderColor = Color.FromArgb(70, 75, 85);
-            btnFullscreen.FlatAppearance.MouseDownBackColor = Color.FromArgb(45, 49, 59);
-            btnFullscreen.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
-            btnFullscreen.FlatStyle = FlatStyle.Flat;
-            btnFullscreen.ForeColor = Color.FromArgb(220, 224, 232);
-            btnFullscreen.Location = new Point(71, 4);
-            btnFullscreen.Margin = new Padding(4);
-            btnFullscreen.Name = "btnFullscreen";
-            btnFullscreen.Padding = new Padding(6, 4, 6, 4);
-            btnFullscreen.Size = new Size(84, 35);
-            btnFullscreen.TabIndex = 1;
-            btnFullscreen.Text = "Fullscreen";
-            btnFullscreen.UseVisualStyleBackColor = false;
+            btnALL.AutoSize = true;
+            btnALL.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnALL.BackColor = Color.FromArgb(30, 33, 40);
+            btnALL.FlatAppearance.BorderColor = Color.FromArgb(70, 75, 85);
+            btnALL.FlatAppearance.MouseDownBackColor = Color.FromArgb(45, 49, 58);
+            btnALL.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
+            btnALL.FlatStyle = FlatStyle.Flat;
+            btnALL.ForeColor = Color.FromArgb(220, 224, 232);
+            btnALL.Location = new Point(307, 6);
+            btnALL.Margin = new Padding(3, 0, 3, 0);
+            btnALL.Name = "btnALL";
+            btnALL.Padding = new Padding(8, 4, 8, 4);
+            btnALL.Size = new Size(55, 35);
+            btnALL.TabIndex = 5;
+            btnALL.Text = "ALL";
+            btnALL.UseVisualStyleBackColor = false;
+            // 
+            // toolbarPanel
+            // 
+            toolbarPanel.Controls.Add(btnZoom);
+            toolbarPanel.Controls.Add(btnPan);
+            toolbarPanel.Controls.Add(btnPlus);
+            toolbarPanel.Controls.Add(btnMinus);
+            toolbarPanel.Controls.Add(btnFullscreenChart);
+            toolbarPanel.Controls.Add(btnHome);
+            toolbarPanel.Dock = DockStyle.Fill;
+            toolbarPanel.FlowDirection = FlowDirection.RightToLeft;
+            toolbarPanel.Location = new Point(390, 0);
+            toolbarPanel.Margin = new Padding(0);
+            toolbarPanel.Name = "toolbarPanel";
+            toolbarPanel.Padding = new Padding(0, 6, 8, 6);
+            toolbarPanel.Size = new Size(390, 40);
+            toolbarPanel.TabIndex = 1;
+            toolbarPanel.WrapContents = false;
+            // 
+            // btnZoom
+            // 
+            btnZoom.AutoSize = true;
+            btnZoom.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnZoom.BackColor = Color.FromArgb(30, 33, 40);
+            btnZoom.FlatAppearance.BorderColor = Color.FromArgb(70, 75, 85);
+            btnZoom.FlatAppearance.MouseDownBackColor = Color.FromArgb(45, 49, 58);
+            btnZoom.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
+            btnZoom.FlatStyle = FlatStyle.Flat;
+            btnZoom.ForeColor = Color.FromArgb(220, 224, 232);
+            btnZoom.Location = new Point(297, 6);
+            btnZoom.Margin = new Padding(3, 0, 3, 0);
+            btnZoom.Name = "btnZoom";
+            btnZoom.Padding = new Padding(8, 4, 8, 4);
+            btnZoom.Size = new Size(82, 35);
+            btnZoom.TabIndex = 0;
+            btnZoom.Text = "🔍 Zoom";
+            btnZoom.UseVisualStyleBackColor = false;
+            // 
+            // btnPan
+            // 
+            btnPan.AutoSize = true;
+            btnPan.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnPan.BackColor = Color.FromArgb(30, 33, 40);
+            btnPan.FlatAppearance.BorderColor = Color.FromArgb(70, 75, 85);
+            btnPan.FlatAppearance.MouseDownBackColor = Color.FromArgb(45, 49, 58);
+            btnPan.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
+            btnPan.FlatStyle = FlatStyle.Flat;
+            btnPan.ForeColor = Color.FromArgb(220, 224, 232);
+            btnPan.Location = new Point(221, 6);
+            btnPan.Margin = new Padding(3, 0, 3, 0);
+            btnPan.Name = "btnPan";
+            btnPan.Padding = new Padding(8, 4, 8, 4);
+            btnPan.Size = new Size(70, 35);
+            btnPan.TabIndex = 1;
+            btnPan.Text = "✋ Pan";
+            btnPan.UseVisualStyleBackColor = false;
+            // 
+            // btnPlus
+            // 
+            btnPlus.AutoSize = true;
+            btnPlus.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnPlus.BackColor = Color.FromArgb(30, 33, 40);
+            btnPlus.FlatAppearance.BorderColor = Color.FromArgb(70, 75, 85);
+            btnPlus.FlatAppearance.MouseDownBackColor = Color.FromArgb(45, 49, 58);
+            btnPlus.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
+            btnPlus.FlatStyle = FlatStyle.Flat;
+            btnPlus.ForeColor = Color.FromArgb(220, 224, 232);
+            btnPlus.Location = new Point(172, 6);
+            btnPlus.Margin = new Padding(3, 0, 3, 0);
+            btnPlus.Name = "btnPlus";
+            btnPlus.Padding = new Padding(8, 4, 8, 4);
+            btnPlus.Size = new Size(43, 35);
+            btnPlus.TabIndex = 2;
+            btnPlus.Text = "+";
+            btnPlus.UseVisualStyleBackColor = false;
+            // 
+            // btnMinus
+            // 
+            btnMinus.AutoSize = true;
+            btnMinus.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnMinus.BackColor = Color.FromArgb(30, 33, 40);
+            btnMinus.FlatAppearance.BorderColor = Color.FromArgb(70, 75, 85);
+            btnMinus.FlatAppearance.MouseDownBackColor = Color.FromArgb(45, 49, 58);
+            btnMinus.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
+            btnMinus.FlatStyle = FlatStyle.Flat;
+            btnMinus.ForeColor = Color.FromArgb(220, 224, 232);
+            btnMinus.Location = new Point(126, 6);
+            btnMinus.Margin = new Padding(3, 0, 3, 0);
+            btnMinus.Name = "btnMinus";
+            btnMinus.Padding = new Padding(8, 4, 8, 4);
+            btnMinus.Size = new Size(40, 35);
+            btnMinus.TabIndex = 3;
+            btnMinus.Text = "-";
+            btnMinus.UseVisualStyleBackColor = false;
+            // 
+            // btnFullscreenChart
+            // 
+            btnFullscreenChart.AutoSize = true;
+            btnFullscreenChart.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnFullscreenChart.BackColor = Color.FromArgb(30, 33, 40);
+            btnFullscreenChart.FlatAppearance.BorderColor = Color.FromArgb(70, 75, 85);
+            btnFullscreenChart.FlatAppearance.MouseDownBackColor = Color.FromArgb(45, 49, 58);
+            btnFullscreenChart.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
+            btnFullscreenChart.FlatStyle = FlatStyle.Flat;
+            btnFullscreenChart.ForeColor = Color.FromArgb(220, 224, 232);
+            btnFullscreenChart.Location = new Point(75, 6);
+            btnFullscreenChart.Margin = new Padding(3, 0, 3, 0);
+            btnFullscreenChart.Name = "btnFullscreenChart";
+            btnFullscreenChart.Padding = new Padding(8, 4, 8, 4);
+            btnFullscreenChart.Size = new Size(45, 35);
+            btnFullscreenChart.TabIndex = 4;
+            btnFullscreenChart.Text = "⛶";
+            btnFullscreenChart.UseVisualStyleBackColor = false;
+            // 
+            // btnHome
+            // 
+            btnHome.AutoSize = true;
+            btnHome.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnHome.BackColor = Color.FromArgb(30, 33, 40);
+            btnHome.FlatAppearance.BorderColor = Color.FromArgb(70, 75, 85);
+            btnHome.FlatAppearance.MouseDownBackColor = Color.FromArgb(45, 49, 58);
+            btnHome.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
+            btnHome.FlatStyle = FlatStyle.Flat;
+            btnHome.ForeColor = Color.FromArgb(220, 224, 232);
+            btnHome.Location = new Point(22, 6);
+            btnHome.Margin = new Padding(3, 0, 3, 0);
+            btnHome.Name = "btnHome";
+            btnHome.Padding = new Padding(8, 4, 8, 4);
+            btnHome.Size = new Size(47, 35);
+            btnHome.TabIndex = 5;
+            btnHome.Text = "🏠";
+            btnHome.UseVisualStyleBackColor = false;
             // 
             // panelCenter
             // 
-            panelCenter.BackColor = Color.FromArgb(21, 23, 28);
+            panelCenter.BackColor = Color.FromArgb(32, 35, 44);
             panelCenter.Controls.Add(chartPressure);
             panelCenter.Dock = DockStyle.Fill;
             panelCenter.Location = new Point(260, 90);
             panelCenter.Name = "panelCenter";
-            panelCenter.Size = new Size(780, 700);
+            panelCenter.Size = new Size(780, 660);
             panelCenter.TabIndex = 6;
             // 
             // lblComPort
@@ -1797,14 +2047,6 @@
             btnFullscreenHeader.Size = new Size(75, 23);
             btnFullscreenHeader.TabIndex = 0;
             // 
-            // lblFooterMax
-            // 
-            lblFooterMax.Location = new Point(0, 0);
-            lblFooterMax.Name = "lblFooterMax";
-            lblFooterMax.Size = new Size(100, 23);
-            lblFooterMax.TabIndex = 0;
-            // 
-            // 
             // GraphForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -1821,15 +2063,18 @@
             Text = "Pressure Graph";
             panelLeft.ResumeLayout(false);
             tlpLeft.ResumeLayout(false);
-            tlpLeft.PerformLayout();
+            grpLiveStatus.ResumeLayout(false);
             pnlLiveStatus.ResumeLayout(false);
+            grpSessionStats.ResumeLayout(false);
             tlpSessionStats.ResumeLayout(false);
             tlpSessionStats.PerformLayout();
+            grpGoToTarget.ResumeLayout(false);
             tlpGoToTarget.ResumeLayout(false);
             tlpGoToTarget.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)dgvTargets).EndInit();
             tlpTargetInputs.ResumeLayout(false);
             tlpTargetInputs.PerformLayout();
+            tlpButtonsRow.ResumeLayout(false);
             tlpControlButtons.ResumeLayout(false);
             tableLayoutPanel1.ResumeLayout(false);
             tableLayoutPanel1.PerformLayout();
@@ -1837,19 +2082,17 @@
             tableLayoutPanel2.PerformLayout();
             panelRight.ResumeLayout(false);
             tableSettings.ResumeLayout(false);
+            grpThresholds.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)numMaxThreshold).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numMinThreshold).EndInit();
             tlpTimeWindow.ResumeLayout(false);
             tlpTimeWindow.PerformLayout();
-            tlpGrid.ResumeLayout(false);
-            tlpGrid.PerformLayout();
             tlpThresholds.ResumeLayout(false);
             tlpThresholds.PerformLayout();
             tlpDisplay.ResumeLayout(false);
             tlpDisplay.PerformLayout();
             tlpAlerts.ResumeLayout(false);
             tlpAlerts.PerformLayout();
-            panelBottom.ResumeLayout(false);
-            footerLayout.ResumeLayout(false);
-            footerLayout.PerformLayout();
             panelHeader.ResumeLayout(false);
             headerLayoutPanel.ResumeLayout(false);
             headerLayoutPanel.PerformLayout();
@@ -1857,9 +2100,11 @@
             headerLeftFlowPanel.PerformLayout();
             headerRightFlowPanel.ResumeLayout(false);
             panelChartHeader.ResumeLayout(false);
-            panelChartHeader.PerformLayout();
-            flowLegend.ResumeLayout(false);
-            flowLegend.PerformLayout();
+            tlpChartHeader.ResumeLayout(false);
+            durationPanel.ResumeLayout(false);
+            durationPanel.PerformLayout();
+            toolbarPanel.ResumeLayout(false);
+            toolbarPanel.PerformLayout();
             panelCenter.ResumeLayout(false);
             ResumeLayout(false);
         }
@@ -1874,31 +2119,42 @@
         private Panel panelHeader;
         private Panel panelChartHeader;
         private Panel panelCenter;
-        private FlowLayoutPanel flowLegend;
-        private Label lblLegendCurrent;
-        private Label lblLegendTarget;
-        private Label lblLegendMin;
-        private Label lblLegendMax;
-        private FlowLayoutPanel panelChartButtons;
-        private Button btnChartReset;
-        private Button btnFullscreen;
+        private TableLayoutPanel tlpChartHeader;
+        private FlowLayoutPanel durationPanel;
+        private Button btn5M;
+        private Button btn15M;
+        private Button btn1H;
+        private Button btn4H;
+        private Button btn10H;
+        private Button btnALL;
+        private FlowLayoutPanel toolbarPanel;
+        private Button btnZoom;
+        private Button btnPan;
+        private Button btnPlus;
+        private Button btnMinus;
+        private Button btnFullscreenChart;
+        private Button btnHome;
         private TableLayoutPanel tableSettings;
         private TableLayoutPanel tlpTimeWindow;
+        private GroupBox grpThresholds;
+        private Label lblMaxThreshold;
+        private NumericUpDown numMaxThreshold;
+        private Label lblMinThreshold;
+        private NumericUpDown numMinThreshold;
+        private Button btnApplyThresholds;
+        private GroupBox grpDisplay;
+        private GroupBox grpAlerts;
         private TableLayoutPanel tlpAlerts;
         private TableLayoutPanel tlpDisplay;
         private TableLayoutPanel tlpThresholds;
-        private TableLayoutPanel tlpGrid;
         private Label lblGridTitle;
-        private Label lblYStep;
-        private ComboBox cmbYStep;
         private Label lblThresholdsTitle;
         private Label lblAlertsTitle;
         private Label lblDisplayTitle;
         private Label lblMinimum;
         private Label lblMaximum;
         private Label lblTimeWindowTitle;
-        private ComboBox cmbDuration;
-        private Label lblDuration;
+        // Pagination buttons are declared in GraphForm.cs (partial class)
         private TextBox txtMaxThreshold;
         private Panel panelMaxIndicator;
         private TextBox txtMinThreshold;
@@ -1910,13 +2166,16 @@
         private CheckBox chkSound;
         private CheckBox chkAtTarget;
         private CheckBox chkAtMax;
+        private Button btnEmergencyRight;
         private Panel panelAlertsIcon;
         private TableLayoutPanel tlpLeft;
+        private GroupBox grpLiveStatus;
         private Panel pnlLiveStatus;
         private Panel pnlLiveStatusDivider;
+        private GroupBox grpSessionStats;
+        private GroupBox grpGoToTarget;
         private TableLayoutPanel tableLayoutPanel1;
         private TableLayoutPanel tableLayoutPanel2;
-        private Button btnEmergency;
         private Label lblTarget;
         private Label lblTargetLabel;
         private Label lblTargetValue;
@@ -1928,7 +2187,6 @@
         private Label lblTrend;
         // Session Stats
         private TableLayoutPanel tlpSessionStats;
-        private Label lblSessionStatsTitle;
         private Label lblMinLabel;
         private Label lblMinValue;
         private Label lblMaxLabel;
@@ -1945,7 +2203,6 @@
         private Label lblSampleRateValue;
         // GO TO TARGET section
         private TableLayoutPanel tlpGoToTarget;
-        private Label lblGoToTargetTitle;
         private DataGridView dgvTargets;
         private TableLayoutPanel tlpTargetInputs;
         private Label lblPSILabel;
@@ -1984,14 +2241,5 @@
         private Panel appIcon;
         private Label lblAppTitle;
         // Connection status panel (will be added to headerLeftFlowPanel in SetupHeaderLayout)
-        // Footer elements
-        private Label lblAutoSaveStatus;
-        private Label lblFooterMin;
-        private Label lblFooterMax;
-        private Label lblFooterAvg;
-        private Label lblFooterPoints;
-        private Label lblThemeIndicator;
-        // Target Control elements
-        private TableLayoutPanel footerLayout;
     }
 }

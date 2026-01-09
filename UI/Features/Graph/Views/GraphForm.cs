@@ -8,6 +8,7 @@ using LiveChartsCore.Defaults;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using LiveChartsCore.SkiaSharpView.Painting.Effects;
+using LiveChartsCore.Easing;
 using SkiaSharp;
 using Alicat.Services.Data;
 using DataPointModel = Alicat.Services.Data.DataPoint;
@@ -18,6 +19,14 @@ namespace Alicat.UI.Features.Graph.Views
     public partial class GraphForm : Form
     {
         private readonly SessionDataStore _dataStore;
+        
+        // Pagination buttons
+        private Button? btnPage1;
+        private Button? btnPage2;
+        private Button? btnPage3;
+        private Button? btnPage4;
+        private Button? btnPage5;
+        private Button? btnPage6;
         // --- series (LiveCharts2) ---
         private ObservableCollection<ObservablePoint> _seriesCurrent = null!;
         private ObservableCollection<ObservablePoint> _seriesTarget = null!;
@@ -68,20 +77,22 @@ namespace Alicat.UI.Features.Graph.Views
         // Optional delegate for saving settings when thresholds change
         private Action? _onThresholdsChanged;
 
-        // Duration data: (Name, Seconds, GridStepXSeconds)
-        private static readonly (string Name, int Seconds, int GridStep)[] DurationData = new[]
+        // Pagination data: (Page Name, Seconds, GridStepXSeconds)
+        private static readonly (string Name, int Seconds, int GridStep)[] PaginationData = new[]
         {
-            ("1 min",    60,     10),
-            ("5 min",    300,    30),
-            ("15 min",   900,    60),
-            ("30 min",   1800,   120),
-            ("1 hour",   3600,   600),
-            ("2 hours",  7200,   900),
-            ("4 hours",  14400,  1800),
-            ("6 hours",  21600,  1800),
-            ("8 hours",  28800,  1800),
-            ("10 hours", 36000,  3600)
+            ("Page 1",   300,    30),   // 5 mins
+            ("Page 2",   900,    60),   // 15 mins
+            ("Page 3",   3600,   600),  // 1 hour
+            ("Page 4",   14400,  1800), // 4 hours
+            ("Page 5",   36000,  3600), // 10 hours
+            ("Page 6",   -1,     1800)  // All data (special case: -1 = no limit)
         };
+        
+        // Legacy Duration data (kept for compatibility)
+        private static readonly (string Name, int Seconds, int GridStep)[] DurationData = PaginationData;
+        
+        // Current selected page index
+        private int _currentPageIndex = 0;
 
         public GraphForm(SessionDataStore dataStore)
         {
@@ -91,17 +102,49 @@ namespace Alicat.UI.Features.Graph.Views
             ComboBoxValues();
             CreateCursorInfoPanel();
 
-            // handlers (duration / grid / thresholds)
-            if (cmbDuration != null)
-                cmbDuration.SelectedIndexChanged += CmbDuration_SelectedIndexChanged;
+            // handlers (pagination / grid / thresholds)
+            // Duration ComboBox removed - now using pagination buttons
+            InitializePaginationButtonHandlers();
             
             // Right panel handlers
-            if (cmbYStep != null)
-                cmbYStep.SelectedIndexChanged += CmbYStep_SelectedIndexChanged;
+            // Y Step removed - LiveCharts2 automatically manages Y axis grid step
             
             if (chkShowGrid != null)
                 chkShowGrid.CheckedChanged += ChkShowGrid_CheckedChanged;
             
+            // Use NumericUpDown for thresholds (new design)
+            if (numMaxThreshold != null)
+            {
+                numMaxThreshold.ValueChanged += (s, e) => 
+                {
+                    if (txtMaxThreshold != null)
+                        txtMaxThreshold.Text = numMaxThreshold.Value.ToString("F0");
+                };
+            }
+            
+            if (numMinThreshold != null)
+            {
+                numMinThreshold.ValueChanged += (s, e) => 
+                {
+                    if (txtMinThreshold != null)
+                        txtMinThreshold.Text = numMinThreshold.Value.ToString("F0");
+                };
+            }
+            
+            // Apply button handler
+            if (btnApplyThresholds != null)
+            {
+                btnApplyThresholds.Click += (s, e) =>
+                {
+                    if (numMaxThreshold != null && txtMaxThreshold != null)
+                        txtMaxThreshold.Text = numMaxThreshold.Value.ToString("F0");
+                    if (numMinThreshold != null && txtMinThreshold != null)
+                        txtMinThreshold.Text = numMinThreshold.Value.ToString("F0");
+                    Thresholds_TextChanged(null, EventArgs.Empty);
+                };
+            }
+            
+            // Keep old TextBox handlers for backward compatibility
             if (txtMaxThreshold != null)
             {
                 txtMaxThreshold.TextChanged += Thresholds_TextChanged;
@@ -114,8 +157,112 @@ namespace Alicat.UI.Features.Graph.Views
                 txtMinThreshold.Leave += Thresholds_TextChanged;
             }
             
+            
             if (chkShowTarget != null)
                 chkShowTarget.CheckedChanged += ChkShowTarget_CheckedChanged;
+            
+            // Emergency Vent button (right panel)
+            if (btnEmergencyRight != null)
+            {
+                btnEmergencyRight.Click += BtnEmergency_Click;
+                // Hover effects for Emergency button
+                btnEmergencyRight.MouseEnter += (s, e) => btnEmergencyRight.BackColor = Color.FromArgb(220, 38, 38);
+                btnEmergencyRight.MouseLeave += (s, e) => btnEmergencyRight.BackColor = Color.FromArgb(239, 68, 68);
+            }
+            
+            // Hover effects for Apply button
+            if (btnApplyThresholds != null)
+            {
+                btnApplyThresholds.MouseEnter += (s, e) => btnApplyThresholds.BackColor = Color.FromArgb(5, 150, 105);
+                btnApplyThresholds.MouseLeave += (s, e) => btnApplyThresholds.BackColor = Color.FromArgb(16, 185, 129);
+            }
+            
+            // Move existing CheckBoxes from tlpDisplay to grpDisplay
+            // This must be done in constructor, not in InitializeComponent (Designer cannot process dynamic control movement)
+            if (chkShowGrid != null && tlpDisplay != null && grpDisplay != null && tlpDisplay.Controls.Contains(chkShowGrid))
+            {
+                tlpDisplay.Controls.Remove(chkShowGrid);
+                chkShowGrid.Location = new Point(12, 22);
+                chkShowGrid.Size = new Size(200, 20);
+                chkShowGrid.Dock = DockStyle.None;
+                chkShowGrid.ForeColor = Color.FromArgb(156, 163, 175);
+                chkShowGrid.Font = new Font("Segoe UI", 9F);
+                chkShowGrid.FlatStyle = FlatStyle.Flat;
+                grpDisplay.Controls.Add(chkShowGrid);
+            }
+            if (chkShowTarget != null && tlpDisplay != null && grpDisplay != null && tlpDisplay.Controls.Contains(chkShowTarget))
+            {
+                tlpDisplay.Controls.Remove(chkShowTarget);
+                chkShowTarget.Location = new Point(12, 44);
+                chkShowTarget.Size = new Size(200, 20);
+                chkShowTarget.Dock = DockStyle.None;
+                chkShowTarget.ForeColor = Color.FromArgb(156, 163, 175);
+                chkShowTarget.Font = new Font("Segoe UI", 9F);
+                chkShowTarget.FlatStyle = FlatStyle.Flat;
+                grpDisplay.Controls.Add(chkShowTarget);
+            }
+            if (chkShowMax != null && tlpDisplay != null && grpDisplay != null && tlpDisplay.Controls.Contains(chkShowMax))
+            {
+                tlpDisplay.Controls.Remove(chkShowMax);
+                chkShowMax.Location = new Point(12, 66);
+                chkShowMax.Size = new Size(200, 20);
+                chkShowMax.Dock = DockStyle.None;
+                chkShowMax.ForeColor = Color.FromArgb(156, 163, 175);
+                chkShowMax.Font = new Font("Segoe UI", 9F);
+                chkShowMax.FlatStyle = FlatStyle.Flat;
+                grpDisplay.Controls.Add(chkShowMax);
+            }
+            if (chkShowMin != null && tlpDisplay != null && grpDisplay != null && tlpDisplay.Controls.Contains(chkShowMin))
+            {
+                tlpDisplay.Controls.Remove(chkShowMin);
+                chkShowMin.Location = new Point(12, 88);
+                chkShowMin.Size = new Size(200, 20);
+                chkShowMin.Dock = DockStyle.None;
+                chkShowMin.ForeColor = Color.FromArgb(156, 163, 175);
+                chkShowMin.Font = new Font("Segoe UI", 9F);
+                chkShowMin.FlatStyle = FlatStyle.Flat;
+                grpDisplay.Controls.Add(chkShowMin);
+            }
+            
+            // Move existing CheckBoxes from tlpAlerts to grpAlerts
+            if (chkSound != null && tlpAlerts != null && grpAlerts != null && tlpAlerts.Controls.Contains(chkSound))
+            {
+                tlpAlerts.Controls.Remove(chkSound);
+                chkSound.Location = new Point(12, 22);
+                chkSound.Size = new Size(200, 20);
+                chkSound.Dock = DockStyle.None;
+                chkSound.ForeColor = Color.FromArgb(156, 163, 175);
+                chkSound.Font = new Font("Segoe UI", 9F);
+                chkSound.FlatStyle = FlatStyle.Flat;
+                grpAlerts.Controls.Add(chkSound);
+            }
+            if (chkAtTarget != null && tlpAlerts != null && grpAlerts != null && tlpAlerts.Controls.Contains(chkAtTarget))
+            {
+                tlpAlerts.Controls.Remove(chkAtTarget);
+                chkAtTarget.Location = new Point(12, 44);
+                chkAtTarget.Size = new Size(200, 20);
+                chkAtTarget.Dock = DockStyle.None;
+                chkAtTarget.ForeColor = Color.FromArgb(156, 163, 175);
+                chkAtTarget.Font = new Font("Segoe UI", 9F);
+                chkAtTarget.FlatStyle = FlatStyle.Flat;
+                grpAlerts.Controls.Add(chkAtTarget);
+            }
+            if (chkAtMax != null && tlpAlerts != null && grpAlerts != null && tlpAlerts.Controls.Contains(chkAtMax))
+            {
+                tlpAlerts.Controls.Remove(chkAtMax);
+                chkAtMax.Location = new Point(12, 66);
+                chkAtMax.Size = new Size(200, 20);
+                chkAtMax.Dock = DockStyle.None;
+                chkAtMax.ForeColor = Color.FromArgb(156, 163, 175);
+                chkAtMax.Font = new Font("Segoe UI", 9F);
+                chkAtMax.FlatStyle = FlatStyle.Flat;
+                grpAlerts.Controls.Add(chkAtMax);
+            }
+            
+            // Hide old TableLayoutPanels (they are no longer used)
+            if (tlpThresholds != null) tlpThresholds.Visible = false;
+            if (tlpDisplay != null) tlpDisplay.Visible = false;
+            if (tlpAlerts != null) tlpAlerts.Visible = false;
             
             if (chkShowMax != null)
                 chkShowMax.CheckedChanged += ChkShowMax_CheckedChanged;
@@ -135,7 +282,8 @@ namespace Alicat.UI.Features.Graph.Views
             // Load thresholds from settings
             LoadThresholdsFromSettings();
 
-            // default duration
+            // default page (Page 1 = 5 mins)
+            _currentPageIndex = 0;
             _timeWindowSeconds = GetDurationSeconds(0);
             _gridStepXSeconds = GetAutoGridStepX(_timeWindowSeconds);
             UpdateGridStepXDisplay();
@@ -197,11 +345,6 @@ namespace Alicat.UI.Features.Graph.Views
             KeyDown += GraphForm_KeyDown;
             KeyPreview = true; // Enable key preview for form-level key handling
 
-            // Setup Emergency Vent button
-            if (btnEmergency != null)
-            {
-                btnEmergency.Click += BtnEmergency_Click;
-            }
 
             // Setup chart header buttons (visual only, no logic)
             // Reset and Fullscreen buttons remain for design, but handlers are removed
@@ -223,31 +366,51 @@ namespace Alicat.UI.Features.Graph.Views
         // =========================
         private void ComboBoxValues()
         {
-            cmbDuration.Items.Clear();
-            foreach (var d in DurationData)
-                cmbDuration.Items.Add(d.Name);
-            cmbDuration.SelectedIndex = 0;
+            // Duration ComboBox removed - now using pagination buttons
+            // Initialize pagination buttons will be done in InitializePaginationButtons()
 
-            // Y Step dropdown
-            if (cmbYStep != null)
-            {
-                cmbYStep.Items.Clear();
-                cmbYStep.Items.AddRange(new object[] { "10", "20", "50", "100" });
-                cmbYStep.SelectedIndex = 1; // Default: 20
-            }
+            // Y Step dropdown removed - LiveCharts2 automatically manages Y axis grid step
+        }
+        
+        private void InitializePaginationButtons()
+        {
+            // This will be called after controls are created
+            // Buttons are created in Designer, we just need to wire up handlers
         }
 
         private double GetDurationSeconds(int index)
         {
-            if (index < 0 || index >= DurationData.Length) return 60;
-            return DurationData[index].Seconds;
+            if (index < 0 || index >= PaginationData.Length) return 300; // Default: 5 mins
+            var data = PaginationData[index];
+            // -1 means "all data" - return max time from store
+            if (data.Seconds == -1)
+            {
+                if (_dataStore.Points.Count > 0)
+                {
+                    return _dataStore.Points.Max(p => p.ElapsedSeconds);
+                }
+                return 3600; // Default 1 hour if no data
+            }
+            return data.Seconds;
+        }
+        
+        private bool IsAllDataPage(int index)
+        {
+            if (index < 0 || index >= PaginationData.Length) return false;
+            return PaginationData[index].Seconds == -1;
         }
 
         private double GetAutoGridStepX(double durationSeconds)
         {
-            foreach (var d in DurationData)
+            // For "all data" page, use default grid step
+            if (durationSeconds < 0) return 1800;
+            
+            foreach (var d in PaginationData)
+            {
+                if (d.Seconds == -1) continue; // Skip "all data" page
                 if (d.Seconds == (int)durationSeconds)
                     return d.GridStep;
+            }
             return 60;
         }
 
@@ -427,7 +590,7 @@ namespace Alicat.UI.Features.Graph.Views
                     Fill = null,
                     GeometryStroke = null,
                     GeometrySize = 0,
-                    LineSmoothness = 0 // Will be changed by ApplySmoothing()
+                    LineSmoothness = 0.6 // Плавные переходы вместо "лестниц" (0.0 = прямые линии, 1.0 = максимальное сглаживание)
                 },
                 // Target line
                 _lineSeriesTarget,
@@ -483,7 +646,39 @@ namespace Alicat.UI.Features.Graph.Views
             };
 
             // Chart background
-            chartPressure.BackColor = Color.FromArgb(22, 24, 30);
+            chartPressure.BackColor = Color.FromArgb(32, 35, 44); // Same as LiveStatus
+
+            // ===== ВКЛЮЧАЕМ ВСТРОЕННЫЕ ФИЧИ LIVECHARTS2 =====
+            
+            // 1. Анимации: плавные переходы при изменении данных
+            chartPressure.AnimationsSpeed = TimeSpan.FromMilliseconds(300); // 300ms для плавных переходов
+            chartPressure.EasingFunction = EasingFunctions.CubicOut; // Плавная функция сглаживания
+
+            // 2. Zoom и Pan: масштабирование колесом мыши и панорамирование перетаскиванием
+            chartPressure.ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.X | LiveChartsCore.Measure.ZoomAndPanMode.Y; // Масштабирование и панорамирование по обеим осям
+            chartPressure.ZoomingSpeed = 0.1; // Скорость масштабирования (0.1 = медленнее, 1.0 = быстрее)
+
+            // 3. Tooltips: кастомные всплывающие подсказки при наведении
+            chartPressure.TooltipPosition = LiveChartsCore.Measure.TooltipPosition.Top;
+            
+            // Настройка стиля tooltip (темная тема)
+            chartPressure.TooltipBackgroundPaint = new SolidColorPaint(new SKColor(30, 32, 38), 255);
+            chartPressure.TooltipTextPaint = new SolidColorPaint(new SKColor(220, 220, 220), 255);
+            chartPressure.TooltipTextSize = 12;
+            
+            // 4. Легенда: встроенная легенда LiveCharts2 (заменяет старую flowLegend)
+            chartPressure.LegendPosition = LiveChartsCore.Measure.LegendPosition.Top; // Легенда сверху
+            chartPressure.LegendBackgroundPaint = new SolidColorPaint(new SKColor(30, 32, 38), 255);
+            chartPressure.LegendTextPaint = new SolidColorPaint(new SKColor(220, 220, 220), 255);
+            chartPressure.LegendTextSize = 11;
+            
+            // Применяем кастомные tooltips к сериям с форматированием
+            foreach (var series in chartPressure.Series.OfType<LineSeries<ObservablePoint>>())
+            {
+                // Tooltip будет показывать название серии и значение
+                // Форматирование происходит автоматически через Name и Values
+                // LiveCharts2 автоматически показывает название серии и значение при наведении
+            }
         }
 
         private void ApplySmoothing()
@@ -503,6 +698,21 @@ namespace Alicat.UI.Features.Graph.Views
             //         currentSeries.LineSmoothness = smooth ? 0.2 : 0; // 0..1 (меньше = спокойнее)
             //     }
             // }
+        }
+
+        /// <summary>
+        /// Применяет сглаживание линии к существующей серии (для плавных переходов вместо "лестниц")
+        /// </summary>
+        private void ApplyLineSmoothing()
+        {
+            if (chartPressure.Series == null || !chartPressure.Series.Any()) return;
+
+            // Находим серию "Current" (первая серия)
+            var currentSeries = chartPressure.Series.FirstOrDefault() as LineSeries<ObservablePoint>;
+            if (currentSeries != null)
+            {
+                currentSeries.LineSmoothness = 0.6; // Плавные переходы (0.0 = прямые линии, 1.0 = максимальное сглаживание)
+            }
         }
 
         // =========================
@@ -659,22 +869,64 @@ namespace Alicat.UI.Features.Graph.Views
         }
 
         // =========================
-        // Duration change
+        // Pagination button handlers
         // =========================
-        private void CmbDuration_SelectedIndexChanged(object? sender, EventArgs e)
+        private void InitializePaginationButtonHandlers()
         {
-            int idx = cmbDuration.SelectedIndex;
-            if (idx < 0 || idx >= DurationData.Length) return;
-
-            _timeWindowSeconds = DurationData[idx].Seconds;
-            _gridStepXSeconds = DurationData[idx].GridStep;
-
+            // Wire up pagination button handlers
+            // Buttons will be created in Designer
+            if (btnPage1 != null) btnPage1.Click += (s, e) => OnPaginationPageClicked(0);
+            if (btnPage2 != null) btnPage2.Click += (s, e) => OnPaginationPageClicked(1);
+            if (btnPage3 != null) btnPage3.Click += (s, e) => OnPaginationPageClicked(2);
+            if (btnPage4 != null) btnPage4.Click += (s, e) => OnPaginationPageClicked(3);
+            if (btnPage5 != null) btnPage5.Click += (s, e) => OnPaginationPageClicked(4);
+            if (btnPage6 != null) btnPage6.Click += (s, e) => OnPaginationPageClicked(5);
+            
+            // Set default page (Page 1)
+            UpdatePaginationButtonStates(0);
+        }
+        
+        private void OnPaginationPageClicked(int pageIndex)
+        {
+            if (pageIndex < 0 || pageIndex >= PaginationData.Length) return;
+            
+            _currentPageIndex = pageIndex;
+            
+            // Get duration for this page
+            _timeWindowSeconds = GetDurationSeconds(pageIndex);
+            _gridStepXSeconds = GetAutoGridStepX(_timeWindowSeconds);
+            
             UpdateGridStepXDisplay();
-
+            UpdatePaginationButtonStates(pageIndex);
+            
             RedrawFromStore();
-
+            
             ApplyGridSettings();
             UpdateCustomLabelsX();
+        }
+        
+        private void UpdatePaginationButtonStates(int selectedIndex)
+        {
+            // Update button visual states (highlight selected)
+            var buttons = new[] { btnPage1, btnPage2, btnPage3, btnPage4, btnPage5, btnPage6 };
+            for (int i = 0; i < buttons.Length && i < PaginationData.Length; i++)
+            {
+                if (buttons[i] != null)
+                {
+                    if (i == selectedIndex)
+                    {
+                        // Selected button - highlight
+                        buttons[i].BackColor = Color.FromArgb(76, 175, 80); // Green
+                        buttons[i].ForeColor = Color.White;
+                    }
+                    else
+                    {
+                        // Unselected button - default
+                        buttons[i].BackColor = Color.FromArgb(42, 45, 53);
+                        buttons[i].ForeColor = Color.FromArgb(200, 205, 215);
+                    }
+                }
+            }
         }
 
         private void RedrawFromStore()
@@ -699,6 +951,10 @@ namespace Alicat.UI.Features.Graph.Views
 
             // Применить окно времени БЕЗ трима
             ApplyTimeWindow(forceTrim: false);
+            
+            // Применяем сглаживание линии
+            ApplyLineSmoothing();
+            
             ApplyThresholdLines();
             UpdateTargetLine();
         }
@@ -712,19 +968,46 @@ namespace Alicat.UI.Features.Graph.Views
             var xAxis = chartPressure.XAxes.FirstOrDefault();
             if (xAxis == null) return;
 
+            // Check if "all data" page is selected
+            bool isAllDataPage = IsAllDataPage(_currentPageIndex);
+            
             double xMax = _timeSeconds;
-            double xMin = Math.Max(0, xMax - _timeWindowSeconds);
-
-            // Update axis limits
-            if (_timeSeconds <= _timeWindowSeconds)
+            double xMin = 0;
+            
+            if (isAllDataPage)
             {
-                xAxis.MinLimit = 0;
-                xAxis.MaxLimit = _timeWindowSeconds;
+                // "All data" page - show all data from store
+                if (_dataStore.Points.Count > 0)
+                {
+                    xMax = _dataStore.Points.Max(p => p.ElapsedSeconds);
+                    xMin = 0;
+                }
+                else
+                {
+                    xMax = _timeSeconds;
+                    xMin = 0;
+                }
+                
+                // No limits on axis for "all data"
+                xAxis.MinLimit = null;
+                xAxis.MaxLimit = null;
             }
             else
             {
-                xAxis.MinLimit = xMin;
-                xAxis.MaxLimit = xMax;
+                // Regular page - apply time window
+                xMin = Math.Max(0, xMax - _timeWindowSeconds);
+
+                // Update axis limits
+                if (_timeSeconds <= _timeWindowSeconds)
+                {
+                    xAxis.MinLimit = 0;
+                    xAxis.MaxLimit = _timeWindowSeconds;
+                }
+                else
+                {
+                    xAxis.MinLimit = xMin;
+                    xAxis.MaxLimit = xMax;
+                }
             }
 
             UpdateCustomLabelsX();
@@ -738,6 +1021,9 @@ namespace Alicat.UI.Features.Graph.Views
             }
 
             if (!forceTrim) return;
+            
+            // For "all data" page, don't trim
+            if (isAllDataPage) return;
 
             // Trim old points from current series (только для активных сессий)
             TrimSeriesByX(_seriesCurrent, xMin);
@@ -888,13 +1174,7 @@ namespace Alicat.UI.Features.Graph.Views
             ApplyThresholdLines();
         }
         
-        // =========================
-        // Y Step dropdown handler
-        // =========================
-        private void CmbYStep_SelectedIndexChanged(object? sender, EventArgs e)
-        {
-            ApplyGridSettings();
-        }
+        // Y Step dropdown handler removed - LiveCharts2 automatically manages Y axis grid step
         
         // =========================
         // Show Grid checkbox handler
@@ -973,16 +1253,30 @@ namespace Alicat.UI.Features.Graph.Views
         /// </summary>
         private void LoadThresholdsFromSettings()
         {
-            // Always use default value 0 (as per user requirement)
-            // Settings are not loaded to ensure default is always 0
+            // Load from AppOptions.Current (single source of truth)
+            var maxPressure = FormOptions.AppOptions.Current.MaxPressure ?? 0;
+            var minPressure = FormOptions.AppOptions.Current.MinPressure ?? 0;
+            
+            // Update NumericUpDown controls (primary controls)
+            if (numMaxThreshold != null)
+            {
+                numMaxThreshold.Value = (decimal)maxPressure;
+            }
+            
+            if (numMinThreshold != null)
+            {
+                numMinThreshold.Value = (decimal)minPressure;
+            }
+            
+            // Update TextBox controls (for backward compatibility)
             if (txtMaxThreshold != null)
             {
-                txtMaxThreshold.Text = "0";
+                txtMaxThreshold.Text = maxPressure.ToString("F0");
             }
             
             if (txtMinThreshold != null)
             {
-                txtMinThreshold.Text = "0";
+                txtMinThreshold.Text = minPressure.ToString("F0");
             }
         }
 
@@ -993,12 +1287,21 @@ namespace Alicat.UI.Features.Graph.Views
         {
             var settings = FormOptions.AppOptions.Current.Clone();
             
-            if (txtMaxThreshold != null && double.TryParse(txtMaxThreshold.Text, out double maxVal))
+            // Use NumericUpDown values (primary controls)
+            if (numMaxThreshold != null)
+            {
+                settings.MaxPressure = (double)numMaxThreshold.Value;
+            }
+            else if (txtMaxThreshold != null && double.TryParse(txtMaxThreshold.Text, out double maxVal))
             {
                 settings.MaxPressure = maxVal;
             }
             
-            if (txtMinThreshold != null && double.TryParse(txtMinThreshold.Text, out double minVal))
+            if (numMinThreshold != null)
+            {
+                settings.MinPressure = (double)numMinThreshold.Value;
+            }
+            else if (txtMinThreshold != null && double.TryParse(txtMinThreshold.Text, out double minVal))
             {
                 settings.MinPressure = minVal;
             }
@@ -1014,6 +1317,16 @@ namespace Alicat.UI.Features.Graph.Views
         public void SetThresholdsChangedHandler(Action handler)
         {
             _onThresholdsChanged = handler;
+        }
+
+        /// <summary>
+        /// Обновляет значения thresholds из настроек приложения
+        /// (вызывается при изменении настроек в Preferences)
+        /// </summary>
+        public void RefreshThresholdsFromSettings()
+        {
+            LoadThresholdsFromSettings();
+            ApplyThresholdLines();
         }
 
         /// <summary>
@@ -1246,7 +1559,9 @@ namespace Alicat.UI.Features.Graph.Views
                 {
                     var cursorSeries = chartPressure.Series.Skip(4).FirstOrDefault() as ScatterSeries<ObservablePoint>;
                     if (cursorSeries != null)
+                    {
                         cursorSeries.IsVisible = true;
+                    }
                 }
 
                 int totalSec = (int)Math.Round(tSec);
@@ -1308,11 +1623,11 @@ namespace Alicat.UI.Features.Graph.Views
             // Применяем настройки окна времени
             ApplyTimeWindow(forceTrim: true);
             
+            // Обновляем сглаживание линии (применяем к существующей серии)
+            ApplyLineSmoothing();
+            
             // Обновляем линии порогов
             ApplyThresholdLines();
-            
-            // Обновляем статистику в футере
-            UpdateFooterStatistics();
             
             // Обновляем live status панель
             if (_dataStore.Points.Count > 0)
@@ -1350,9 +1665,6 @@ namespace Alicat.UI.Features.Graph.Views
             }
 
             AddSample(point.Current, point.Target > 0 ? point.Target : null);
-
-            // Update footer statistics
-            UpdateFooterStatistics();
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -1396,6 +1708,22 @@ namespace Alicat.UI.Features.Graph.Views
         }
 
         // Emergency Vent handler delegate
+
+        // BtnFullscreen_Click removed - replaced with toolbar icon
+
+        private void PnlLiveStatus_Paint(object? sender, PaintEventArgs e)
+        {
+            var panel = sender as Panel;
+            if (panel == null) return;
+
+            // Draw border around LIVE STATUS panel (опционально, если нужна рамка)
+            // using var pen = new Pen(_isDarkTheme ? Color.FromArgb(60, 65, 75) : Color.FromArgb(200, 200, 210), 1);
+            // var rect = new Rectangle(0, 0, panel.Width - 1, panel.Height - 1);
+            // e.Graphics.DrawRectangle(pen, rect);
+        }
+
+        // btnGoTarget_Click is implemented in GraphForm.HeaderFooter.cs
+        
         private Action? _emergencyVentHandler;
 
         /// <summary>
@@ -1419,21 +1747,6 @@ namespace Alicat.UI.Features.Graph.Views
                 _emergencyVentHandler?.Invoke();
             }
         }
-
-        // BtnFullscreen_Click removed - replaced with toolbar icon
-
-        private void PnlLiveStatus_Paint(object? sender, PaintEventArgs e)
-        {
-            var panel = sender as Panel;
-            if (panel == null) return;
-
-            // Draw border around LIVE STATUS panel (опционально, если нужна рамка)
-            // using var pen = new Pen(_isDarkTheme ? Color.FromArgb(60, 65, 75) : Color.FromArgb(200, 200, 210), 1);
-            // var rect = new Rectangle(0, 0, panel.Width - 1, panel.Height - 1);
-            // e.Graphics.DrawRectangle(pen, rect);
-        }
-
-        // btnGoTarget_Click is implemented in GraphForm.HeaderFooter.cs
         
         private void GraphForm_KeyDown(object? sender, KeyEventArgs e)
         {
