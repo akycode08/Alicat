@@ -4,6 +4,12 @@
     <Compile Update="UI\Features\Graph\Views\GoToTargetPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Update="UI\Features\Graph\Views\GraphForm.DisplaySettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="UI\Features\Graph\Views\GraphForm.Events.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="UI\Features\Graph\Views\GraphForm.HeaderFooter.cs">
       <SubType>Form</SubType>
     </Compile>

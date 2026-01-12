@@ -6,7 +6,7 @@
   },
   "Device": {
     "PressureRamp": 10,
-    "MaxPressure": 20,
+    "MaxPressure": 40,
     "MinPressure": 10
   },
   "Control": {
@@ -25,6 +25,21 @@
   "AutoConnect": {
     "AutoConnectOnStartup": true
   },
-  "RecentSessions": [],
-  "LastSaved": "2026-01-09T16:49:38.6576501-06:00"
+  "RecentSessions": [
+    "C:\\Users\\User\\Desktop\\Alicat_Test\\Test13\\session_2026-01-08_16-30-30.csv",
+    "C:\\Users\\User\\Desktop\\Alicat_Test\\Test12\\session_2026-01-08_12-09-59.csv",
+    "C:\\Users\\User\\Desktop\\Alicat_Test\\Test11\\session_2026-01-07_17-33-38.csv"
+  ],
+  "LastSaved": "2026-01-12T13:23:23.4117138-06:00",
+  "GraphForm": {
+    "Display": {
+      "ShowGrid": false,
+      "ShowTarget": false,
+      "ShowMax": true,
+      "ShowMin": true
+    },
+    "Duration": {
+      "SelectedIndex": 5
+    }
+  }
 }

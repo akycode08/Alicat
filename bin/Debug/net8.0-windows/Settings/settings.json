@@ -6,7 +6,7 @@
   },
   "Device": {
     "PressureRamp": 10,
-    "MaxPressure": 20,
+    "MaxPressure": 40,
     "MinPressure": 10
   },
   "Control": {
@@ -26,5 +26,16 @@
     "AutoConnectOnStartup": true
   },
   "RecentSessions": [],
-  "LastSaved": "2026-01-09T16:31:43.900545-06:00"
+  "LastSaved": "2026-01-12T13:03:19.3341829-06:00",
+  "GraphForm": {
+    "Display": {
+      "ShowGrid": false,
+      "ShowTarget": false,
+      "ShowMax": true,
+      "ShowMin": true
+    },
+    "Duration": {
+      "SelectedIndex": 3
+    }
+  }
 }

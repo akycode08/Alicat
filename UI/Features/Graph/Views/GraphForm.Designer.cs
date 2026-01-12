@@ -1886,11 +1886,10 @@
             toolbarPanel.Controls.Add(btnFullscreenChart);
             toolbarPanel.Controls.Add(btnHome);
             toolbarPanel.Dock = DockStyle.Fill;
-            toolbarPanel.FlowDirection = FlowDirection.RightToLeft;
             toolbarPanel.Location = new Point(390, 0);
             toolbarPanel.Margin = new Padding(0);
             toolbarPanel.Name = "toolbarPanel";
-            toolbarPanel.Padding = new Padding(0, 6, 8, 6);
+            toolbarPanel.Padding = new Padding(8, 6, 0, 6);
             toolbarPanel.Size = new Size(390, 40);
             toolbarPanel.TabIndex = 1;
             toolbarPanel.WrapContents = false;
@@ -1905,7 +1904,7 @@
             btnZoom.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
             btnZoom.FlatStyle = FlatStyle.Flat;
             btnZoom.ForeColor = Color.FromArgb(220, 224, 232);
-            btnZoom.Location = new Point(297, 6);
+            btnZoom.Location = new Point(11, 6);
             btnZoom.Margin = new Padding(3, 0, 3, 0);
             btnZoom.Name = "btnZoom";
             btnZoom.Padding = new Padding(8, 4, 8, 4);
@@ -1924,7 +1923,7 @@
             btnPan.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
             btnPan.FlatStyle = FlatStyle.Flat;
             btnPan.ForeColor = Color.FromArgb(220, 224, 232);
-            btnPan.Location = new Point(221, 6);
+            btnPan.Location = new Point(99, 6);
             btnPan.Margin = new Padding(3, 0, 3, 0);
             btnPan.Name = "btnPan";
             btnPan.Padding = new Padding(8, 4, 8, 4);
@@ -1943,7 +1942,7 @@
             btnPlus.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
             btnPlus.FlatStyle = FlatStyle.Flat;
             btnPlus.ForeColor = Color.FromArgb(220, 224, 232);
-            btnPlus.Location = new Point(172, 6);
+            btnPlus.Location = new Point(175, 6);
             btnPlus.Margin = new Padding(3, 0, 3, 0);
             btnPlus.Name = "btnPlus";
             btnPlus.Padding = new Padding(8, 4, 8, 4);
@@ -1962,7 +1961,7 @@
             btnMinus.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
             btnMinus.FlatStyle = FlatStyle.Flat;
             btnMinus.ForeColor = Color.FromArgb(220, 224, 232);
-            btnMinus.Location = new Point(126, 6);
+            btnMinus.Location = new Point(224, 6);
             btnMinus.Margin = new Padding(3, 0, 3, 0);
             btnMinus.Name = "btnMinus";
             btnMinus.Padding = new Padding(8, 4, 8, 4);
@@ -1981,7 +1980,7 @@
             btnFullscreenChart.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
             btnFullscreenChart.FlatStyle = FlatStyle.Flat;
             btnFullscreenChart.ForeColor = Color.FromArgb(220, 224, 232);
-            btnFullscreenChart.Location = new Point(75, 6);
+            btnFullscreenChart.Location = new Point(270, 6);
             btnFullscreenChart.Margin = new Padding(3, 0, 3, 0);
             btnFullscreenChart.Name = "btnFullscreenChart";
             btnFullscreenChart.Padding = new Padding(8, 4, 8, 4);
@@ -2000,7 +1999,7 @@
             btnHome.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 39, 48);
             btnHome.FlatStyle = FlatStyle.Flat;
             btnHome.ForeColor = Color.FromArgb(220, 224, 232);
-            btnHome.Location = new Point(22, 6);
+            btnHome.Location = new Point(321, 6);
             btnHome.Margin = new Padding(3, 0, 3, 0);
             btnHome.Name = "btnHome";
             btnHome.Padding = new Padding(8, 4, 8, 4);

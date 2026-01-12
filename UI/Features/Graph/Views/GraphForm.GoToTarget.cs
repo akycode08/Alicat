@@ -267,6 +267,7 @@ namespace Alicat.UI.Features.Graph.Views
             if (btnAddTarget != null)
                 btnAddTarget.Click += BtnAddTarget_Click;
             
+            
             if (btnClearAll != null)
                 btnClearAll.Click += BtnClearAll_Click;
             
@@ -496,6 +497,7 @@ namespace Alicat.UI.Features.Graph.Views
             // Очищаем поля ввода
             txtPSI.Text = "0";
             txtHold.Text = "0";
+            
         }
 
         private void BtnClearAll_Click(object? sender, EventArgs e)
@@ -920,15 +922,21 @@ namespace Alicat.UI.Features.Graph.Views
         /// </summary>
         private static string GetSettingsFilePath()
         {
-            // Используем папку проекта для хранения настроек
+            // ВСЕГДА используем папку проекта для хранения настроек
+            // Находим папку проекта через путь к exe файлу (надежнее, чем текущая директория)
             string? projectDir = null;
-            string? currentDir = System.IO.Directory.GetCurrentDirectory();
             
-            if (!string.IsNullOrEmpty(currentDir))
+            // Получаем путь к exe файлу
+            string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            string? exeDir = System.IO.Path.GetDirectoryName(exePath);
+            
+            if (!string.IsNullOrEmpty(exeDir))
             {
-                var dir = new System.IO.DirectoryInfo(currentDir);
+                // Поднимаемся вверх от exe до папки проекта (где есть .csproj файл)
+                var dir = new System.IO.DirectoryInfo(exeDir);
                 while (dir != null)
                 {
+                    // Проверяем, есть ли .csproj файл в этой директории
                     if (dir.GetFiles("*.csproj").Length > 0)
                     {
                         projectDir = dir.FullName;
@@ -938,24 +946,29 @@ namespace Alicat.UI.Features.Graph.Views
                 }
             }
             
+            // Если не нашли через exe путь, пробуем текущую директорию
             if (string.IsNullOrEmpty(projectDir))
             {
-                string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-                string? exeDir = System.IO.Path.GetDirectoryName(exePath);
-                
-                if (exeDir != null && exeDir.Contains("bin"))
+                string? currentDir = System.IO.Directory.GetCurrentDirectory();
+                if (!string.IsNullOrEmpty(currentDir))
                 {
-                    var dir = new System.IO.DirectoryInfo(exeDir);
-                    while (dir != null && dir.Name != "Alicat" && dir.GetFiles("*.csproj").Length == 0)
+                    var dir = new System.IO.DirectoryInfo(currentDir);
+                    while (dir != null)
                     {
+                        if (dir.GetFiles("*.csproj").Length > 0)
+                        {
+                            projectDir = dir.FullName;
+                            break;
+                        }
                         dir = dir.Parent;
                     }
-                    projectDir = dir?.FullName ?? System.IO.Directory.GetCurrentDirectory();
                 }
-                else
-                {
-                    projectDir = System.IO.Directory.GetCurrentDirectory();
-                }
+            }
+            
+            // Если все еще не нашли, используем папку exe (fallback)
+            if (string.IsNullOrEmpty(projectDir))
+            {
+                projectDir = exeDir ?? System.IO.Directory.GetCurrentDirectory();
             }
             
             string settingsDir = System.IO.Path.Combine(projectDir, "Settings");

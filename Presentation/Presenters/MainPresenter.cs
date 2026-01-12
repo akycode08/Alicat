@@ -1433,6 +1433,10 @@ namespace Alicat.Presentation.Presenters
                 bool isDark = _view.IsDarkTheme;
                 _graphForm.ApplyTheme(isDark);
                 
+                // НЕ загружаем состояние при показе существующей формы
+                // Загрузка происходит только один раз в конструкторе
+                // Это предотвращает перезапись текущих значений пользователя
+                
                 if (_graphForm.WindowState == FormWindowState.Minimized)
                     _graphForm.WindowState = FormWindowState.Normal;
                 _graphForm.Focus();

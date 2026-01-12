@@ -98,6 +98,7 @@ namespace Alicat.UI.Features.Graph.Views
         {
             _dataStore = dataStore;
             InitializeComponent();
+            
             ConfigureChart();
             ComboBoxValues();
             CreateCursorInfoPanel();
@@ -295,6 +296,10 @@ namespace Alicat.UI.Features.Graph.Views
             UpdateCustomLabelsX();     // <- X labels
             UpdateSeriesVisibility();  // <- update series visibility based on checkboxes
 
+            // Zoom and pan modes will be controlled by toolbar buttons
+            // Default: no zoom/pan (None)
+            chartPressure.ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None;
+            
             // cursor events
             chartPressure.MouseDoubleClick += ChartPressure_MouseDoubleClick;
             chartPressure.MouseMove += ChartPressure_MouseMove;
@@ -325,6 +330,14 @@ namespace Alicat.UI.Features.Graph.Views
             // Initialize GO TO TARGET section
             InitializeGoToTarget();
             
+            // Load Display settings from JSON (after all controls are initialized)
+            LoadDisplaySettings();
+            
+            // Load Duration settings from JSON (after pagination buttons are initialized)
+            LoadDurationSettings();
+            
+            // Remove custom zoom/pan setup - using LiveCharts2 built-in functionality
+            
             // Initialize Hold timer to 00:00
             if (lblHoldTimer != null)
             {
@@ -339,7 +352,7 @@ namespace Alicat.UI.Features.Graph.Views
             // (будет установлен извне через SetTargetHandler)
 
             // Setup mouse wheel zoom and pan
-            SetupMouseWheelZoom();
+            // LiveCharts2 built-in zoom/pan is enabled via ZoomMode property
             
             // Setup keyboard shortcuts (Escape to cancel zoom/pan mode)
             KeyDown += GraphForm_KeyDown;
@@ -654,8 +667,8 @@ namespace Alicat.UI.Features.Graph.Views
             chartPressure.AnimationsSpeed = TimeSpan.FromMilliseconds(300); // 300ms для плавных переходов
             chartPressure.EasingFunction = EasingFunctions.CubicOut; // Плавная функция сглаживания
 
-            // 2. Zoom и Pan: масштабирование колесом мыши и панорамирование перетаскиванием
-            chartPressure.ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.X | LiveChartsCore.Measure.ZoomAndPanMode.Y; // Масштабирование и панорамирование по обеим осям
+            // 2. Zoom и Pan: управляются через кнопки toolbar (не здесь)
+            // ZoomMode устанавливается в InitializeToolbar() и через кнопки
             chartPressure.ZoomingSpeed = 0.1; // Скорость масштабирования (0.1 = медленнее, 1.0 = быстрее)
 
             // 3. Tooltips: кастомные всплывающие подсказки при наведении
@@ -873,16 +886,21 @@ namespace Alicat.UI.Features.Graph.Views
         // =========================
         private void InitializePaginationButtonHandlers()
         {
-            // Wire up pagination button handlers
-            // Buttons will be created in Designer
-            if (btnPage1 != null) btnPage1.Click += (s, e) => OnPaginationPageClicked(0);
-            if (btnPage2 != null) btnPage2.Click += (s, e) => OnPaginationPageClicked(1);
-            if (btnPage3 != null) btnPage3.Click += (s, e) => OnPaginationPageClicked(2);
-            if (btnPage4 != null) btnPage4.Click += (s, e) => OnPaginationPageClicked(3);
-            if (btnPage5 != null) btnPage5.Click += (s, e) => OnPaginationPageClicked(4);
-            if (btnPage6 != null) btnPage6.Click += (s, e) => OnPaginationPageClicked(5);
+            // Wire up new duration button handlers (replacing old btnPage1-6)
+            // btn5M -> index 0 (5 mins)
+            if (btn5M != null) btn5M.Click += (s, e) => OnPaginationPageClicked(0);
+            // btn15M -> index 1 (15 mins)
+            if (btn15M != null) btn15M.Click += (s, e) => OnPaginationPageClicked(1);
+            // btn1H -> index 2 (1 hour)
+            if (btn1H != null) btn1H.Click += (s, e) => OnPaginationPageClicked(2);
+            // btn4H -> index 3 (4 hours)
+            if (btn4H != null) btn4H.Click += (s, e) => OnPaginationPageClicked(3);
+            // btn10H -> index 4 (10 hours)
+            if (btn10H != null) btn10H.Click += (s, e) => OnPaginationPageClicked(4);
+            // btnALL -> index 5 (All data)
+            if (btnALL != null) btnALL.Click += (s, e) => OnPaginationPageClicked(5);
             
-            // Set default page (Page 1)
+            // Set default page (Page 1 = 5M)
             UpdatePaginationButtonStates(0);
         }
         
@@ -903,27 +921,30 @@ namespace Alicat.UI.Features.Graph.Views
             
             ApplyGridSettings();
             UpdateCustomLabelsX();
+            
+            // Сохраняем выбранный индекс в JSON
+            SaveDurationSettings();
         }
         
         private void UpdatePaginationButtonStates(int selectedIndex)
         {
-            // Update button visual states (highlight selected)
-            var buttons = new[] { btnPage1, btnPage2, btnPage3, btnPage4, btnPage5, btnPage6 };
+            // Update new duration button visual states (highlight selected)
+            var buttons = new[] { btn5M, btn15M, btn1H, btn4H, btn10H, btnALL };
             for (int i = 0; i < buttons.Length && i < PaginationData.Length; i++)
             {
                 if (buttons[i] != null)
                 {
                     if (i == selectedIndex)
                     {
-                        // Selected button - highlight
+                        // Selected button - highlight (green)
                         buttons[i].BackColor = Color.FromArgb(76, 175, 80); // Green
                         buttons[i].ForeColor = Color.White;
                     }
                     else
                     {
-                        // Unselected button - default
-                        buttons[i].BackColor = Color.FromArgb(42, 45, 53);
-                        buttons[i].ForeColor = Color.FromArgb(200, 205, 215);
+                        // Unselected button - default (dark theme colors)
+                        buttons[i].BackColor = Color.FromArgb(30, 33, 40);
+                        buttons[i].ForeColor = Color.FromArgb(220, 224, 232);
                     }
                 }
             }
@@ -1181,7 +1202,10 @@ namespace Alicat.UI.Features.Graph.Views
         // =========================
         private void ChkShowGrid_CheckedChanged(object? sender, EventArgs e)
         {
+            bool newValue = chkShowGrid?.Checked ?? false;
+            System.Diagnostics.Debug.WriteLine($"[ChkShowGrid_CheckedChanged] Checked changed to: {newValue}, sender: {sender?.GetType().Name ?? "null"}");
             ApplyGridSettings();
+            SaveDisplaySettings(); // Save Display section to JSON
         }
         
         // =========================
@@ -1189,7 +1213,10 @@ namespace Alicat.UI.Features.Graph.Views
         // =========================
         private void ChkShowTarget_CheckedChanged(object? sender, EventArgs e)
         {
+            bool newValue = chkShowTarget?.Checked ?? false;
+            System.Diagnostics.Debug.WriteLine($"[ChkShowTarget_CheckedChanged] Checked changed to: {newValue}, sender: {sender?.GetType().Name ?? "null"}");
             UpdateSeriesVisibility();
+            SaveDisplaySettings(); // Save Display section to JSON
         }
         
         // =========================
@@ -1197,7 +1224,10 @@ namespace Alicat.UI.Features.Graph.Views
         // =========================
         private void ChkShowMax_CheckedChanged(object? sender, EventArgs e)
         {
+            bool newValue = chkShowMax?.Checked ?? false;
+            System.Diagnostics.Debug.WriteLine($"[ChkShowMax_CheckedChanged] Checked changed to: {newValue}, sender: {sender?.GetType().Name ?? "null"}");
             UpdateSeriesVisibility();
+            SaveDisplaySettings(); // Save Display section to JSON
         }
         
         // =========================
@@ -1205,7 +1235,10 @@ namespace Alicat.UI.Features.Graph.Views
         // =========================
         private void ChkShowMin_CheckedChanged(object? sender, EventArgs e)
         {
+            bool newValue = chkShowMin?.Checked ?? false;
+            System.Diagnostics.Debug.WriteLine($"[ChkShowMin_CheckedChanged] Checked changed to: {newValue}, sender: {sender?.GetType().Name ?? "null"}");
             UpdateSeriesVisibility();
+            SaveDisplaySettings(); // Save Display section to JSON
         }
         
         // =========================
@@ -1234,17 +1267,23 @@ namespace Alicat.UI.Features.Graph.Views
         // =========================
         private void ChkSound_CheckedChanged(object? sender, EventArgs e)
         {
+            bool newValue = chkSound?.Checked ?? false;
+            System.Diagnostics.Debug.WriteLine($"[ChkSound_CheckedChanged] Checked changed to: {newValue}, sender: {sender?.GetType().Name ?? "null"}");
             // Sound alerts enabled/disabled
             // This will be used by alert logic
         }
         
         private void ChkAtTarget_CheckedChanged(object? sender, EventArgs e)
         {
+            bool newValue = chkAtTarget?.Checked ?? false;
+            System.Diagnostics.Debug.WriteLine($"[ChkAtTarget_CheckedChanged] Checked changed to: {newValue}, sender: {sender?.GetType().Name ?? "null"}");
             // Alert when at target enabled/disabled
         }
         
         private void ChkAtMax_CheckedChanged(object? sender, EventArgs e)
         {
+            bool newValue = chkAtMax?.Checked ?? false;
+            System.Diagnostics.Debug.WriteLine($"[ChkAtMax_CheckedChanged] Checked changed to: {newValue}, sender: {sender?.GetType().Name ?? "null"}");
             // Alert when at max enabled/disabled
         }
 
@@ -1350,13 +1389,38 @@ namespace Alicat.UI.Features.Graph.Views
             var xAxis = chartPressure.XAxes.FirstOrDefault();
             if (xAxis == null) return;
 
-            double x1 = xAxis.MinLimit ?? 0;
-            double x2 = xAxis.MaxLimit ?? _timeWindowSeconds;
-
-            if (x2 <= x1)
+            double x1 = 0; // Always start from 0
+            double x2;
+            
+            // Check if "ALL" is selected (both limits are null)
+            if (xAxis.MinLimit == null && xAxis.MaxLimit == null)
             {
-                x1 = Math.Max(0, _timeSeconds - _timeWindowSeconds);
-                x2 = Math.Max(x1 + 1, _timeSeconds);
+                // "ALL" mode - use maximum time from all data in store
+                // This ensures lines extend to the full right edge of the graph
+                if (_dataStore.Points.Count > 0)
+                {
+                    x2 = _dataStore.Points.Max(p => p.ElapsedSeconds);
+                }
+                else if (_timeSeconds > 0)
+                {
+                    x2 = _timeSeconds;
+                }
+                else
+                {
+                    x2 = _timeWindowSeconds;
+                }
+            }
+            else
+            {
+                // Regular mode - use axis MaxLimit (right edge of visible graph)
+                // If MaxLimit is null, use time window or current time
+                x2 = xAxis.MaxLimit ?? _timeWindowSeconds;
+                
+                // Ensure x2 is valid
+                if (x2 <= 0)
+                {
+                    x2 = _timeSeconds > 0 ? _timeSeconds : _timeWindowSeconds;
+                }
             }
 
             // Get values from TextBox controls
@@ -1393,13 +1457,38 @@ namespace Alicat.UI.Features.Graph.Views
             var xAxis = chartPressure.XAxes.FirstOrDefault();
             if (xAxis == null) return;
 
-            double x1 = xAxis.MinLimit ?? 0;
-            double x2 = xAxis.MaxLimit ?? _timeWindowSeconds;
-
-            if (x2 <= x1)
+            double x1 = 0; // Always start from 0
+            double x2;
+            
+            // Check if "ALL" is selected (both limits are null)
+            if (xAxis.MinLimit == null && xAxis.MaxLimit == null)
             {
-                x1 = Math.Max(0, _timeSeconds - _timeWindowSeconds);
-                x2 = Math.Max(x1 + 1, _timeSeconds);
+                // "ALL" mode - use maximum time from all data in store
+                // This ensures lines extend to the full right edge of the graph
+                if (_dataStore.Points.Count > 0)
+                {
+                    x2 = _dataStore.Points.Max(p => p.ElapsedSeconds);
+                }
+                else if (_timeSeconds > 0)
+                {
+                    x2 = _timeSeconds;
+                }
+                else
+                {
+                    x2 = _timeWindowSeconds;
+                }
+            }
+            else
+            {
+                // Regular mode - use axis MaxLimit (right edge of visible graph)
+                // If MaxLimit is null, use time window or current time
+                x2 = xAxis.MaxLimit ?? _timeWindowSeconds;
+                
+                // Ensure x2 is valid
+                if (x2 <= 0)
+                {
+                    x2 = _timeSeconds > 0 ? _timeSeconds : _timeWindowSeconds;
+                }
             }
 
             _seriesTarget.Clear();
@@ -1477,21 +1566,19 @@ namespace Alicat.UI.Features.Graph.Views
         }
 
         // =========================
-        // Mouse down (for zoom/pan integration)
+        // Mouse down
         // =========================
         private void ChartPressure_MouseDown(object? sender, MouseEventArgs e)
         {
-            // Call toolbar handlers if zoom/pan is active
-            HandleMouseDownForZoomPan(e);
+            // LiveCharts2 handles zoom/pan automatically
         }
 
         // =========================
-        // Mouse up (for zoom/pan integration)
+        // Mouse up
         // =========================
         private void ChartPressure_MouseUp(object? sender, MouseEventArgs e)
         {
-            // Call toolbar handlers if zoom/pan is active
-            HandleMouseUpForZoomPan(e);
+            // LiveCharts2 handles zoom/pan automatically
         }
 
         // =========================
@@ -1499,8 +1586,6 @@ namespace Alicat.UI.Features.Graph.Views
         // =========================
         private void ChartPressure_MouseMove(object? sender, MouseEventArgs e)
         {
-            // Handle zoom/pan first if active
-            HandleMouseMoveForZoomPan(e);
 
             // throttle for cursor tracking
             long now = Environment.TickCount64;
@@ -1750,12 +1835,7 @@ namespace Alicat.UI.Features.Graph.Views
         
         private void GraphForm_KeyDown(object? sender, KeyEventArgs e)
         {
-            // Escape key: Cancel zoom/pan mode (expert recommendation)
-            if (e.KeyCode == Keys.Escape)
-            {
-                CancelZoomPanMode();
-                e.Handled = true;
-            }
+            // LiveCharts2 handles zoom/pan automatically - no custom handling needed
         }
     }
 }

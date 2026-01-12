@@ -264,17 +264,21 @@ namespace Alicat
 
         private static string GetSettingsFilePath()
         {
-            // Используем папку проекта для хранения настроек
-            // Находим папку проекта через поиск .csproj файла
+            // ВСЕГДА используем папку проекта для хранения настроек
+            // Находим папку проекта через путь к exe файлу (надежнее, чем текущая директория)
             string? projectDir = null;
             
-            // Пробуем найти папку проекта через поиск .csproj файла
-            string? currentDir = System.IO.Directory.GetCurrentDirectory();
-            if (!string.IsNullOrEmpty(currentDir))
+            // Получаем путь к exe файлу
+            string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            string? exeDir = System.IO.Path.GetDirectoryName(exePath);
+            
+            if (!string.IsNullOrEmpty(exeDir))
             {
-                var dir = new System.IO.DirectoryInfo(currentDir);
+                // Поднимаемся вверх от exe до папки проекта (где есть .csproj файл)
+                var dir = new System.IO.DirectoryInfo(exeDir);
                 while (dir != null)
                 {
+                    // Проверяем, есть ли .csproj файл в этой директории
                     if (dir.GetFiles("*.csproj").Length > 0)
                     {
                         projectDir = dir.FullName;
@@ -284,25 +288,29 @@ namespace Alicat
                 }
             }
             
-            // Если не нашли через поиск, используем папку где находится exe и поднимаемся до проекта
+            // Если не нашли через exe путь, пробуем текущую директорию
             if (string.IsNullOrEmpty(projectDir))
             {
-                string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-                string? exeDir = System.IO.Path.GetDirectoryName(exePath);
-                
-                if (exeDir != null && exeDir.Contains("bin"))
+                string? currentDir = System.IO.Directory.GetCurrentDirectory();
+                if (!string.IsNullOrEmpty(currentDir))
                 {
-                    var dir = new System.IO.DirectoryInfo(exeDir);
-                    while (dir != null && dir.Name != "Alicat" && dir.GetFiles("*.csproj").Length == 0)
+                    var dir = new System.IO.DirectoryInfo(currentDir);
+                    while (dir != null)
                     {
+                        if (dir.GetFiles("*.csproj").Length > 0)
+                        {
+                            projectDir = dir.FullName;
+                            break;
+                        }
                         dir = dir.Parent;
                     }
-                    projectDir = dir?.FullName ?? System.IO.Directory.GetCurrentDirectory();
                 }
-                else
-                {
-                    projectDir = System.IO.Directory.GetCurrentDirectory();
-                }
+            }
+            
+            // Если все еще не нашли, используем папку exe (fallback)
+            if (string.IsNullOrEmpty(projectDir))
+            {
+                projectDir = exeDir ?? System.IO.Directory.GetCurrentDirectory();
             }
             
             string settingsDir = System.IO.Path.Combine(projectDir, "Settings");
@@ -326,8 +334,9 @@ namespace Alicat
                     System.Diagnostics.Debug.WriteLine($"[SaveSettingsToFile] Created directory: {directory}");
                 }
 
-                // Читаем RecentSessions из существующего файла, если он есть
+                // Читаем RecentSessions и GraphForm из существующего файла, если он есть
                 string[]? recentSessions = null;
+                System.Text.Json.JsonElement? graphFormState = null;
                 if (System.IO.File.Exists(settingsPath))
                 {
                     try
@@ -338,10 +347,15 @@ namespace Alicat
                         {
                             recentSessions = System.Text.Json.JsonSerializer.Deserialize<string[]>(recentSessionsProp.GetRawText());
                         }
+                        // Сохраняем секцию GraphForm из существующего файла
+                        if (existingData.TryGetProperty("GraphForm", out var graphFormProp))
+                        {
+                            graphFormState = graphFormProp;
+                        }
                     }
                     catch
                     {
-                        // Если не удалось прочитать RecentSessions, продолжаем без них
+                        // Если не удалось прочитать, продолжаем без них
                     }
                 }
 
@@ -375,10 +389,25 @@ namespace Alicat
 
                 System.Diagnostics.Debug.WriteLine($"[SaveSettingsToFile] AutoConnectOnStartup = {FormOptions.AppOptions.Current.AutoConnectOnStartup}");
 
-                string json = System.Text.Json.JsonSerializer.Serialize(settingsData, new System.Text.Json.JsonSerializerOptions
+                // Serialize to JSON
+                string baseJson = System.Text.Json.JsonSerializer.Serialize(settingsData, new System.Text.Json.JsonSerializerOptions
                 {
                     WriteIndented = true
                 });
+                
+                // Parse to JsonObject to add GraphForm section if it exists
+                var jsonDoc = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.Nodes.JsonObject>(baseJson);
+                if (jsonDoc != null && graphFormState.HasValue)
+                {
+                    // Добавляем секцию GraphForm из существующего файла
+                    jsonDoc["GraphForm"] = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.Nodes.JsonNode>(graphFormState.Value.GetRawText());
+                    System.Diagnostics.Debug.WriteLine($"[SaveSettingsToFile] GraphForm section preserved from existing file");
+                }
+                
+                // Serialize final JSON
+                string json = jsonDoc != null 
+                    ? System.Text.Json.JsonSerializer.Serialize(jsonDoc, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })
+                    : baseJson;
 
                 System.IO.File.WriteAllText(settingsPath, json);
                 System.Diagnostics.Debug.WriteLine($"[SaveSettingsToFile] Settings saved successfully to {settingsPath}");
