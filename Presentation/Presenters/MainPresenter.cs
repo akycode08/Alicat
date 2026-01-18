@@ -1617,49 +1617,42 @@ namespace Alicat.Presentation.Presenters
         /// <summary>
         /// Emergency Stop - немедленная остановка и сброс давления до нуля.
         /// </summary>
-        public async Task EmergencyStop()
+        public Task EmergencyStop()
         {
             if (_serial == null)
             {
                 MessageBox.Show("Device is not connected.", "Emergency Stop",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                return Task.CompletedTask;
             }
-
-            var result = MessageBox.Show(
-                "Emergency Stop will immediately stop pressure control and reset to zero.\n\n" +
-                "This action cannot be undone. Continue?",
-                "Emergency Stop",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Warning);
-
-            if (result != DialogResult.Yes) return;
 
             try
             {
-                // Открываем выхлоп для быстрого сброса давления
+                // Открываем выхлоп и оставляем открытым (как в Purge)
                 _serial.Send(AlicatCommands.ExhaustHold);
                 _isExhaust = true;
-                _setPoint = 0.0;
-                _view.UI_SetSetPoint(0.0, _unit);
+
                 _view.UI_SetTrendStatus(_lastCurrent, _current, isExhaust: true, _rampSpeed);
-                _view.UI_AppendStatusInfo("EMERGENCY STOP ACTIVATED");
+                _view.UI_AppendStatusInfo("Emergency vent started - exhaust open");
 
-                // Ждем немного для сброса
-                await Task.Delay(500);
-
-                // Возвращаем в режим управления (закрываем выхлоп)
-                _serial.Send(AlicatCommands.ControlOn);
+                // Устанавливаем setpoint на устройстве в 0.0
                 _serial.Send(AlicatCommands.SetSetPoint(0.0));
+                _setPoint = 0.0;
+                _view.UI_SetSetPoint(_setPoint, _unit);
+
                 _serial.Send(AlicatCommands.ReadAls);
 
-                _view.UI_AppendStatusInfo("Emergency stop complete - pressure reset to zero");
+                // Записываем событие Emergency Vent
+                int pointIndex = GetCurrentPointIndex();
+                _dataStore.RecordEvent(_current, _setPoint, _unit, "EMERGENCY_VENT_STARTED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Emergency Stop error:\n{ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+
+            return Task.CompletedTask;
         }
 
         // ====================================================================
