@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace Alicat.UI.Features.Table.Views
+namespace PrecisionPressureController.UI.Features.Table.Views
 {
     public partial class CommentDialog : Form
     {

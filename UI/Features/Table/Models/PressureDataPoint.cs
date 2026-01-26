@@ -1,6 +1,6 @@
 using System;
 
-namespace Alicat.UI.Features.Table.Models
+namespace PrecisionPressureController.UI.Features.Table.Models
 {
     /// <summary>
     /// Модель данных для строки таблицы давления

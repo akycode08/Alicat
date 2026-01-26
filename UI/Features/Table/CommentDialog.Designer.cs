@@ -1,4 +1,4 @@
-namespace Alicat.UI.Features.Table.Views
+namespace PrecisionPressureController.UI.Features.Table.Views
 {
     partial class CommentDialog
     {

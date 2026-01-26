@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
+using PrecisionPressureController.UI.Main;
 
-namespace Alicat
+namespace PrecisionPressureController
 {
     internal static class Program
     {
@@ -13,11 +14,11 @@ namespace Alicat
                 // Стандартная инициализация WinForms (.NET 6/7/8)
                 ApplicationConfiguration.Initialize();
 
-                // Запускаем твоё главное окно
-                var form = new AlicatForm();
-                form.WindowState = FormWindowState.Normal;
-                form.Show();
-                Application.Run(form);
+                // Запускаем главное окно приложения
+                var mainWindow = new MainWindow();
+                mainWindow.WindowState = FormWindowState.Normal;
+                mainWindow.Show();
+                Application.Run(mainWindow);
             }
             catch (Exception ex)
             {

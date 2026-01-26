@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Alicat.Domain;
+using PrecisionPressureController.Domain;
 
-namespace Alicat.Services.Data
+namespace PrecisionPressureController.Services.Data
 {
     /// <summary>
     /// Data model for session information used in PDF report generation

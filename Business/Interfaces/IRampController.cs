@@ -1,4 +1,4 @@
-namespace Alicat.Business.Interfaces
+namespace PrecisionPressureController.Business.Interfaces
 {
     /// <summary>
     /// Интерфейс для управления рампой давления.

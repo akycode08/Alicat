@@ -1,4 +1,4 @@
-namespace Alicat.Domain
+namespace PrecisionPressureController.Domain
 {
     /// <summary>
     /// Состояние сессии

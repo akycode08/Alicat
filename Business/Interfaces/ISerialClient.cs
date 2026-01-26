@@ -1,4 +1,4 @@
-namespace Alicat.Business.Interfaces
+namespace PrecisionPressureController.Business.Interfaces
 {
     /// <summary>
     /// Интерфейс для работы с последовательным портом (RS-232).

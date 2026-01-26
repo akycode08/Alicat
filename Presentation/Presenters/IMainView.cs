@@ -1,8 +1,6 @@
-using Alicat.UI.Features.Graph.Views;
-using Alicat.UI.Features.Table.Views;
-using Alicat.UI.Features.Terminal.Views;
+using PrecisionPressureController.Business.Interfaces;
 
-namespace Alicat.Presentation.Presenters
+namespace PrecisionPressureController.Presentation.Presenters
 {
     /// <summary>
     /// Интерфейс для MainForm - позволяет Presenter обновлять UI без прямых зависимостей.
@@ -33,10 +31,10 @@ namespace Alicat.Presentation.Presenters
         string Unit { get; set; }
         double RampSpeed { get; set; }
 
-        // Child Forms
-        TerminalForm? TerminalForm { get; set; }
-        GraphForm? GraphForm { get; set; }
-        TableForm? TableForm { get; set; }
+        // Child Forms - теперь через интерфейсы
+        ITerminalView? TerminalView { get; set; }
+        IGraphView? GraphView { get; set; }
+        ITableView? TableView { get; set; }
 
         // Invoke для thread-safe UI updates
         void BeginInvoke(Action action);

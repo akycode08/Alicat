@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Globalization;
 
-namespace Alicat.Domain
+namespace PrecisionPressureController.Domain
 {
     public sealed class DeviceState
     {

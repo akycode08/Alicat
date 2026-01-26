@@ -4,22 +4,24 @@ using System.Globalization;
 using System.IO.Ports;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Alicat.Business.Interfaces;
-using Alicat.Domain;
-using Alicat.Services.Controllers;
-using Alicat.Services.Data;
-using Alicat.Services.Protocol;
-using Alicat.Services.Serial;
-using Alicat.Services.Sequence;
-using Alicat.UI.Features.Graph.Views;
-using Alicat.UI.Features.Table.Views;
-using Alicat.UI.Features.Terminal.Views;
+using PrecisionPressureController.Business.Interfaces;
+using PrecisionPressureController.Domain;
+using PrecisionPressureController.Services.Controllers;
+using PrecisionPressureController.Services.Data;
+using PrecisionPressureController.Services.Protocol;
+using PrecisionPressureController.Services.Serial;
+using PrecisionPressureController.Services.Sequence;
+using PrecisionPressureController.UI.Connect;
+using PrecisionPressureController.UI.Options;
+using PrecisionPressureController.UI.Features.Graph.Views;
+using PrecisionPressureController.UI.Features.Table.Views;
+using PrecisionPressureController.UI.Features.Terminal.Views;
 
-namespace Alicat.Presentation.Presenters
+namespace PrecisionPressureController.Presentation.Presenters
 {
     /// <summary>
     /// Presenter для MainForm - содержит всю бизнес-логику.
-    /// View (AlicatForm) только отображает данные и вызывает методы Presenter.
+    /// View (MainWindow) только отображает данные и вызывает методы Presenter.
     /// </summary>
     public class MainPresenter
     {
@@ -42,8 +44,10 @@ namespace Alicat.Presentation.Presenters
         private readonly System.Timers.Timer _pollTimer = new(500) { AutoReset = true };
         private bool _isWaitingForResponse = false; // Защита от переполнения при малых интервалах
         
-        // Sequence service - работает независимо от UI
-        private SequenceService? _sequenceService;
+        // Презентеры для разделения ответственности
+        private readonly ConnectionPresenter _connectionPresenter;
+        private readonly SequencePresenter _sequencePresenter;
+        private readonly DataPresenter _dataPresenter;
         
         // Connection timeout detection - сторожевой таймер
         private System.Threading.Timer? _watchdogTimer;
@@ -59,16 +63,21 @@ namespace Alicat.Presentation.Presenters
         // State
         private readonly DeviceState _state = new();
 
-        // Child forms
-        private TerminalForm? _terminalForm;
-        private GraphForm? _graphForm;
-        private TableForm? _tableForm;
-        private Alicat.UI.Features.Test.FormTestPressure? _testPressureForm;
+        // Child forms - через интерфейсы для устранения циклических зависимостей
+        private ITerminalView? _terminalView;
+        private IGraphView? _graphView;
+        private ITableView? _tableView;
+        private PrecisionPressureController.UI.Features.Test.TestPressureWindow? _testPressureForm;
 
         public MainPresenter(IMainView view, IDataStore dataStore)
         {
             _view = view ?? throw new ArgumentNullException(nameof(view));
             _dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
+
+            // Инициализируем презентеры
+            _connectionPresenter = new ConnectionPresenter(_view, _dataStore);
+            _sequencePresenter = new SequencePresenter(_view, _dataStore);
+            _dataPresenter = new DataPresenter(_dataStore);
 
             // Setup polling timer - используем System.Timers.Timer для более точного polling
             // Этот таймер работает в отдельном потоке и не зависит от UI потока
@@ -76,10 +85,11 @@ namespace Alicat.Presentation.Presenters
             {
                 // Не отправляем новый запрос, пока не получен ответ на предыдущий
                 // Это защищает от переполнения при малых интервалах (например, 10мс)
-                if (_serial != null && !_isWaitingForResponse)
+                var serial = _connectionPresenter.Serial ?? _serial;
+                if (serial != null && !_isWaitingForResponse)
                 {
                     _isWaitingForResponse = true;
-                    _serial.Send(AlicatCommands.ReadAls);
+                    serial.Send(DeviceCommands.ReadAls);
                 }
             };
 
@@ -92,7 +102,7 @@ namespace Alicat.Presentation.Presenters
         /// </summary>
         public void ClearSequenceOnExit()
         {
-            _sequenceService?.ClearTargetsOnExit();
+            _sequencePresenter.ClearSequenceOnExit();
         }
 
         /// <summary>
@@ -103,17 +113,7 @@ namespace Alicat.Presentation.Presenters
         /// </summary>
         private int GetCurrentPointIndex()
         {
-            if (_sequenceService == null)
-                return 0;
-
-            int currentTargetIndex = _sequenceService.CurrentTargetIndex;
-            
-            // Если последовательность не запущена или нет активной точки
-            if (currentTargetIndex < 0)
-                return 0;
-
-            // PointIndex = CurrentTargetIndex + 1 (1 = первая точка, 2 = вторая и т.д.)
-            return currentTargetIndex + 1;
+            return _sequencePresenter.GetCurrentPointIndex();
         }
 
         /// <summary>
@@ -137,23 +137,22 @@ namespace Alicat.Presentation.Presenters
                 SetTargetSilent(target);
             }
 
-            _sequenceService = new SequenceService(GetCurrentPressure, SetTargetPressure);
-            
-            // Загружаем сохраненные targets при старте
-            _sequenceService.LoadTargetsFromFile();
-            
-            // Подписываемся на события для обновления UI
-            _sequenceService.OnSequenceStateChanged += () =>
-            {
-                // Обновляем GraphForm, если он открыт
-                if (_graphForm != null && !_graphForm.IsDisposed)
+            // Инициализируем SequencePresenter
+            _sequencePresenter.Initialize(
+                GetCurrentPressure,
+                SetTargetPressure,
+                () =>
                 {
-                    _view.BeginInvoke(() =>
+                    // Обновляем ChartWindow, если он открыт
+                    if (_graphView != null && !_graphView.IsDisposed)
                     {
-                        _graphForm.RefreshSequenceState();
-                    });
+                        _view.BeginInvoke(() =>
+                        {
+                            _graphView.RefreshSequenceState();
+                        });
+                    }
                 }
-            };
+            );
         }
 
         // ====================================================================
@@ -287,14 +286,14 @@ namespace Alicat.Presentation.Presenters
                     StartWatchdogTimer();
                     _view.UI_UpdateConnectionStatus(true, port.PortName);
                     
-                    if (_graphForm != null && !_graphForm.IsDisposed)
+                    if (_graphView != null && !_graphView.IsDisposed)
                     {
-                        _graphForm.SetConnectionInfo(port.PortName, port.BaudRate);
+                        _graphView.SetConnectionInfo(port.PortName, port.BaudRate);
                     }
                     
-                    if (_tableForm != null && !_tableForm.IsDisposed)
+                    if (_tableView != null && !_tableView.IsDisposed)
                     {
-                        _tableForm.SetConnectionInfo(port.PortName, port.BaudRate);
+                        _tableView.SetConnectionInfo(port.PortName, port.BaudRate);
                     }
                 }));
                 _serial.Disconnected += (_, __) => _view.BeginInvoke(new Action(() =>
@@ -303,24 +302,24 @@ namespace Alicat.Presentation.Presenters
                     StopWatchdogTimer();
                     _view.UI_UpdateConnectionStatus(false);
                     
-                    if (_graphForm != null && !_graphForm.IsDisposed)
+                    if (_graphView != null && !_graphView.IsDisposed)
                     {
-                        _graphForm.SetConnectionInfo(null, null);
+                        _graphView.SetConnectionInfo(null, null);
                     }
                     
-                    if (_tableForm != null && !_tableForm.IsDisposed)
+                    if (_tableView != null && !_tableView.IsDisposed)
                     {
-                        _tableForm.SetConnectionInfo(null, null);
+                        _tableView.SetConnectionInfo(null, null);
                     }
                 }));
 
                 _serial.Attach();
                 _ramp = new RampController(_serial);
-                _serial.Send(AlicatCommands.ReadRampSpeed);
+                _serial.Send(DeviceCommands.ReadRampSpeed);
 
                 if (!_dataStore.IsRunning)
                 {
-                    _dataStore.StartSession();
+                    _dataPresenter.StartSession();
                 }
 
                 StartWatchdogTimer();
@@ -328,14 +327,14 @@ namespace Alicat.Presentation.Presenters
                 _view.UI_UpdateConnectionStatus(true, port.PortName);
                 _view.UI_AppendStatusInfo($"Quick connected to {port.PortName}");
                 
-                if (_graphForm != null && !_graphForm.IsDisposed)
+                if (_graphView != null && !_graphView.IsDisposed)
                 {
-                    _graphForm.SetConnectionInfo(port.PortName, port.BaudRate);
+                    _graphView.SetConnectionInfo(port.PortName, port.BaudRate);
                 }
                 
-                if (_tableForm != null && !_tableForm.IsDisposed)
+                if (_tableView != null && !_tableView.IsDisposed)
                 {
-                    _tableForm.SetConnectionInfo(port.PortName, port.BaudRate);
+                    _tableView.SetConnectionInfo(port.PortName, port.BaudRate);
                 }
             }
             catch (Exception ex)
@@ -415,7 +414,7 @@ namespace Alicat.Presentation.Presenters
             // Сохраняем состояние подключения до открытия диалога
             bool wasConnected = _serial != null;
             
-            using var dlg = new FormConnect { StartPosition = FormStartPosition.CenterParent };
+            using var dlg = new ConnectionDialog { StartPosition = FormStartPosition.CenterParent };
             dlg.ShowDialog(parentForm);
 
             var opened = dlg.OpenPort;
@@ -444,16 +443,16 @@ namespace Alicat.Presentation.Presenters
                 StartWatchdogTimer();
                 _view.UI_UpdateConnectionStatus(true, opened.PortName);
                 
-                // Update GraphForm connection info if open
-                if (_graphForm != null && !_graphForm.IsDisposed && _serial is SerialClient serialClient)
+                // Update ChartWindow connection info if open
+                if (_graphView != null && !_graphView.IsDisposed && _serial is SerialClient serialClient)
                 {
-                    _graphForm.SetConnectionInfo(serialClient.PortName, serialClient.BaudRate);
+                    _graphView.SetConnectionInfo(serialClient.PortName, serialClient.BaudRate);
                 }
                 
-                // Update TableForm connection info if open
-                if (_tableForm != null && !_tableForm.IsDisposed && _serial is SerialClient serialClient2)
+                // Update DataTableWindow connection info if open
+                if (_tableView != null && !_tableView.IsDisposed && _serial is SerialClient serialClient2)
                 {
-                    _tableForm.SetConnectionInfo(serialClient2.PortName, serialClient2.BaudRate);
+                    _tableView.SetConnectionInfo(serialClient2.PortName, serialClient2.BaudRate);
                 }
             }));
             _serial.Disconnected += (_, __) => _view.BeginInvoke(new Action(() =>
@@ -462,16 +461,16 @@ namespace Alicat.Presentation.Presenters
                 StopWatchdogTimer();
                 _view.UI_UpdateConnectionStatus(false);
                 
-                // Update GraphForm connection info if open
-                if (_graphForm != null && !_graphForm.IsDisposed)
+                // Update ChartWindow connection info if open
+                if (_graphView != null && !_graphView.IsDisposed)
                 {
-                    _graphForm.SetConnectionInfo(null, null);
+                    _graphView.SetConnectionInfo(null, null);
                 }
                 
-                // Update TableForm connection info if open
-                if (_tableForm != null && !_tableForm.IsDisposed)
+                // Update DataTableWindow connection info if open
+                if (_tableView != null && !_tableView.IsDisposed)
                 {
-                    _tableForm.SetConnectionInfo(null, null);
+                    _tableView.SetConnectionInfo(null, null);
                 }
             }));
 
@@ -479,11 +478,11 @@ namespace Alicat.Presentation.Presenters
             {
                 _serial.Attach();
                 _ramp = new RampController(_serial);
-                _serial.Send(AlicatCommands.ReadRampSpeed);
+                _serial.Send(DeviceCommands.ReadRampSpeed);
 
                 if (!_dataStore.IsRunning)
                 {
-                    _dataStore.StartSession();
+                    _dataPresenter.StartSession();
                 }
 
                 // Запускаем сторожевой таймер
@@ -495,16 +494,16 @@ namespace Alicat.Presentation.Presenters
                 _view.UI_UpdateConnectionStatus(true, opened.PortName);
                 _view.UI_AppendStatusInfo($"Device connected to {opened.PortName}");
                 
-                // Update GraphForm connection info if open
-                if (_graphForm != null && !_graphForm.IsDisposed)
+                // Update ChartWindow connection info if open
+                if (_graphView != null && !_graphView.IsDisposed)
                 {
-                    _graphForm.SetConnectionInfo(opened.PortName, opened.BaudRate);
+                    _graphView.SetConnectionInfo(opened.PortName, opened.BaudRate);
                 }
                 
-                // Update TableForm connection info if open
-                if (_tableForm != null && !_tableForm.IsDisposed)
+                // Update DataTableWindow connection info if open
+                if (_tableView != null && !_tableView.IsDisposed)
                 {
-                    _tableForm.SetConnectionInfo(opened.PortName, opened.BaudRate);
+                    _tableView.SetConnectionInfo(opened.PortName, opened.BaudRate);
                 }
             }
             catch (Exception ex)
@@ -528,9 +527,9 @@ namespace Alicat.Presentation.Presenters
             if (exh) _isExhaust = true;
 
             // Log to terminal if open
-            if (_terminalForm != null && !_terminalForm.IsDisposed)
+            if (_terminalView != null && !_terminalView.IsDisposed)
             {
-                _terminalForm.AppendLog("<< " + line);
+                _terminalView.AppendLog("<< " + line);
             }
 
             // Сбрасываем сторожевой таймер при получении любого ответа
@@ -597,13 +596,13 @@ namespace Alicat.Presentation.Presenters
                 // Record to store
                 // Получаем PointIndex из SequenceService (0 = до старта, 1+ = номер активной точки)
                 int pointIndex = GetCurrentPointIndex();
-                _dataStore.RecordSample(_current, _isExhaust ? 0.0 : _setPoint, _unit, _rampSpeed, (int)_pollTimer.Interval, pointIndex);
+                _dataPresenter.RecordSample(_current, _isExhaust ? 0.0 : _setPoint, _unit, _rampSpeed, (int)_pollTimer.Interval, pointIndex);
 
                 // Update graph if open
-                if (_graphForm != null && !_graphForm.IsDisposed)
+                if (_graphView != null && !_graphView.IsDisposed)
                 {
                     double? targetForGraph = _isExhaust ? (double?)null : _setPoint;
-                    _graphForm.AddSample(_current, targetForGraph);
+                    _graphView.AddSample(_current, targetForGraph);
                 }
 
                 // Update test pressure form if open
@@ -613,7 +612,7 @@ namespace Alicat.Presentation.Presenters
                     _testPressureForm.UpdateCurrentRampSpeed(_rampSpeed, _unit);
                 }
 
-                // TableForm получает данные через события DataStore.OnNewPoint
+                // DataTableWindow получает данные через события DataStore.OnNewPoint
                 // Не нужно вызывать AddRecordFromDevice напрямую
             }));
         }
@@ -798,18 +797,18 @@ namespace Alicat.Presentation.Presenters
                 // Если выхлоп открыт (purge режим), закрываем его перед установкой давления
                 if (_isExhaust)
                 {
-                    _serial.Send(AlicatCommands.ControlOn);
+                    _serial.Send(DeviceCommands.ControlOn);
                     _isExhaust = false;
                     _lastCurrent = null;
                     _view.UI_SetTrendStatus(_lastCurrent, _current, isExhaust: false, _rampSpeed);
                     _view.UI_AppendStatusInfo("Exhaust closed - returning to control mode");
                 }
 
-                _serial.Send(AlicatCommands.SetSetPoint(targetValue));
+                _serial.Send(DeviceCommands.SetSetPoint(targetValue));
 
                 _setPoint = targetValue;
                 _view.UI_SetSetPoint(_setPoint, _unit);
-                _serial.Send(AlicatCommands.ReadAls);
+                _serial.Send(DeviceCommands.ReadAls);
 
                 _view.TargetInputText = "";
 
@@ -841,7 +840,7 @@ namespace Alicat.Presentation.Presenters
                     _isPaused = false;
                     _view.UI_AppendStatusInfo("Ramp resumed");
                     int pointIndex = GetCurrentPointIndex();
-                    _dataStore.RecordEvent(_current, _setPoint, _unit, "RESUMED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
+                    _dataPresenter.RecordEvent(_current, _setPoint, _unit, "RESUMED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
                 }
                 else
                 {
@@ -852,13 +851,13 @@ namespace Alicat.Presentation.Presenters
                     _isPaused = true;
                     _view.UI_AppendStatusInfo($"Ramp paused - setpoint set to current ({_current:F2} {_unit}). Polling continues.");
                     int pointIndex = GetCurrentPointIndex();
-                    _dataStore.RecordEvent(_current, _setPoint, _unit, "PAUSED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
+                    _dataPresenter.RecordEvent(_current, _setPoint, _unit, "PAUSED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
                 }
                 
-                // Update GraphForm pause state
-                if (_graphForm != null && !_graphForm.IsDisposed)
+                // Update ChartWindow pause state
+                if (_graphView != null && !_graphView.IsDisposed)
                 {
-                    _graphForm.UpdatePauseState(_isPaused);
+                    _graphView.UpdatePauseState(_isPaused);
                 }
             }
             catch (Exception ex)
@@ -884,22 +883,22 @@ namespace Alicat.Presentation.Presenters
 
             try
             {
-                _serial.Send(AlicatCommands.ExhaustHold);
+                _serial.Send(DeviceCommands.ExhaustHold);
                 _isExhaust = true;
 
                 _view.UI_SetTrendStatus(_lastCurrent, _current, isExhaust: true, _rampSpeed);
                 _view.UI_AppendStatusInfo("Purge started - exhaust open");
 
                 // Устанавливаем setpoint на устройстве в 0.0
-                _serial.Send(AlicatCommands.SetSetPoint(0.0));
+                _serial.Send(DeviceCommands.SetSetPoint(0.0));
                 _setPoint = 0.0;
                 _view.UI_SetSetPoint(_setPoint, _unit);
 
-                _serial.Send(AlicatCommands.ReadAls);
+                _serial.Send(DeviceCommands.ReadAls);
 
                 // Записываем событие Purge
                 int pointIndex = GetCurrentPointIndex();
-                _dataStore.RecordEvent(_current, _setPoint, _unit, "PURGE_STARTED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
+                _dataPresenter.RecordEvent(_current, _setPoint, _unit, "PURGE_STARTED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
             }
             catch (Exception ex)
             {
@@ -957,7 +956,7 @@ namespace Alicat.Presentation.Presenters
             // Если выхлоп открыт (purge режим), закрываем его перед установкой давления
             if (_isExhaust)
             {
-                _serial.Send(AlicatCommands.ControlOn);
+                _serial.Send(DeviceCommands.ControlOn);
                 _isExhaust = false;
                 _lastCurrent = null;
                 _view.UI_SetTrendStatus(_lastCurrent, _current, isExhaust: false, _rampSpeed);
@@ -966,12 +965,12 @@ namespace Alicat.Presentation.Presenters
 
             try
             {
-                _serial.Send(AlicatCommands.SetSetPoint(sp));
-                _serial.Send(AlicatCommands.ReadAls);
+                _serial.Send(DeviceCommands.SetSetPoint(sp));
+                _serial.Send(DeviceCommands.ReadAls);
 
                 // Записываем событие изменения давления
                 int pointIndex = GetCurrentPointIndex();
-                _dataStore.RecordEvent(_current, _setPoint, _unit, "TARGET_CHANGED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
+                _dataPresenter.RecordEvent(_current, _setPoint, _unit, "TARGET_CHANGED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
             }
             catch (Exception ex)
             {
@@ -1007,21 +1006,21 @@ namespace Alicat.Presentation.Presenters
                 // Если выхлоп открыт (purge режим), закрываем его перед установкой давления
                 if (_isExhaust)
                 {
-                    _serial.Send(AlicatCommands.ControlOn);
+                    _serial.Send(DeviceCommands.ControlOn);
                     _isExhaust = false;
                     _lastCurrent = null;
                     _view.UI_SetTrendStatus(_lastCurrent, _current, isExhaust: false, _rampSpeed);
                     _view.UI_AppendStatusInfo("Exhaust closed - returning to control mode");
                 }
 
-                _serial.Send(AlicatCommands.SetSetPoint(targetValue));
+                _serial.Send(DeviceCommands.SetSetPoint(targetValue));
                 _setPoint = targetValue;
                 _view.UI_SetSetPoint(_setPoint, _unit);
-                _serial.Send(AlicatCommands.ReadAls);
+                _serial.Send(DeviceCommands.ReadAls);
 
                 // Записываем событие изменения давления
                 int pointIndex = GetCurrentPointIndex();
-                _dataStore.RecordEvent(_current, _setPoint, _unit, "TARGET_CHANGED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
+                _dataPresenter.RecordEvent(_current, _setPoint, _unit, "TARGET_CHANGED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
             }
             catch (Exception ex)
             {
@@ -1055,11 +1054,11 @@ namespace Alicat.Presentation.Presenters
                 _view.UI_SetRampSpeedUnits($"{TrimZeros(rampSpeed)} {_unit}/s");
                 
                 // Отправляем команду для получения подтверждения от устройства
-                _serial.Send(AlicatCommands.ReadRampSpeed);
+                _serial.Send(DeviceCommands.ReadRampSpeed);
 
                 // Записываем событие изменения скорости рампа
                 int pointIndex = GetCurrentPointIndex();
-                _dataStore.RecordEvent(_current, _setPoint, _unit, "RAMP_SPEED_CHANGED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
+                _dataPresenter.RecordEvent(_current, _setPoint, _unit, "RAMP_SPEED_CHANGED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
             }
             catch (Exception ex)
             {
@@ -1119,12 +1118,13 @@ namespace Alicat.Presentation.Presenters
                 _view.UI_SetRampSpeedUnits($"{TrimZeros(rampSpeed)} {_unit}/s");
                 
                 // Отправляем команду для получения подтверждения от устройства
-                _serial.Send(AlicatCommands.ReadRampSpeed);
+                _serial.Send(DeviceCommands.ReadRampSpeed);
                 
                 _view.UI_AppendStatusInfo($"Ramp speed set to {displayVal} {_unit}/s");
 
                 // Записываем событие изменения скорости рампа
-                _dataStore.RecordEvent(_current, _setPoint, _unit, "RAMP_SPEED_CHANGED", _rampSpeed, (int)_pollTimer.Interval);
+                int pointIndex = GetCurrentPointIndex();
+                _dataPresenter.RecordEvent(_current, _setPoint, _unit, "RAMP_SPEED_CHANGED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
             }
             catch (Exception ex)
             {
@@ -1210,13 +1210,13 @@ namespace Alicat.Presentation.Presenters
             var oldMinIncrement = _minIncrementLimit;
 
             // Обновляем настройки в Presenter
-            _maxPressure = FormOptions.AppOptions.Current.MaxPressure ?? 200.0;
-            _minPressure = FormOptions.AppOptions.Current.MinPressure ?? 0.0;
-            _maxIncrementLimit = FormOptions.AppOptions.Current.MaxIncrement ?? 20.0;
-            _minIncrementLimit = FormOptions.AppOptions.Current.MinIncrement ?? 0.1;
+            _maxPressure = OptionsWindow.AppOptions.Current.MaxPressure ?? 200.0;
+            _minPressure = OptionsWindow.AppOptions.Current.MinPressure ?? 0.0;
+            _maxIncrementLimit = OptionsWindow.AppOptions.Current.MaxIncrement ?? 20.0;
+            _minIncrementLimit = OptionsWindow.AppOptions.Current.MinIncrement ?? 0.1;
 
             // Update Polling Frequency from Preferences
-            var pollingFreq = FormOptions.AppOptions.Current.PollingFrequency ?? 500;
+            var pollingFreq = OptionsWindow.AppOptions.Current.PollingFrequency ?? 500;
             bool wasRunning = _pollTimer.Enabled;
             _pollTimer.Stop();
             _pollTimer.Interval = pollingFreq;
@@ -1235,7 +1235,7 @@ namespace Alicat.Presentation.Presenters
             _view.UpdateIncrementButtons();
 
             // Проверяем, изменились ли единицы измерения
-            var newUnit = FormOptions.AppOptions.Current.PressureUnits ?? "PSIG";
+            var newUnit = OptionsWindow.AppOptions.Current.PressureUnits ?? "PSIG";
             if (newUnit != oldUnit)
             {
                 // Отправляем команду ADCU на устройство для изменения единиц
@@ -1248,7 +1248,7 @@ namespace Alicat.Presentation.Presenters
                         Debug.WriteLine($"GetUnitCodeForADCU('{newUnit}') = {unitCode}");
                         if (unitCode.HasValue)
                         {
-                            string command = AlicatCommands.SetPressureUnits(unitCode.Value);
+                            string command = DeviceCommands.SetPressureUnits(unitCode.Value);
                             Debug.WriteLine($"Sending command: {command}");
                             _serial.Send(command);
                             _view.UI_AppendStatusInfo($"Unit changed from {oldUnit} -> {newUnit}");
@@ -1275,16 +1275,16 @@ namespace Alicat.Presentation.Presenters
             // Единицы всегда обновляются из текущего значения _unit (которое берется из ответов устройства)
             _view.UI_SetPressureUnits(_unit);
 
-            // Обновляем thresholds в GraphForm, если он открыт
-            if (_graphForm != null && !_graphForm.IsDisposed)
+            // Обновляем thresholds в ChartWindow, если он открыт
+            if (_graphView != null && !_graphView.IsDisposed)
             {
-                _graphForm.UpdateThresholdsFromSettings();
+                _graphView.UpdateThresholdsFromSettings();
             }
         }
 
         public void ShowOptions(Form parentForm)
         {
-            using var dlg = new FormOptions();
+            using var dlg = new OptionsWindow();
             dlg.StartPosition = FormStartPosition.CenterParent;
             
             // Подписываемся на событие Applied для обновления UI при нажатии Apply
@@ -1294,7 +1294,7 @@ namespace Alicat.Presentation.Presenters
                 _view.ApplyOptionsToUi();
 
                 // Применяем Ramp Speed если задано
-                var ramp = FormOptions.AppOptions.Current.PressureRamp;
+                var ramp = OptionsWindow.AppOptions.Current.PressureRamp;
                 if (_serial != null && ramp.HasValue && ramp.Value > 0.001)
                 {
                     try
@@ -1329,7 +1329,7 @@ namespace Alicat.Presentation.Presenters
                 _view.ApplyOptionsToUi();
 
                 // Применяем Ramp Speed если задано
-                var ramp = FormOptions.AppOptions.Current.PressureRamp;
+                var ramp = OptionsWindow.AppOptions.Current.PressureRamp;
                 if (_serial != null && ramp.HasValue && ramp.Value > 0.001)
                 {
                     try
@@ -1370,7 +1370,7 @@ namespace Alicat.Presentation.Presenters
             string fileName = $"session_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.csv";
             string fullPath = System.IO.Path.Combine(folderDialog.SelectedPath, fileName);
 
-            _dataStore.StartSession(fullPath);
+            _dataPresenter.StartSession(fullPath);
 
             MessageBox.Show(
                 $"Session started!\n\nSaving to:\n{fullPath}",
@@ -1388,66 +1388,68 @@ namespace Alicat.Presentation.Presenters
 
         public void ShowGraph(Form parentForm)
         {
-            if (_graphForm == null || _graphForm.IsDisposed)
+            if (_graphView == null || _graphView.IsDisposed)
             {
                 // Convert IDataStore to SessionDataStore (it's actually SessionDataStore instance)
                 var sessionDataStore = _dataStore as SessionDataStore 
                     ?? throw new InvalidOperationException("DataStore must be SessionDataStore instance");
-                _graphForm = new GraphForm(sessionDataStore);
+                var graphForm = new ChartWindow(sessionDataStore);
+                _graphView = graphForm;
+                _view.GraphView = graphForm;
                 
                 // Set connection info if device is connected
                 if (_serial != null && _serial is SerialClient serialClient)
                 {
-                    _graphForm.SetConnectionInfo(serialClient.PortName, serialClient.BaudRate);
+                    _graphView.SetConnectionInfo(serialClient.PortName, serialClient.BaudRate);
                 }
                 
                 // Set pause handler
-                _graphForm.SetPauseHandler(() => Pause());
+                _graphView.SetPauseHandler(() => Pause());
                 
                 // Set target handler
-                _graphForm.SetTargetHandler((target) => GoToTarget(target.ToString("F1", CultureInfo.InvariantCulture)));
+                _graphView.SetTargetHandler((target) => GoToTarget(target.ToString("F1", CultureInfo.InvariantCulture)));
                 // Устанавливаем обработчик для GO TO TARGET секции (без подтверждения)
-                _graphForm.SetTargetHandlerSilent((target) => SetTargetSilent(target));
+                _graphView.SetTargetHandlerSilent((target) => SetTargetSilent(target));
                 
                 // Set emergency vent handler
-                _graphForm.SetEmergencyVentHandler(async () => await EmergencyStop());
+                _graphView.SetEmergencyVentHandler(async () => await EmergencyStop());
                 
-                // Передаем SequenceService в GraphForm для синхронизации
-                if (_sequenceService != null)
+                // Передаем SequenceService в ChartWindow для синхронизации
+                if (_sequencePresenter.SequenceService != null)
                 {
-                    _graphForm.SetSequenceService(_sequenceService);
+                    _graphView.SetSequenceService(_sequencePresenter.SequenceService);
                 }
                 
                 // Apply theme from main form
                 bool isDark = _view.IsDarkTheme;
-                _graphForm.ApplyTheme(isDark);
+                _graphView.ApplyTheme(isDark);
                 
                 // Update pause state
-                _graphForm.UpdatePauseState(_isPaused);
+                _graphView.UpdatePauseState(_isPaused);
                 
-                _graphForm.Show(parentForm);
+                _graphView.Show(parentForm);
             }
             else
             {
                 // Update theme if form is already open
                 bool isDark = _view.IsDarkTheme;
-                _graphForm.ApplyTheme(isDark);
+                _graphView.ApplyTheme(isDark);
                 
                 // НЕ загружаем состояние при показе существующей формы
                 // Загрузка происходит только один раз в конструкторе
                 // Это предотвращает перезапись текущих значений пользователя
                 
-                if (_graphForm.WindowState == FormWindowState.Minimized)
-                    _graphForm.WindowState = FormWindowState.Normal;
-                _graphForm.Focus();
+                if (_graphView.WindowState == FormWindowState.Minimized)
+                    _graphView.WindowState = FormWindowState.Normal;
+                _graphView.Focus();
             }
             
             // Устанавливаем обработчик для синхронизации thresholds с главной формой
-            _graphForm.SetThresholdsChangedHandler(() =>
+            _graphView.SetThresholdsChangedHandler(() =>
             {
                 // Обновляем внутренние значения в Presenter
-                _maxPressure = FormOptions.AppOptions.Current.MaxPressure ?? 200.0;
-                _minPressure = FormOptions.AppOptions.Current.MinPressure ?? 0.0;
+                _maxPressure = OptionsWindow.AppOptions.Current.MaxPressure ?? 200.0;
+                _minPressure = OptionsWindow.AppOptions.Current.MinPressure ?? 0.0;
                 
                 // Обновляем значения в View
                 _view.MaxPressure = _maxPressure;
@@ -1465,34 +1467,36 @@ namespace Alicat.Presentation.Presenters
             });
             
             // Синхронизируем thresholds с текущими настройками при открытии
-            _graphForm.RefreshThresholdsFromSettings();
+            _graphView.RefreshThresholdsFromSettings();
         }
 
         public void ShowTable(Form parentForm)
         {
-            if (_tableForm == null || _tableForm.IsDisposed)
+            if (_tableView == null || _tableView.IsDisposed)
             {
                 // Convert IDataStore to SessionDataStore (it's actually SessionDataStore instance)
                 var sessionDataStore = _dataStore as SessionDataStore 
                     ?? throw new InvalidOperationException("DataStore must be SessionDataStore instance");
-                _tableForm = new TableForm(sessionDataStore);
-                _tableForm.StartPosition = FormStartPosition.CenterParent;
+                var tableForm = new DataTableWindow(sessionDataStore);
+                _tableView = tableForm;
+                _view.TableView = tableForm;
+                _tableView.StartPosition = FormStartPosition.CenterParent;
                 
                 // Set connection info if device is connected
                 if (_serial != null && _serial is SerialClient serialClient)
                 {
-                    _tableForm.SetConnectionInfo(serialClient.PortName, serialClient.BaudRate);
+                    _tableView.SetConnectionInfo(serialClient.PortName, serialClient.BaudRate);
                 }
                 
                 // Синхронизируем тему с главной формой
-                _tableForm.ApplyTheme(_view.IsDarkTheme);
-                _tableForm.Show(parentForm);
+                _tableView.ApplyTheme(_view.IsDarkTheme);
+                _tableView.Show(parentForm);
             }
             else
             {
-                if (_tableForm.WindowState == FormWindowState.Minimized)
-                    _tableForm.WindowState = FormWindowState.Normal;
-                _tableForm.Focus();
+                if (_tableView.WindowState == FormWindowState.Minimized)
+                    _tableView.WindowState = FormWindowState.Normal;
+                _tableView.Focus();
             }
         }
 
@@ -1500,7 +1504,7 @@ namespace Alicat.Presentation.Presenters
         {
             if (_testPressureForm == null || _testPressureForm.IsDisposed)
             {
-                _testPressureForm = new Alicat.UI.Features.Test.FormTestPressure(this);
+                _testPressureForm = new PrecisionPressureController.UI.Features.Test.TestPressureWindow(this);
                 _testPressureForm.FormClosed += (s, e) => _testPressureForm = null;
             }
 
@@ -1510,24 +1514,26 @@ namespace Alicat.Presentation.Presenters
 
         public void ShowTerminal(Form parentForm)
         {
-            if (_terminalForm == null || _terminalForm.IsDisposed)
+            if (_terminalView == null || _terminalView.IsDisposed)
             {
-                _terminalForm = new TerminalForm();
-                _terminalForm.CommandSent += TerminalForm_CommandSent;
+                var terminalForm = new TerminalWindow();
+                terminalForm.CommandSent += TerminalWindow_CommandSent;
+                _terminalView = terminalForm;
+                _view.TerminalView = terminalForm;
             }
 
-            if (!_terminalForm.Visible)
+            if (!_terminalView.Visible)
             {
-                _terminalForm.Show(parentForm);
+                _terminalView.Show(parentForm);
             }
-            _terminalForm.Focus();
+            _terminalView.Focus();
         }
 
-        private void TerminalForm_CommandSent(string cmd)
+        private void TerminalWindow_CommandSent(string cmd)
         {
             if (_serial == null)
             {
-                _terminalForm?.AppendLog("!! Serial not connected");
+                _terminalView?.AppendLog("!! Serial not connected");
                 return;
             }
 
@@ -1537,7 +1543,7 @@ namespace Alicat.Presentation.Presenters
             }
             catch (Exception ex)
             {
-                _terminalForm?.AppendLog("!! Error: " + ex.Message);
+                _terminalView?.AppendLog("!! Error: " + ex.Message);
             }
         }
 
@@ -1591,16 +1597,16 @@ namespace Alicat.Presentation.Presenters
                 _view.UI_UpdateConnectionStatus(false);
                 _view.UI_AppendStatusInfo("Device disconnected");
                 
-                // Update GraphForm connection info if open
-                if (_graphForm != null && !_graphForm.IsDisposed)
+                // Update ChartWindow connection info if open
+                if (_graphView != null && !_graphView.IsDisposed)
                 {
-                    _graphForm.SetConnectionInfo(null, null);
+                    _graphView.SetConnectionInfo(null, null);
                 }
                 
-                // Update TableForm connection info if open
-                if (_tableForm != null && !_tableForm.IsDisposed)
+                // Update DataTableWindow connection info if open
+                if (_tableView != null && !_tableView.IsDisposed)
                 {
-                    _tableForm.SetConnectionInfo(null, null);
+                    _tableView.SetConnectionInfo(null, null);
                 }
                 
                 System.Diagnostics.Debug.WriteLine($"[DisconnectDevice] Disconnect completed successfully.");
@@ -1629,22 +1635,22 @@ namespace Alicat.Presentation.Presenters
             try
             {
                 // Открываем выхлоп и оставляем открытым (как в Purge)
-                _serial.Send(AlicatCommands.ExhaustHold);
+                _serial.Send(DeviceCommands.ExhaustHold);
                 _isExhaust = true;
 
                 _view.UI_SetTrendStatus(_lastCurrent, _current, isExhaust: true, _rampSpeed);
                 _view.UI_AppendStatusInfo("Emergency vent started - exhaust open");
 
                 // Устанавливаем setpoint на устройстве в 0.0
-                _serial.Send(AlicatCommands.SetSetPoint(0.0));
+                _serial.Send(DeviceCommands.SetSetPoint(0.0));
                 _setPoint = 0.0;
                 _view.UI_SetSetPoint(_setPoint, _unit);
 
-                _serial.Send(AlicatCommands.ReadAls);
+                _serial.Send(DeviceCommands.ReadAls);
 
                 // Записываем событие Emergency Vent
                 int pointIndex = GetCurrentPointIndex();
-                _dataStore.RecordEvent(_current, _setPoint, _unit, "EMERGENCY_VENT_STARTED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
+                _dataPresenter.RecordEvent(_current, _setPoint, _unit, "EMERGENCY_VENT_STARTED", _rampSpeed, (int)_pollTimer.Interval, pointIndex);
             }
             catch (Exception ex)
             {
@@ -1701,7 +1707,7 @@ namespace Alicat.Presentation.Presenters
                 return "Device not connected";
 
             var info = new System.Text.StringBuilder();
-            info.AppendLine("Alicat Pressure Controller");
+            info.AppendLine("Precision Pressure Controller");
             info.AppendLine("═══════════════════════════════════");
             info.AppendLine();
 
@@ -1725,7 +1731,7 @@ namespace Alicat.Presentation.Presenters
             {
                 // Запрашиваем информацию об устройстве через команду AVE
                 // Формат ответа: "A 10v22.0-R24 Apr 29 2025,10:58:06"
-                string? deviceInfoResponse = await RequestDeviceResponseAsync(AlicatCommands.GetDeviceInfo, 1500);
+                string? deviceInfoResponse = await RequestDeviceResponseAsync(DeviceCommands.GetDeviceInfo, 1500);
                 if (!string.IsNullOrWhiteSpace(deviceInfoResponse))
                 {
                     // Парсим ответ AVE
@@ -1907,9 +1913,9 @@ namespace Alicat.Presentation.Presenters
             try
             {
                 // Запрашиваем текущее давление (ALS)
-                _serial.Send(AlicatCommands.ReadAls);
+                _serial.Send(DeviceCommands.ReadAls);
                 // Запрашиваем текущую скорость рампа (ASR)
-                _serial.Send(AlicatCommands.ReadRampSpeed);
+                _serial.Send(DeviceCommands.ReadRampSpeed);
             }
             catch (Exception ex)
             {
@@ -1919,7 +1925,7 @@ namespace Alicat.Presentation.Presenters
 
         /// <summary>
         /// Получает код единицы измерения для команды ADCU.
-        /// Коды единиц согласно документации Alicat (Appendix B-6):
+        /// Коды единиц согласно документации устройства (Appendix B-6):
         /// 2: Pa
         /// 3: hPa
         /// 4: kPa
@@ -2109,7 +2115,7 @@ namespace Alicat.Presentation.Presenters
                 if (exeDir != null && exeDir.Contains("bin"))
                 {
                     var dir = new System.IO.DirectoryInfo(exeDir);
-                    while (dir != null && dir.Name != "Alicat" && dir.GetFiles("*.csproj").Length == 0)
+                    while (dir != null && dir.Name != "PrecisionPressureController" && dir.GetFiles("*.csproj").Length == 0)
                     {
                         dir = dir.Parent;
                     }
@@ -2125,7 +2131,7 @@ namespace Alicat.Presentation.Presenters
             return System.IO.Path.Combine(settingsDir, "settings.json");
         }
 
-        private void SaveCommunicationSettings(FormConnect dlg, SerialPort opened)
+        private void SaveCommunicationSettings(ConnectionDialog dlg, SerialPort opened)
         {
             try
             {

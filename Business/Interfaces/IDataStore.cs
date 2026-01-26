@@ -1,6 +1,6 @@
-using Alicat.Services.Data;
+using PrecisionPressureController.Services.Data;
 
-namespace Alicat.Business.Interfaces
+namespace PrecisionPressureController.Business.Interfaces
 {
     /// <summary>
     /// Интерфейс для хранения данных сессии.

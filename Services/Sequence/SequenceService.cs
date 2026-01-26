@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
 using System.Windows.Forms;
-using Alicat.UI.Features.Graph.Views;
+using PrecisionPressureController.UI.Features.Graph.Views;
 
-namespace Alicat.Services.Sequence
+namespace PrecisionPressureController.Services.Sequence
 {
     /// <summary>
     /// Сервис для выполнения последовательности давлений
@@ -310,7 +310,7 @@ namespace Alicat.Services.Sequence
                 if (exeDir != null && exeDir.Contains("bin"))
                 {
                     var dir = new System.IO.DirectoryInfo(exeDir);
-                    while (dir != null && dir.Name != "Alicat" && dir.GetFiles("*.csproj").Length == 0)
+                    while (dir != null && dir.Name != "PrecisionPressureController" && dir.GetFiles("*.csproj").Length == 0)
                     {
                         dir = dir.Parent;
                     }

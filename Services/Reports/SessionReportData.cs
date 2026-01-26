@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Alicat.Services.Data;
+using PrecisionPressureController.Services.Data;
 
-namespace Alicat.Services.Reports
+namespace PrecisionPressureController.Services.Reports
 {
     /// <summary>
     /// Модель данных для генерации PDF отчета сессии

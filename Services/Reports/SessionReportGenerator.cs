@@ -4,10 +4,10 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
-namespace Alicat.Services.Reports
+namespace PrecisionPressureController.Services.Reports
 {
     /// <summary>
-    /// Генератор PDF отчетов для сессий Alicat Controller
+    /// Генератор PDF отчетов для сессий Precision Pressure Controller
     /// </summary>
     public class SessionReportGenerator
     {
@@ -65,7 +65,7 @@ namespace Alicat.Services.Reports
                 {
                     column.Item().Text("Session Report")
                         .FontSize(24).Bold().FontColor("#0078d4");
-                    column.Item().Text("Alicat Pressure Controller")
+                    column.Item().Text("Precision Pressure Controller")
                         .FontSize(12).FontColor("#666666");
                 });
 
@@ -298,7 +298,7 @@ namespace Alicat.Services.Reports
             {
                 text.Span($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}").FontSize(8).FontColor("#666666");
                 text.Span(" | ");
-                text.Span("Alicat Controller v1.0").FontSize(8).FontColor("#666666");
+                text.Span("Precision Pressure Controller v1.0").FontSize(8).FontColor("#666666");
             });
         }
 

@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Globalization;
-using Alicat.Business.Interfaces;
-using Alicat.Services.Protocol;
+using PrecisionPressureController.Business.Interfaces;
+using PrecisionPressureController.Services.Protocol;
 
-namespace Alicat.Services.Controllers
+namespace PrecisionPressureController.Services.Controllers
 {
     public sealed class RampController : IRampController
     {
@@ -22,7 +22,7 @@ namespace Alicat.Services.Controllers
             double r = pressureRamp.Value;
             if (r < 0) r = 0;                // простая защита
 
-            _serial.Send(AlicatCommands.SetRamp(r, 4)); // 4 = секунды
+            _serial.Send(DeviceCommands.SetRamp(r, 4)); // 4 = секунды
             return true;
         }
     }

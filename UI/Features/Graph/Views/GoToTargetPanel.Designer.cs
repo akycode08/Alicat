@@ -1,4 +1,4 @@
-namespace Alicat.UI.Features.Graph.Views
+namespace PrecisionPressureController.UI.Features.Graph.Views
 {
     partial class GoToTargetPanel
     {

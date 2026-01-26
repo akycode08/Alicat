@@ -1,12 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Timers;
-using Alicat.Business.Interfaces;
+using PrecisionPressureController.Business.Interfaces;
 
-namespace Alicat.Services.Data
+namespace PrecisionPressureController.Services.Data
 {
     /// <summary>
     /// Центральное хранилище данных сессии.
@@ -45,10 +45,10 @@ namespace Alicat.Services.Data
         /// <summary>
         /// Максимальное количество точек в RAM (rolling window)
         /// При превышении удаляются самые старые точки (FIFO)
-        /// Достаточно для отображения графика в реальном времени
+        /// Достаточно для отображения графика до 1 часа (для polling 500ms, 1000ms, 2500ms, 5000ms)
         /// Все данные сохраняются в CSV через автосохранение
         /// </summary>
-        private const int MaxPointsInMemory = 1000; // Достаточно для графика (~8 минут при polling 500ms)
+        private const int MaxPointsInMemory = 8000; // Достаточно для ~1 часа данных при большинстве polling частот
 
         /// <summary>
         /// Все точки данных (только чтение)
@@ -122,7 +122,9 @@ namespace Alicat.Services.Data
             _csvRowNumber = 0; // Сбрасываем счетчик строк
 
             // Создаём файл и пишем заголовок (новый формат с RowNumber и PointIndex)
-            _writer = new StreamWriter(csvFilePath, append: false, Encoding.UTF8);
+            // Используем FileShare.Read для разрешения чтения файла другими процессами (например, для загрузки данных в график)
+            var fileStream = new FileStream(csvFilePath, FileMode.Create, FileAccess.Write, FileShare.Read);
+            _writer = new StreamWriter(fileStream, Encoding.UTF8);
             _writer.WriteLine("RowNumber,Timestamp,Time_s,Current,Target,Unit,RampSpeed_psi_s,PollingFrequency,PointIndex,Event");
             _writer.Flush();
 
@@ -170,6 +172,9 @@ namespace Alicat.Services.Data
                 // Удаляем старые точки с начала списка
                 int pointsToRemove = _points.Count - MaxPointsInMemory;
                 _points.RemoveRange(0, pointsToRemove);
+                
+                // Корректируем индекс автосохранения после удаления старых точек
+                _lastAutoSavedIndex = Math.Max(0, _lastAutoSavedIndex - pointsToRemove);
             }
 
             // CSV (по изменению)
@@ -215,6 +220,9 @@ namespace Alicat.Services.Data
             {
                 int pointsToRemove = _points.Count - MaxPointsInMemory;
                 _points.RemoveRange(0, pointsToRemove);
+                
+                // Корректируем индекс автосохранения после удаления старых точек
+                _lastAutoSavedIndex = Math.Max(0, _lastAutoSavedIndex - pointsToRemove);
             }
 
             // CSV (события всегда)

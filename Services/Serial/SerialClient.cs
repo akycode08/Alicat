@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.IO.Ports;
 using System.Text;
-using Alicat.Business.Interfaces;
+using PrecisionPressureController.Business.Interfaces;
 
-namespace Alicat.Services.Serial
+namespace PrecisionPressureController.Services.Serial
 {
     public sealed class SerialClient : ISerialClient, IDisposable
     {

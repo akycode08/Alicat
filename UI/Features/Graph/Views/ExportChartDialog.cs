@@ -2,7 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace Alicat.UI.Features.Graph.Views
+namespace PrecisionPressureController.UI.Features.Graph.Views
 {
     /// <summary>
     /// Настройки экспорта графика

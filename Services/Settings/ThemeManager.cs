@@ -2,7 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace Alicat.Services.Settings
+namespace PrecisionPressureController.Services.Settings
 {
     /// <summary>
     /// Управление темами приложения (Light/Dark)

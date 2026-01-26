@@ -1,6 +1,6 @@
 using System;
 
-namespace Alicat.Domain
+namespace PrecisionPressureController.Domain
 {
     /// <summary>
     /// Утилита для расчета ETA (Estimated Time of Arrival - расчетное время достижения цели)
